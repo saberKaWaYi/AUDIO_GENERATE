@@ -3,6 +3,7 @@ from settings.web import web_settings
 from settings.mongo import mongo_settings
 from settings.fish_audio import fish_audio_settings
 from settings.elevenlabs import elevenlabs_settings
+from settings.deepseek import deepseek_settings
 from settings.worker import worker_settings
 
 
@@ -39,6 +40,14 @@ class Settings:
     elevenlabs_api_keys = elevenlabs_settings.elevenlabs_api_keys
     elevenlabs_music_model_id = elevenlabs_settings.elevenlabs_music_model_id
     elevenlabs_timeout = elevenlabs_settings.elevenlabs_timeout
+
+    deepseek_base_url = deepseek_settings.deepseek_base_url
+    deepseek_api_key = deepseek_settings.deepseek_api_key
+    deepseek_model = deepseek_settings.deepseek_model
+    deepseek_temperature = deepseek_settings.deepseek_temperature
+    deepseek_max_tokens = deepseek_settings.deepseek_max_tokens
+    deepseek_timeout = deepseek_settings.deepseek_timeout
+    deepseek_max_retries = deepseek_settings.deepseek_max_retries
 
     worker_poll_interval = worker_settings.worker_poll_interval
     music_data_dir = worker_settings.music_data_dir
