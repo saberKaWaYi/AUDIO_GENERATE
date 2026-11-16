@@ -37,6 +37,8 @@ class ASMRBackendMusicInfo(BaseModel):
     title: str
     reference_ids: list[str]
     theme: str
+    duration_minutes: int
+    language: TaskLanguage
 
 
 TaskInfo = ASMRTextInfo | ASMRBackendMusicInfo

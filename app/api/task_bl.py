@@ -31,6 +31,8 @@ def _new_info(request: CreateTaskRequest, task_type: TaskType) -> TaskInfo:
             title=request.title,
             reference_ids=request.reference_ids,
             theme=request.theme,
+            duration_minutes=request.duration_minutes,
+            language=request.language,
         )
     raise ValueError(f"不支持的任务类型：{task_type}")
 
