@@ -1,7 +1,7 @@
 from typing import Optional
 from urllib.parse import quote_plus
 
-from pymongo import MongoClient
+from pymongo import MongoClient, ReturnDocument
 
 import logging
 
@@ -77,6 +77,21 @@ class MongoService:
         if limit:
             cursor = cursor.limit(limit)
         return list(cursor)
+
+    def find_one_and_update(
+        self,
+        collection: str,
+        query: dict,
+        update: dict,
+        sort: Optional[list] = None,
+    ) -> Optional[dict]:
+        return self._collection(collection).find_one_and_update(
+            query,
+            update,
+            projection={"_id": 0},
+            sort=sort,
+            return_document=ReturnDocument.BEFORE,
+        )
 
     def count_documents(self, collection: str, query: dict) -> int:
         return self._collection(collection).count_documents(query)

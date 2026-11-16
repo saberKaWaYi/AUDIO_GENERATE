@@ -20,6 +20,9 @@ class TaskType(str, Enum):
 
 class TaskStatus(str, Enum):
     PENDING = "pending"
+    PROCESSING = "processing"
+    SUCCESS = "success"
+    FAILED = "failed"
 
 
 class ASMRTextInfo(BaseModel):
