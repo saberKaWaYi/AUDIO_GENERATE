@@ -4,7 +4,7 @@ from pydantic import Field
 
 from settings.base import EnvSettings
 
-LogServiceName = Literal["web"]
+LogServiceName = Literal["web", "worker"]
 
 
 class CommonSettings(EnvSettings):

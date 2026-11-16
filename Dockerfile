@@ -9,3 +9,6 @@ COPY . .
 
 FROM base AS web
 CMD ["python", "main.py", "web", "--host", "0.0.0.0", "--port", "8002", "--no-reload"]
+
+FROM base AS worker
+CMD ["python", "main.py", "worker"]
