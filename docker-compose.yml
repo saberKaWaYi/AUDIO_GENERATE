@@ -1,0 +1,34 @@
+services:
+  web:
+    build:
+      context: .
+      target: web
+    command: python main.py web --host 0.0.0.0 --port 8002 --no-reload
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "api.fish.audio:104.18.0.100"
+    expose:
+      - "8002"
+    ports:
+      - "8002:8002"
+    environment:
+      - DEBUG=${DEBUG:-false}
+      - WEB_DEBUG=${WEB_DEBUG:-}
+      - WEB_NAME=${WEB_NAME:-Audio Generate Web Service}
+      - WEB_VERSION=${WEB_VERSION:-1.0}
+      - BACKEND_API_KEY=${BACKEND_API_KEY:?Set BACKEND_API_KEY}
+      - MONGODB_HOST=${MONGODB_HOST:?Set MONGODB_HOST to the MongoDB host used by AUDIO-GENERATE}
+      - MONGODB_PORT=${MONGODB_PORT:-27017}
+      - MONGODB_USERNAME=${MONGODB_USERNAME:-mongodb}
+      - MONGODB_PASSWORD=${MONGODB_PASSWORD:?Set MONGODB_PASSWORD}
+      - MONGODB_DATABASE=${MONGODB_DATABASE:-audio_generate}
+      - FISH_AUDIO_BASE_URL=${FISH_AUDIO_BASE_URL:-https://api.fish.audio}
+      - FISH_AUDIO_API_KEY=${FISH_AUDIO_API_KEY:?Set FISH_AUDIO_API_KEY}
+      - FISH_AUDIO_TIMEOUT=${FISH_AUDIO_TIMEOUT:-30}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/docs', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
