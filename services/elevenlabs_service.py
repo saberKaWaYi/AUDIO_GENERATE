@@ -36,13 +36,13 @@ class ElevenLabsService:
             if api_key in self._exhausted:
                 continue
             try:
-                return self._compose(prompt, api_key, music_length_ms)
+                return self._compose_music(prompt, api_key, music_length_ms)
             except ElevenLabsExhaustedError:
                 self._exhausted.add(api_key)
                 logger.warning("ElevenLabs 账号额度耗尽，切换下一个，key=%s***", api_key[:8])
         raise ElevenLabsExhaustedError("所有 ElevenLabs 账号额度已耗尽")
 
-    def _compose(self, prompt: str, api_key: str, music_length_ms: int) -> bytes:
+    def _compose_music(self, prompt: str, api_key: str, music_length_ms: int) -> bytes:
         url = f"{elevenlabs_settings.elevenlabs_base_url.rstrip('/')}/v1/music"
         try:
             response = httpx.post(
