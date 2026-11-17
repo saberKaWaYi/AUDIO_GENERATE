@@ -167,9 +167,8 @@
 3. 不要只写“产生舒适的 ASMR 声音”之类的模糊描述。
 4. 应根据主题选择适合的动作，不能为了增加声音数量而设计无意义的动作。
 5. 可以将一个持续动作设计为一个事件，也可以根据动作变化拆分为多个事件。
-6. 如果声音由某个角色明确触发，必须使用该角色的 `reference_id`。
-7. 如果声音来自不属于指定角色的动作或其他独立声源，`reference_id` 可以为 `null`。
-8. 不要将环境自然产生的声音错误归入此类型。
+6. `reference_id` 必须为 `null`。动作音不绑定角色音色，即使由某个角色触发也不填写角色 ID。
+7. 不要将环境自然产生的声音错误归入此类型。
 
 ### 3.4 environmental_sound — 环境声音
 
@@ -507,7 +506,7 @@ Fish Audio S2 支持在 TTS 的 `text` 内容中使用方括号形式的语音�
 
 - `human_speech`：必须使用有效角色的 `reference_id`。
 - `non_verbal_human_sound`：必须使用有效角色的 `reference_id`。
-- `action_generated_sound`：如果由指定角色触发，使用该角色的 `reference_id`；如果不属于指定角色，可以为 `null`。
+- `action_generated_sound`：必须为 `null`。
 - `environmental_sound`：必须为 `null`。
 
 所有非空 `reference_id` 必须来自输入中的 `characters`，不得自行编造。
