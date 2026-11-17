@@ -26,7 +26,7 @@ class MusicOutcome:
         self.tracks = tracks
 
 
-CHARACTER_FIELDS = ("title", "tags")
+CHARACTER_FIELDS = ("reference_id", "title", "tags", "languages")
 
 
 def _get_mongo() -> MongoService:
