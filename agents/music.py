@@ -13,7 +13,7 @@ class MusicTrack(BaseModel):
     model_config = ConfigDict(strict=True)
 
     prompt: str = Field(min_length=1)
-    duration_seconds: int = Field(gt=0)
+    duration_seconds: int = Field(ge=3, le=300)
 
 
 class MusicTracks(BaseModel):
