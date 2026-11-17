@@ -20,6 +20,7 @@ class TaskType(str, Enum):
 
 
 class TaskStatus(str, Enum):
+    DEBUG = "debug"
     PENDING = "pending"
     PROCESSING = "processing"
     SUCCESS = "success"

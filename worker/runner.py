@@ -18,6 +18,7 @@ from services.mongo_service import MongoService
 from settings.elevenlabs import elevenlabs_settings
 from settings.mongo import mongo_settings
 from settings.worker import worker_settings
+from settings_config import settings
 from worker.executors import EXECUTORS, SUBMUSIC_SUCCESS
 
 import logging
@@ -145,7 +146,7 @@ def _insert_submusic_tasks(subtask: dict, outcome: MusicOutcome) -> None:
                 prompt=track.prompt,
                 duration_seconds=track.duration_seconds,
             ),
-            status=TaskStatus.PENDING,
+            status=TaskStatus.DEBUG if settings.debug else TaskStatus.PENDING,
             result=ASMRBackendSubMusicResult(result_text=""),
             create_time=now,
             update_time=now,

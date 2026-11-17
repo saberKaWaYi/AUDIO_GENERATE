@@ -2,19 +2,25 @@ from datetime import datetime
 from uuid import uuid4
 
 from app.api.task_req import CreateTaskRequest
-from app.api.task_res import CreateTaskResponse, TaskQueryResponse, TaskSubtaskResponse
+from app.api.task_res import (
+    CreateTaskResponse,
+    ReleaseTaskResponse,
+    TaskQueryResponse,
+    TaskSubtaskResponse,
+)
 from models.schemas_task import (
+    AUDIO_TASKS_COLLECTION,
     ASMRBackendMusicInfo,
     ASMRBackendMusicResult,
     ASMRTextInfo,
     ASMRTextResult,
-    AUDIO_TASKS_COLLECTION,
     AudioTask,
     TaskInfo,
     TaskResult,
     TaskStatus,
     TaskType,
 )
+from settings_config import settings
 
 
 def _new_info(request: CreateTaskRequest, task_type: TaskType) -> TaskInfo:
@@ -54,7 +60,7 @@ def _new_task(
         user_id=request.user_id,
         type=task_type,
         info=_new_info(request, task_type),
-        status=TaskStatus.PENDING,
+        status=TaskStatus.DEBUG if settings.debug else TaskStatus.PENDING,
         result=_new_result(task_type),
         create_time=now,
         update_time=now,
@@ -78,6 +84,29 @@ def create_task(mongo, request: CreateTaskRequest) -> CreateTaskResponse:
         mongo.insert_document(AUDIO_TASKS_COLLECTION, music_task.model_dump(mode="json"))
 
     return CreateTaskResponse(task_id=task_id, status=task.status)
+
+
+def release_task(mongo, subtask_id: str) -> ReleaseTaskResponse | None:
+    query = {"subtask_id": subtask_id, "is_deleted": False}
+    doc = mongo.find_one(AUDIO_TASKS_COLLECTION, query)
+    if doc is None:
+        return None
+    if TaskStatus(doc["status"]) != TaskStatus.DEBUG:
+        raise ValueError(f"任务不处于 debug 状态，无法放行：{doc['status']}")
+
+    modified = mongo.update_document(
+        AUDIO_TASKS_COLLECTION,
+        query,
+        {
+            "$set": {
+                "status": TaskStatus.PENDING.value,
+                "update_time": datetime.utcnow(),
+            }
+        },
+    )
+    if modified != 1:
+        raise RuntimeError("放行任务时更新数量异常")
+    return ReleaseTaskResponse(subtask_id=subtask_id, status=TaskStatus.PENDING)
 
 
 def query_task(mongo, task_id: str, user_id: int) -> TaskQueryResponse | None:

@@ -11,6 +11,12 @@ class CreateTaskResponse(BaseModel):
     status: TaskStatus = Field(..., description="任务状态")
 
 
+class ReleaseTaskResponse(BaseModel):
+
+    subtask_id: str = Field(..., description="子任务标识")
+    status: TaskStatus = Field(..., description="放行后的状态")
+
+
 class TaskSubtaskResponse(BaseModel):
 
     subtask_id: str = Field(..., description="子任务标识")
