@@ -27,7 +27,7 @@ class TextSegment(BaseModel):
     start_time: int = Field(ge=0)
     end_time: int = Field(ge=0)
     type: str
-    reference_id: str
+    reference_id: str | None
     type_prompt: str = Field(min_length=1)
 
     @field_validator("type")
@@ -45,8 +45,17 @@ class TextSegment(BaseModel):
             )
         return self
 
+    @model_validator(mode="after")
+    def validate_reference(self) -> "TextSegment":
+        if self.type in {"human_speech", "non_verbal_human_sound"} and self.reference_id is None:
+            raise ValueError(f"{self.type} 必须指定 reference_id")
+        if self.type in {"action_generated_sound", "environmental_sound"} and self.reference_id is not None:
+            raise ValueError(f"{self.type} 的 reference_id 必须为 None")
+        return self
+
 
 class TextTimeline(BaseModel):
+    model_config = ConfigDict(strict=True)
 
     segments: list[TextSegment] = Field(min_length=1)
 
