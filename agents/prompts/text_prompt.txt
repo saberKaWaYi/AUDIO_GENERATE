@@ -324,6 +324,8 @@ Do not mechanically split every word, every breath, or every tiny movement into 
 
 Continuous and consistent sound activities may remain as one event. When the sound content, action, sound source, or performance changes significantly, they may be split into multiple events.
 
+- The duration of each sound event must realistically match the time required for the described sound-producing action. Do not extend an action's duration merely to fill available timeline space. For actions involving multiple steps, allocate reasonable durations to each step. Keep surrounding pauses, hesitation, and emotional performance separate from the duration of the physical sound-producing action.
+
 ## 6. type_prompt Writing Guidelines
 
 `type_prompt` is the most important creative content of each sound event.
