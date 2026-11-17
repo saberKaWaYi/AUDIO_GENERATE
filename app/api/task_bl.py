@@ -142,14 +142,6 @@ def query_task(mongo, task_id: str, user_id: int) -> TaskQueryResponse | None:
     return _build_task_response(task_id, docs)
 
 
-def query_task_detail(mongo, task_id: str) -> TaskQueryResponse | None:
-    query = {"task_id": task_id, "is_deleted": False}
-    docs = mongo.find_documents(AUDIO_TASKS_COLLECTION, query, sort=[("create_time", 1)])
-    if not docs:
-        return None
-    return _build_task_response(task_id, docs)
-
-
 def list_tasks(mongo) -> TaskListResponse:
     docs = mongo.find_documents(AUDIO_TASKS_COLLECTION, {"is_deleted": False})
     groups: dict[str, list[dict]] = {}
