@@ -71,6 +71,7 @@ def chat(
                 temperature=temperature,
                 max_tokens=max_tokens,
                 timeout=timeout,
+                extra_body={"thinking": {"type": "enabled"}},
             )
             choice = response.choices[0]
             usage = getattr(response, "usage", None)
