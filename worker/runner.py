@@ -5,6 +5,7 @@ from typing import Optional
 from uuid import uuid4
 
 from agents.music import MusicOutcome
+from agents.text import TextOutcome
 from models.schemas_task import (
     ASMRBackendSubMusicInfo,
     ASMRBackendSubMusicResult,
@@ -105,6 +106,22 @@ def _write_success(subtask: dict, result_text: str) -> None:
     )
 
 
+def _write_text_success(subtask: dict, outcome: TextOutcome) -> None:
+    mongo_service.update_document(
+        AUDIO_TASKS_COLLECTION,
+        {"subtask_id": subtask["subtask_id"], "is_deleted": False},
+        {
+            "$set": {
+                "status": TaskStatus.SUCCESS.value,
+                "result.result_text": outcome.llm_result.raw_text,
+                "result.prompt_tokens": outcome.llm_result.prompt_tokens,
+                "result.completion_tokens": outcome.llm_result.completion_tokens,
+                "update_time": _now(),
+            }
+        },
+    )
+
+
 def _write_failed(subtask: dict, reason: str) -> None:
     mongo_service.update_document(
         AUDIO_TASKS_COLLECTION,
@@ -126,6 +143,7 @@ def _write_music_success(subtask: dict, outcome: MusicOutcome) -> None:
         {
             "$set": {
                 "status": TaskStatus.SUCCESS.value,
+                "result.result_text": outcome.llm_result.raw_text,
                 "result.prompt_tokens": outcome.llm_result.prompt_tokens,
                 "result.completion_tokens": outcome.llm_result.completion_tokens,
                 "update_time": _now(),
@@ -175,7 +193,16 @@ def _run_once() -> bool:
             raise ValueError(f"任务类型 {task_type.value!r} 没有注册执行器")
 
         outcome = executor(subtask)
-        if task_type == TaskType.ASMR_BACKEND_MUSIC:
+        if task_type == TaskType.ASMR_TEXT:
+            if not isinstance(outcome, TextOutcome):
+                raise ValueError(f"TEXT 执行器返回类型错误：{type(outcome).__name__}")
+            _write_text_success(subtask, outcome)
+            logger.info(
+                "TEXT 拆解成功, subtask_id=%s, segments=%d",
+                subtask["subtask_id"],
+                len(outcome.segments),
+            )
+        elif task_type == TaskType.ASMR_BACKEND_MUSIC:
             if not isinstance(outcome, MusicOutcome):
                 raise ValueError(f"MUSIC 执行器返回类型错误：{type(outcome).__name__}")
             _insert_submusic_tasks(subtask, outcome)

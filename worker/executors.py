@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from agents.music import run_music
+from agents.text import run_text
 from models.schemas_task import TaskType
 from settings.worker import worker_settings
 
@@ -25,6 +26,7 @@ def run_submusic(subtask: dict) -> str:
 
 
 EXECUTORS = {
+    TaskType.ASMR_TEXT: run_text,
     TaskType.ASMR_BACKEND_MUSIC: run_music,
     TaskType.ASMR_BACKEND_SUBMUSIC: run_submusic,
 }
