@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 AUDIO_TASKS_COLLECTION = "audio_tasks"
 
@@ -16,6 +16,7 @@ class TaskLanguage(str, Enum):
 class TaskType(str, Enum):
     ASMR_TEXT = "ASMR_TEXT"
     ASMR_BACKEND_MUSIC = "ASMR_BACKEND_MUSIC"
+    ASMR_BACKEND_SUBMUSIC = "ASMR_BACKEND_SUBMUSIC"
 
 
 class TaskStatus(str, Enum):
@@ -41,7 +42,12 @@ class ASMRBackendMusicInfo(BaseModel):
     language: TaskLanguage
 
 
-TaskInfo = ASMRTextInfo | ASMRBackendMusicInfo
+class ASMRBackendSubMusicInfo(BaseModel):
+    prompt: str = Field(min_length=1)
+    duration_seconds: int = Field(ge=3, le=180)
+
+
+TaskInfo = ASMRTextInfo | ASMRBackendMusicInfo | ASMRBackendSubMusicInfo
 
 
 class ASMRTextResult(BaseModel):
@@ -56,7 +62,13 @@ class ASMRBackendMusicResult(BaseModel):
     completion_tokens: int
 
 
-TaskResult = ASMRTextResult | ASMRBackendMusicResult
+class ASMRBackendSubMusicResult(BaseModel):
+    result_text: str
+    prompt_tokens: int
+    completion_tokens: int
+
+
+TaskResult = ASMRTextResult | ASMRBackendMusicResult | ASMRBackendSubMusicResult
 
 
 class AudioTask(BaseModel):

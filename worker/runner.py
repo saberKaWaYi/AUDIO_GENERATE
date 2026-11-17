@@ -2,14 +2,23 @@ import signal
 import time
 from datetime import datetime
 from typing import Optional
+from uuid import uuid4
 
-from models.schemas_task import AUDIO_TASKS_COLLECTION, TaskStatus, TaskType
+from agents.music import MusicOutcome
+from models.schemas_task import (
+    ASMRBackendSubMusicInfo,
+    ASMRBackendSubMusicResult,
+    AUDIO_TASKS_COLLECTION,
+    AudioTask,
+    TaskStatus,
+    TaskType,
+)
 from services.elevenlabs_service import ElevenLabsService
 from services.mongo_service import MongoService
 from settings.elevenlabs import elevenlabs_settings
 from settings.mongo import mongo_settings
 from settings.worker import worker_settings
-from worker.executors import EXECUTORS
+from worker.executors import EXECUTORS, SUBMUSIC_SUCCESS
 
 import logging
 from logging_config import setup_logging
@@ -109,6 +118,45 @@ def _write_failed(subtask: dict, reason: str) -> None:
     )
 
 
+def _write_music_success(subtask: dict, outcome: MusicOutcome) -> None:
+    mongo_service.update_document(
+        AUDIO_TASKS_COLLECTION,
+        {"subtask_id": subtask["subtask_id"], "is_deleted": False},
+        {
+            "$set": {
+                "status": TaskStatus.SUCCESS.value,
+                "result.prompt_tokens": outcome.llm_result.prompt_tokens,
+                "result.completion_tokens": outcome.llm_result.completion_tokens,
+                "update_time": _now(),
+            }
+        },
+    )
+
+
+def _insert_submusic_tasks(subtask: dict, outcome: MusicOutcome) -> None:
+    now = _now()
+    for track in outcome.tracks:
+        task = AudioTask(
+            task_id=subtask["task_id"],
+            subtask_id=uuid4().hex,
+            user_id=subtask["user_id"],
+            type=TaskType.ASMR_BACKEND_SUBMUSIC,
+            info=ASMRBackendSubMusicInfo(
+                prompt=track.prompt,
+                duration_seconds=track.duration_seconds,
+            ),
+            status=TaskStatus.PENDING,
+            result=ASMRBackendSubMusicResult(
+                result_text="", prompt_tokens=0, completion_tokens=0
+            ),
+            create_time=now,
+            update_time=now,
+            is_deleted=False,
+        )
+        mongo_service.insert_document(AUDIO_TASKS_COLLECTION, task.model_dump(mode="json"))
+        logger.info("插入 SUBMUSIC 任务, subtask_id=%s", task.subtask_id)
+
+
 def _run_once() -> bool:
     subtask = _claim_task()
     if subtask is None:
@@ -123,13 +171,28 @@ def _run_once() -> bool:
 
     try:
         task_type = TaskType(subtask["type"])
-        executor = EXECUTORS[task_type]
-        if task_type == TaskType.ASMR_BACKEND_MUSIC:
-            pass
-        else:
+        executor = EXECUTORS.get(task_type)
+        if executor is None:
             raise ValueError(f"任务类型 {task_type.value!r} 没有注册执行器")
-        _write_success(subtask, result_text)
-        logger.info("任务处理成功, subtask_id=%s, result=%s", subtask["subtask_id"], result_text)
+
+        outcome = executor(subtask)
+        if task_type == TaskType.ASMR_BACKEND_MUSIC:
+            if not isinstance(outcome, MusicOutcome):
+                raise ValueError(f"MUSIC 执行器返回类型错误：{type(outcome).__name__}")
+            _insert_submusic_tasks(subtask, outcome)
+            _write_music_success(subtask, outcome)
+            logger.info(
+                "MUSIC 规划成功, subtask_id=%s, tracks=%d",
+                subtask["subtask_id"],
+                len(outcome.tracks),
+            )
+        elif task_type == TaskType.ASMR_BACKEND_SUBMUSIC:
+            if outcome != SUBMUSIC_SUCCESS:
+                raise ValueError(f"SUBMUSIC 执行器返回了非预期结果：{outcome!r}")
+            _write_success(subtask, outcome)
+            logger.info("SUBMUSIC 生成成功, subtask_id=%s", subtask["subtask_id"])
+        else:
+            raise ValueError(f"任务类型 {task_type.value!r} 没有闭合结果处理")
     except Exception as exc:
         logger.exception("任务处理失败, subtask_id=%s", subtask["subtask_id"])
         _write_failed(subtask, str(exc))
