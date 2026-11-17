@@ -64,8 +64,6 @@ class ASMRBackendMusicResult(BaseModel):
 
 class ASMRBackendSubMusicResult(BaseModel):
     result_text: str
-    prompt_tokens: int
-    completion_tokens: int
 
 
 TaskResult = ASMRTextResult | ASMRBackendMusicResult | ASMRBackendSubMusicResult

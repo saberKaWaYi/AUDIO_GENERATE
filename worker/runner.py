@@ -146,9 +146,7 @@ def _insert_submusic_tasks(subtask: dict, outcome: MusicOutcome) -> None:
                 duration_seconds=track.duration_seconds,
             ),
             status=TaskStatus.PENDING,
-            result=ASMRBackendSubMusicResult(
-                result_text="", prompt_tokens=0, completion_tokens=0
-            ),
+            result=ASMRBackendSubMusicResult(result_text=""),
             create_time=now,
             update_time=now,
             is_deleted=False,
