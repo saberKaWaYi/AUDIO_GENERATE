@@ -106,7 +106,7 @@ def _write_success(subtask: dict, result_text: str) -> None:
     )
 
 
-def _write_text_success(subtask: dict, outcome: TextOutcome) -> None:
+def _write_llm_success(subtask: dict, outcome: MusicOutcome | TextOutcome) -> None:
     mongo_service.update_document(
         AUDIO_TASKS_COLLECTION,
         {"subtask_id": subtask["subtask_id"], "is_deleted": False},
@@ -130,22 +130,6 @@ def _write_failed(subtask: dict, reason: str) -> None:
             "$set": {
                 "status": TaskStatus.FAILED.value,
                 "result.result_text": reason,
-                "update_time": _now(),
-            }
-        },
-    )
-
-
-def _write_music_success(subtask: dict, outcome: MusicOutcome) -> None:
-    mongo_service.update_document(
-        AUDIO_TASKS_COLLECTION,
-        {"subtask_id": subtask["subtask_id"], "is_deleted": False},
-        {
-            "$set": {
-                "status": TaskStatus.SUCCESS.value,
-                "result.result_text": outcome.llm_result.raw_text,
-                "result.prompt_tokens": outcome.llm_result.prompt_tokens,
-                "result.completion_tokens": outcome.llm_result.completion_tokens,
                 "update_time": _now(),
             }
         },
@@ -196,7 +180,7 @@ def _run_once() -> bool:
         if task_type == TaskType.ASMR_TEXT:
             if not isinstance(outcome, TextOutcome):
                 raise ValueError(f"TEXT 执行器返回类型错误：{type(outcome).__name__}")
-            _write_text_success(subtask, outcome)
+            _write_llm_success(subtask, outcome)
             logger.info(
                 "TEXT 拆解成功, subtask_id=%s, segments=%d",
                 subtask["subtask_id"],
@@ -206,7 +190,7 @@ def _run_once() -> bool:
             if not isinstance(outcome, MusicOutcome):
                 raise ValueError(f"MUSIC 执行器返回类型错误：{type(outcome).__name__}")
             _insert_submusic_tasks(subtask, outcome)
-            _write_music_success(subtask, outcome)
+            _write_llm_success(subtask, outcome)
             logger.info(
                 "MUSIC 规划成功, subtask_id=%s, tracks=%d",
                 subtask["subtask_id"],

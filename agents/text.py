@@ -1,9 +1,9 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from agents.music import _load_characters, build_user_content
 from agents.prompts.text_prompt import get_text_system_prompt
 from services.llm_service import LLMResult, chat, parse_json
 from settings_config import settings
+from tools.agent_tools import _load_characters, build_user_content
 
 VALID_TYPES = {
     "human_speech",
