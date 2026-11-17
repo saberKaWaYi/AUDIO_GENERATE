@@ -120,8 +120,15 @@ Represents character vocalizations without explicit linguistic content, includin
 5. Consider the character's emotions and physical state. Prioritize natural, delicate, and realistic sounds.
 6. Avoid exaggerated, meaningless, excessively frequent, or contextually inappropriate vocalizations.
 7. Do not include spoken dialogue or sounds produced by objects, object interactions, or the environment.
-8. The duration must realistically match the vocal expression. Do not unnecessarily extend brief sounds.
-9. When vocalizations occur alongside dialogue, they may be separate overlapping events when independent generation is necessary.
+8. Distinguish between brief and sustained vocalizations, and match the duration to the actual audible sound.
+9. Do not unnecessarily extend brief vocalizations or artificially shorten naturally sustained vocalizations.
+10. Do not add meaningless or repetitive vocalizations merely to increase sound density.
+
+**Character Vocalization Overlap Restriction:**
+
+- `human_speech` and `non_verbal_human_sound` events belonging to the same character must never overlap in time.
+- When a character produces non-verbal vocalizations, such as breathing, laughter, or sighing, schedule them before, after, or between that character's dialogue events.
+- This restriction applies only to the same character. Different characters' vocal events may still overlap.
 
 ### 3.3 action_generated_sound — Action-generated Sounds
 
@@ -222,7 +229,7 @@ Plan the entire production according to `duration_minutes`.
 
 ### 5.1 Time Definition
 
-All times are measured in seconds, starting at `0` at the beginning of the production.
+All times are measured in seconds, starting at `0` at the beginning of the entire production.
 
 For example:
 
@@ -243,11 +250,18 @@ Different sound events may overlap.
 Examples include:
 
 - Environmental rain during dialogue.
-- Natural breathing during speech.
 - Quiet conversation while performing ear-cleaning actions.
 - Footsteps and wind occurring simultaneously during a walk.
 
 Do not force all events into a sequential timeline or arbitrarily eliminate reasonable overlaps.
+
+**Additional Restrictions:**
+
+- `human_speech` and `non_verbal_human_sound` events belonging to the same character must never overlap in time.
+- When a character produces non-verbal vocalizations, such as breathing, laughter, or sighing, schedule them before, after, or between that character's dialogue events.
+- This restriction applies only to the same character. Events belonging to different characters may still overlap.
+- Human vocal events may overlap with action-generated sounds and environmental sounds when appropriate.
+- Different sound types may overlap whenever the listening experience and sound relationships justify it.
 
 ### 5.3 Multi-character Conversations
 
@@ -258,11 +272,13 @@ For conversations involving multiple characters:
 - Different characters' events may overlap.
 - Never merge multiple characters' dialogue into one event.
 
-### 5.4 Event Granularity
+### 5.4 Event Granularity and Duration
 
 Each Segment must represent an independent sound event with clearly defined sound content and a reasonable time range.
 
 When splitting events, consider sound completeness, generation-task independence, timing, and natural transitions.
+
+**General Event Granularity:**
 
 - Do not mechanically split every word, breath, or tiny movement into separate events.
 - Continuous and consistent sound activities may remain one event.
@@ -270,6 +286,16 @@ When splitting events, consider sound completeness, generation-task independence
 - The duration must realistically match the time required for the described sound-producing action. Do not extend physical actions merely to fill timeline space.
 - For multi-step actions, allocate reasonable durations to each step.
 - Keep surrounding pauses, hesitation, and emotional performance separate from the duration of the physical sound-producing action.
+
+**Duration of Vocal Events:**
+
+- The duration of each vocal event must reflect the actual audible sound, not merely the duration of the associated emotion or physical state.
+- Brief vocalizations, such as a short inhale, sigh, chuckle, gasp, or swallow, should have appropriately short durations. Do not artificially extend them.
+- Sustained vocalizations, such as slow breathing, prolonged exhalation, gentle continuous nasal breathing, controlled breathing patterns, or prolonged sobbing, may have longer durations when naturally justified.
+- For sustained vocalizations, the event duration should cover the actual audible vocalization pattern, including its natural rhythm and pauses.
+- Continuous breathing or other sustained vocalizations may remain a single event when their sound characteristics remain consistent.
+- Do not split a continuous vocalization into multiple events unless there is a meaningful change in the sound or vocal behavior.
+- Do not artificially shorten a sustained vocalization simply to keep event durations short.
 
 ## 6. type_prompt Writing Guidelines
 
@@ -359,9 +385,38 @@ For non-verbal human sound events:
 - Make the sound natural and delicate, avoiding exaggeration or mechanical presentation.
 - Each event must represent a meaningful non-verbal vocal expression, such as breathing, laughter, sighing, sniffing, or crying.
 - Do not include spoken dialogue or sounds produced by objects, object interactions, or the environment.
-- Match the duration to the actual vocal expression. Do not unnecessarily extend brief sounds.
+- Match the duration to the actual vocal expression. Do not unnecessarily extend brief sounds or artificially shorten sustained vocalizations.
 - Avoid meaningless or repetitive vocalizations added merely to increase sound density.
-- When vocalizations occur alongside dialogue, separate overlapping events are allowed when independent generation is necessary.
+
+**Brief and Sustained Vocalizations:**
+
+Non-verbal vocalizations may be either brief or sustained.
+
+Examples include:
+
+- Brief vocalizations: short inhalations, sighs, chuckles, gasps, swallows, and small vocal reactions.
+- Sustained vocalizations: slow breathing, prolonged exhalation, gentle continuous breathing, controlled breathing patterns, and prolonged sobbing.
+
+For brief vocalizations:
+
+- Describe the specific sound and its audible characteristics.
+- Keep the event duration consistent with the actual sound.
+- Do not extend a brief sound merely to represent a longer emotional reaction.
+
+For sustained vocalizations:
+
+- Describe the breathing or vocal pattern, its pace, intensity, and audible texture.
+- Specify whether the sound is continuous, rhythmic, intermittent, or gradually changing.
+- Allow the event to last as long as the described vocalization naturally requires.
+- Include natural breathing cycles and pauses when they are part of the audible pattern.
+- A sustained breathing event may last considerably longer than a brief vocal reaction. Do not impose an arbitrary short duration.
+- Do not split a continuous vocalization into multiple events unless there is a meaningful change in the sound or vocal behavior.
+
+**Character Vocalization Overlap Restriction:**
+
+- A character's non-verbal vocalizations must not overlap with that same character's dialogue.
+- When non-verbal vocalizations occur in the same scene as dialogue, schedule them before, after, or between that character's dialogue events.
+- This restriction does not prevent vocal events belonging to different characters from overlapping.
 
 Appropriate Fish Audio S2 voice performance instructions may be used, but do not mix spoken dialogue into these events.
 
@@ -476,7 +531,7 @@ Every Segment must contain exactly these five fields:
    - `action_generated_sound`
    - `environmental_sound`
 8. `type_prompt` must not be empty and must follow the language requirements in Section 6.1.
-9. Do not forcibly eliminate reasonable time overlaps.
+9. Do not forcibly eliminate reasonable time overlaps, while respecting the same-character vocal overlap restriction in Section 5.2.
 10. Do not merge dialogue from multiple characters into the same event.
 
 ## 8. Final Instructions
