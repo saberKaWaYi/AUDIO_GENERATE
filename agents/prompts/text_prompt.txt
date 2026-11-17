@@ -332,7 +332,24 @@ Continuous and consistent sound activities may remain as one event. When the sou
 
 You must write a complete description suitable for the corresponding sound generation workflow according to each event's `type`.
 
-### 6.1 human_speech
+### 6.1 Global type_prompt Language Rule
+
+All `type_prompt` fields must be written entirely in the language specified by `info.language`, without exception.
+
+This rule applies to all sound event types:
+
+- `human_speech`: Actual dialogue and all square-bracket voice performance instructions.
+- `non_verbal_human_sound`: The entire vocalization description and all voice performance instructions.
+- `action_generated_sound`: The entire action and sound description.
+- `environmental_sound`: The entire environment and sound description.
+
+Do not use another language in any part of `type_prompt`, including descriptions, explanations, and square-bracket instructions.
+
+The language specified by `info.language` takes precedence over the language used in examples or references.
+
+For example, when `info.language = "ja"`, all content in `type_prompt`, including dialogue, sound descriptions, and square-bracket voice performance instructions, must be written in Japanese.
+
+### 6.2 human_speech
 
 For human speech events:
 
@@ -342,6 +359,9 @@ For human speech events:
 - You may include performance directions such as whispering, speaking softly, gentle delivery, slow speech, intimacy, hesitation, and happiness.
 - You may use Fish Audio S2 Inline Voice Direction to control vocal performance.
 - Do not output only descriptions such as "speak gently" or "chat with the listener" without providing actual dialogue.
+- Dialogue length must be consistent with its allocated time range and a natural speaking pace. Do not compress excessive dialogue into an unrealistically short duration or artificially slow down speech to fill time.
+- Dialogue should serve the character interaction and story progression. Avoid repetitive, redundant, or meaningless lines added merely to occupy time.
+- Voice performance instructions must be clearly distinguished from spoken content. Use voice tags and natural-language descriptions only when they meaningfully improve the intended vocal performance.
 
 **Fish Audio S2 Inline Voice Direction:**
 
@@ -349,28 +369,30 @@ Fish Audio S2 supports voice performance instructions in square brackets within 
 
 Use standard English square brackets `[]` and place the performance instruction before the corresponding dialogue.
 
-For example:
+The square brackets are structural delimiters. The instructions inside them must follow the language specified by `info.language`.
+
+For example, when `info.language = "zh"`:
 
 ```text
-[whispering softly] 你好呀，今天过得怎么样？
+[轻声耳语] 你好呀，今天过得怎么样？
 ```
 
 ```text
-[speaking slowly with a warm and gentle tone] 不用着急，我会一直陪着你的。
+[用温柔亲切的语气缓慢说话] 不用着急，我会一直陪着你的。
 ```
 
 ```text
-[chuckling softly] 哈哈，原来你也发现了呀。
+[轻轻笑着] 哈哈，原来你也发现了呀。
 ```
 
 You may insert different instructions within the same dialogue according to changes in emotion and performance:
 
 ```text
-[whispering softly] 你醒了吗？
+[轻声耳语] 你醒了吗？
 
-[gentle and affectionate tone] 如果还困的话，可以再休息一会儿。
+[温柔而亲昵的语气] 如果还困的话，可以再休息一会儿。
 
-[chuckling quietly] 不逗你啦。
+[轻声笑着] 不逗你啦。
 ```
 
 Tag usage rules:
@@ -383,12 +405,12 @@ Tag usage rules:
 6. Do not use contradictory performance instructions.
 7. Do not stack too many tags, as this may affect naturalness.
 8. Place tags before the dialogue they are intended to control. You may switch performance styles within the dialogue when necessary.
-9. Official examples such as `[chuckle]` and `[emphasis]` may be used as references. The actual performance of other natural-language descriptions depends on the model's capabilities. Do not assume that every word has an independent special effect.
+9. Official examples such as `[chuckle]` and `[emphasis]` may be used as references. The actual performance of other natural-language descriptions depends on the model's capabilities. Do not assume that every word has an independent special effect. All generated instructions must still follow the language specified by `info.language`.
 10. The final content must be directly usable as the `text` input for Fish Audio TTS.
 
-Note: Square-bracket tags do not change the dialogue language requirement. Regardless of the language used in the tags, the actual spoken content must strictly follow `info.language`.
+Note: Square-bracket tags do not change the dialogue language requirement. Both the actual spoken content and all voice performance instructions must strictly follow `info.language`.
 
-### 6.2 non_verbal_human_sound
+### 6.3 non_verbal_human_sound
 
 For non-verbal human sound events:
 
@@ -397,6 +419,11 @@ For non-verbal human sound events:
 - Describe the sound's intensity, rhythm, duration, and variations.
 - Consider the character's current emotions and physical state.
 - Make the sound as natural and delicate as possible. Avoid exaggeration or mechanical presentation.
+- Each event must represent a meaningful non-verbal vocal expression produced by the character, such as breathing, laughter, sighing, sniffing, or crying.
+- Non-verbal vocal events must not contain spoken dialogue or sounds produced by objects, object interactions, or the environment.
+- The duration of each vocal event must realistically match the described vocal expression. Do not extend brief vocal expressions unnecessarily.
+- Avoid adding meaningless or repetitive vocalizations merely to increase sound density.
+- When non-verbal vocalizations occur alongside dialogue, they may be represented as separate overlapping events when independent generation is necessary.
 
 For example:
 
@@ -407,7 +434,7 @@ For example:
 
 You may use appropriate Fish Audio S2 voice performance instructions, but do not mix spoken dialogue into non-verbal human sound events.
 
-### 6.3 action_generated_sound
+### 6.4 action_generated_sound
 
 For sounds produced by character actions:
 
@@ -433,7 +460,7 @@ Instead, provide a specific description:
 Use a soft, small ear-cleaning tool to perform slow and gentle scraping and touching movements around the outer ear. The sound should be delicate and subtle, with a clear friction texture. Maintain a steady rhythm and avoid sudden sharp or piercing sounds.
 ```
 
-### 6.4 environmental_sound
+### 6.5 environmental_sound
 
 For environmental sounds:
 
@@ -452,7 +479,7 @@ For example:
 A quiet summer night in a forest. A gentle breeze continuously moves through the leaves, producing soft and delicate rustling sounds. Occasional insect calls can be heard in the distance, clear but not intrusive. The overall environment is quiet and natural, with soft layers of sound.
 ```
 
-### 6.5 General Prompt Requirements
+### 6.6 General Prompt Requirements
 
 1. Descriptions must be specific, clear, and actionable.
 2. Do not use only abstract emotional words.
