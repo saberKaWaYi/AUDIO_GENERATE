@@ -5,6 +5,8 @@ from app.api.task_req import CreateTaskRequest
 from app.api.task_res import (
     CreateTaskResponse,
     ReleaseTaskResponse,
+    TaskListResponse,
+    TaskListItem,
     TaskQueryResponse,
     TaskSubtaskResponse,
 )
@@ -109,12 +111,7 @@ def release_task(mongo, subtask_id: str) -> ReleaseTaskResponse | None:
     return ReleaseTaskResponse(subtask_id=subtask_id, status=TaskStatus.PENDING)
 
 
-def query_task(mongo, task_id: str, user_id: int) -> TaskQueryResponse | None:
-    query = {"task_id": task_id, "user_id": user_id, "is_deleted": False}
-    docs = mongo.find_documents(AUDIO_TASKS_COLLECTION, query, sort=[("create_time", 1)])
-    if not docs:
-        return None
-
+def _build_task_response(task_id: str, docs: list[dict]) -> TaskQueryResponse:
     subtasks = [
         TaskSubtaskResponse(
             subtask_id=doc["subtask_id"],
@@ -129,9 +126,46 @@ def query_task(mongo, task_id: str, user_id: int) -> TaskQueryResponse | None:
     ]
     return TaskQueryResponse(
         task_id=task_id,
-        user_id=user_id,
+        user_id=docs[0]["user_id"],
         status=docs[0]["status"],
         subtasks=subtasks,
         create_time=docs[0]["create_time"],
         update_time=docs[0]["update_time"],
     )
+
+
+def query_task(mongo, task_id: str, user_id: int) -> TaskQueryResponse | None:
+    query = {"task_id": task_id, "user_id": user_id, "is_deleted": False}
+    docs = mongo.find_documents(AUDIO_TASKS_COLLECTION, query, sort=[("create_time", 1)])
+    if not docs:
+        return None
+    return _build_task_response(task_id, docs)
+
+
+def query_task_detail(mongo, task_id: str) -> TaskQueryResponse | None:
+    query = {"task_id": task_id, "is_deleted": False}
+    docs = mongo.find_documents(AUDIO_TASKS_COLLECTION, query, sort=[("create_time", 1)])
+    if not docs:
+        return None
+    return _build_task_response(task_id, docs)
+
+
+def list_tasks(mongo) -> TaskListResponse:
+    docs = mongo.find_documents(AUDIO_TASKS_COLLECTION, {"is_deleted": False})
+    groups: dict[str, list[dict]] = {}
+    for doc in docs:
+        groups.setdefault(doc["task_id"], []).append(doc)
+
+    items = [
+        TaskListItem(
+            task_id=task_id,
+            user_id=subtasks[0]["user_id"],
+            status=TaskStatus(subtasks[0]["status"]),
+            subtask_count=len(subtasks),
+            create_time=subtasks[0]["create_time"],
+            update_time=subtasks[0]["update_time"],
+        )
+        for task_id, subtasks in groups.items()
+    ]
+    items.sort(key=lambda item: item.create_time, reverse=True)
+    return TaskListResponse(items=items, total=len(items))

@@ -17,6 +17,22 @@ class ReleaseTaskResponse(BaseModel):
     status: TaskStatus = Field(..., description="放行后的状态")
 
 
+class TaskListItem(BaseModel):
+
+    task_id: str = Field(..., description="任务标识")
+    user_id: int = Field(..., description="提交者身份")
+    status: TaskStatus = Field(..., description="任务代表状态")
+    subtask_count: int = Field(..., description="子任务数量")
+    create_time: datetime = Field(..., description="创建时间")
+    update_time: datetime = Field(..., description="更新时间")
+
+
+class TaskListResponse(BaseModel):
+
+    items: list[TaskListItem] = Field(..., description="任务列表")
+    total: int = Field(..., description="任务总数")
+
+
 class TaskSubtaskResponse(BaseModel):
 
     subtask_id: str = Field(..., description="子任务标识")
