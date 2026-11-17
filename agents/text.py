@@ -104,4 +104,10 @@ def run_text(subtask: dict) -> TextOutcome:
     segments = payload["segments"]
     _validate_segments(segments)
     timeline = TextTimeline.model_validate({"segments": segments})
+    total_seconds = subtask["info"]["duration_minutes"] * 60
+    max_end_time = max(segment.end_time for segment in timeline.segments)
+    if max_end_time > total_seconds:
+        raise ValueError(
+            f"片段结束时间超出作品总时长：{max_end_time} > {total_seconds}"
+        )
     return TextOutcome(result, timeline.segments)
