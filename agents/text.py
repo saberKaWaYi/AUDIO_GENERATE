@@ -18,6 +18,7 @@ REQUIRED_FIELDS = {
     "type",
     "reference_id",
     "type_prompt",
+    "polling_count",
 }
 
 
@@ -29,6 +30,7 @@ class TextSegment(BaseModel):
     type: str
     reference_id: str | None
     type_prompt: str = Field(min_length=1)
+    polling_count: int | None
 
     @field_validator("type")
     @classmethod
@@ -51,6 +53,17 @@ class TextSegment(BaseModel):
             raise ValueError(f"{self.type} 必须指定 reference_id")
         if self.type in {"action_generated_sound", "environmental_sound"} and self.reference_id is not None:
             raise ValueError(f"{self.type} 的 reference_id 必须为 None")
+        return self
+
+    @model_validator(mode="after")
+    def validate_polling_count(self) -> "TextSegment":
+        if self.type in {"human_speech", "non_verbal_human_sound"}:
+            if self.polling_count is not None:
+                raise ValueError(f"{self.type} 的 polling_count 必须为 None")
+        elif self.polling_count is None:
+            raise ValueError(f"{self.type} 必须指定 polling_count")
+        elif self.polling_count < 1:
+            raise ValueError(f"{self.type} 的 polling_count 必须为正整数：{self.polling_count}")
         return self
 
 

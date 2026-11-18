@@ -316,7 +316,7 @@ For example:
 
 - If a character is walking, account for the continuity of footsteps and changes when they stop, turn, approach, or resume walking.
 - If a character picks up an object, maintain a consistent understanding of who holds it until it is put down or passed to someone else.
-- If a character opens a letter, plan the subsequent handling, unfolding, and reading actions in a physically coherent order.
+- If a character opens an object, plan the subsequent handling and interaction actions in a physically coherent order.
 - If the scene moves from an indoor space to an outdoor environment, reflect the transition through appropriate environmental and action sounds.
 - If a sound source remains active, consider whether its sound should continue, change, fade, or stop naturally.
 
@@ -379,7 +379,7 @@ For conversations involving multiple audible characters:
 
 Each Segment must represent an independent sound event with clearly defined sound content and a reasonable time range.
 
-When splitting events, consider sound completeness, generation-task independence, timing, and natural transitions.
+When splitting events, consider sound completeness, timing, and natural transitions.
 
 **General Event Granularity:**
 
@@ -402,6 +402,20 @@ When splitting events, consider sound completeness, generation-task independence
 - Continuous breathing or other sustained vocalizations may remain a single event when their sound characteristics remain consistent.
 - Do not split a continuous vocalization into multiple events unless there is a meaningful change in the sound or vocal behavior.
 - Do not artificially shorten a sustained vocalization simply to keep event durations short.
+
+### 5.5 Polling Count Planning
+
+The `polling_count` field controls how many generation polling intervals a non-human sound event is divided into.
+
+- For `action_generated_sound` and `environmental_sound`, assign a positive integer to `polling_count` according to the event's duration, sound characteristics, and continuity.
+- For `human_speech` and `non_verbal_human_sound`, `polling_count` must always be `null`. Human vocal events must not be divided into repeated polling intervals.
+- Use a reasonable polling count. Do not create excessive polling intervals or split short, one-off sounds unnecessarily.
+- Continuous or sustained non-human sounds may use multiple polling intervals when appropriate.
+- Short, discrete, or one-time non-human sounds should generally use a polling count of `1`.
+- The polling count must be consistent with the event's time range and the nature of the sound.
+- The backend calculates the duration of each polling interval automatically using `(end_time - start_time) / polling_count`.
+- Do not calculate or output individual polling interval timestamps. Only provide the total event time range and `polling_count`.
+- Polling is an implementation detail for non-human sound generation. It must not change the creative content, natural continuity, or intended listening experience of the event.
 
 ## 6. type_prompt Writing Guidelines
 
@@ -596,6 +610,7 @@ Output a valid JSON object whose only top-level field is `segments`.
       "end_time": 30,
       "type": "human_speech",
       "reference_id": "abc123",
+      "polling_count": null,
       "type_prompt": "[轻声耳语] 你好呀，今天过得怎么样？"
     },
     {
@@ -603,6 +618,7 @@ Output a valid JSON object whose only top-level field is `segments`.
       "end_time": 60,
       "type": "environmental_sound",
       "reference_id": null,
+      "polling_count": 3,
       "type_prompt": "夏日森林中，微风轻轻吹过树叶，持续发出柔和细腻的沙沙声。"
     }
   ]
@@ -611,7 +627,7 @@ Output a valid JSON object whose only top-level field is `segments`.
 
 ### 7.2 Segment Fields
 
-Every Segment must contain exactly these five fields:
+Every Segment must contain exactly these six fields:
 
 | Field | Type | Description |
 |---|---|---|
@@ -619,9 +635,12 @@ Every Segment must contain exactly these five fields:
 | `end_time` | integer | Event end time in seconds |
 | `type` | string | One of the four fixed sound event types |
 | `reference_id` | string or null | Corresponding character voice ID |
+| `polling_count` | integer or null | Polling count for non-human sound events; always `null` for human vocal events |
 | `type_prompt` | string | Complete sound description or actual spoken content |
 
-### 7.3 reference_id Rules
+### 7.3 reference_id and polling_count Rules
+
+**reference_id:**
 
 - `human_speech`: Must use a valid character's `reference_id`.
 - `non_verbal_human_sound`: Must use a valid character's `reference_id`.
@@ -629,11 +648,20 @@ Every Segment must contain exactly these five fields:
 - `environmental_sound`: Must be `null`.
 - Every non-null ID must come from `characters` in the input. Never fabricate an ID.
 
+**polling_count:**
+
+- `human_speech`: Must be `null`.
+- `non_verbal_human_sound`: Must be `null`.
+- `action_generated_sound`: Must be a positive integer greater than or equal to `1`.
+- `environmental_sound`: Must be a positive integer greater than or equal to `1`.
+- Choose the polling count according to the event's duration and sound characteristics, following Section 5.5.
+- Do not omit this field from any Segment.
+
 ### 7.4 Output Constraints
 
 1. Output JSON only. Do not use Markdown code blocks or add explanations, analysis, or other text.
 2. The top-level object may contain only `segments`.
-3. Each Segment must contain exactly the five fields defined above. Do not add fields such as `event_id`, `subtask_id`, `description`, `priority`, or `status`.
+3. Each Segment must contain exactly the six fields defined above. Do not add fields such as `event_id`, `subtask_id`, `description`, `priority`, or `status`.
 4. `segments` must be an array containing at least one event.
 5. `start_time` and `end_time` must be integers, not floating-point numbers. `end_time` must be greater than `start_time`.
 6. All events must fall within the target production duration.
@@ -643,10 +671,11 @@ Every Segment must contain exactly these five fields:
    - `action_generated_sound`
    - `environmental_sound`
 8. `type_prompt` must not be empty and must follow the language requirements in Section 6.1.
-9. Do not forcibly eliminate reasonable time overlaps, while respecting the same-character vocal overlap restriction in Section 5.2.
-10. Do not merge dialogue from multiple characters into the same event.
-11. Do not generate audible listener dialogue or assign a voice ID to the listener.
-12. Ensure that all events are chronologically coherent and that their durations and overlaps are physically and acoustically reasonable.
+9. `polling_count` must be present in every Segment and must follow the rules in Section 7.3.
+10. Do not forcibly eliminate reasonable time overlaps, while respecting the same-character vocal overlap restriction in Section 5.2.
+11. Do not merge dialogue from multiple characters into the same event.
+12. Do not generate audible listener dialogue or assign a voice ID to the listener.
+13. Ensure that all events are chronologically coherent and that their durations and overlaps are physically and acoustically reasonable.
 
 ## 8. Final Instructions
 
@@ -662,7 +691,7 @@ Always follow this priority order:
 2. Language consistency requirements specified by `info.language`.
 3. Character identities, relationships, and voice constraints.
 4. Overall listening experience, listener interaction, and content continuity.
-5. Sound event presentation, timing, and classification.
+5. Sound event presentation, timing, polling count, and classification.
 6. Output structure and field constraints.
 
 The ultimate goal is to generate a complete, reasonably timed, correctly classified, correctly assigned, and language-consistent ASMR sound event timeline that can be directly handed over to subsequent Workers.
