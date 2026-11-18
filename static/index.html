@@ -250,11 +250,10 @@ var STATUS_META={
   debug:{label:"调试",color:"#6b7280"}
 };
 var LANES=[
-  {key:"bg",label:"背景音乐",tag:"轨 1 · 背景",type:null,color:"#6366f1"},
-  {key:"human_speech",label:"人声对白",tag:"轨 2 · 文本",type:"human_speech",color:"#2563eb"},
-  {key:"non_verbal_human_sound",label:"非语言人声",tag:"轨 3 · 文本",type:"non_verbal_human_sound",color:"#0891b2"},
-  {key:"action_generated_sound",label:"动作音",tag:"轨 4 · 文本",type:"action_generated_sound",color:"#ea580c"},
-  {key:"environmental_sound",label:"环境音",tag:"轨 5 · 文本",type:"environmental_sound",color:"#16a34a"}
+  {key:"human_speech",label:"人声对白",tag:"轨 1 · 文本",type:"human_speech",color:"#2563eb"},
+  {key:"non_verbal_human_sound",label:"非语言人声",tag:"轨 2 · 文本",type:"non_verbal_human_sound",color:"#0891b2"},
+  {key:"action_generated_sound",label:"动作音",tag:"轨 3 · 文本",type:"action_generated_sound",color:"#ea580c"},
+  {key:"environmental_sound",label:"环境音",tag:"轨 4 · 文本",type:"environmental_sound",color:"#16a34a"}
 ];
 var TYPE_CN={human_speech:"人声对白",non_verbal_human_sound:"非语言人声",action_generated_sound:"动作音",environmental_sound:"环境音"};
 
@@ -404,31 +403,18 @@ function filterTaskTable(){
 
 function parseResult(text){if(!text||typeof text!=="string")return null;try{return JSON.parse(text)}catch(e){return null}}
 function buildTimeline(detail){
-  var tracks=[],segments=[],musicEnd=0,textEnd=0,declared=0;
+  var segments=[],textEnd=0,declared=0;
   (detail.subtasks||[]).forEach(function(sub){
     if(sub.info&&sub.info.duration_minutes)declared=Math.max(declared,sub.info.duration_minutes*60);
     var data=parseResult(sub.result&&sub.result.result_text);
-    if(sub.type==="ASMR_BACKEND_MUSIC"&&data&&Array.isArray(data.tracks)){
-      var acc=0;
-      data.tracks.forEach(function(t,i){var d=Number(t.duration_seconds)||0;tracks.push({prompt:t.prompt,index:i+1,start:acc,end:acc+d,duration:d});acc+=d});
-      musicEnd=acc;
-    }
     if(sub.type==="ASMR_TEXT"&&data&&Array.isArray(data.segments)){
       segments=data.segments;
       data.segments.forEach(function(s){textEnd=Math.max(textEnd,Number(s.end_time)||0)});
     }
   });
-  return {tracks:tracks,segments:segments,total:Math.max(musicEnd,textEnd,declared,60)};
+  return {segments:segments,total:Math.max(textEnd,declared,60)};
 }
 function laneBlocks(lane,tl){
-  if(lane.key==="bg"){
-    if(!tl.tracks.length)return '<div class="tl-none">该任务无背景音乐结果</div>';
-    return tl.tracks.map(function(t){
-      var left=t.start/tl.total*100,width=Math.max(t.duration/tl.total*100,0.6);
-      var tip={h:"背景音乐 · 轨 1",color:lane.color,kv:[["区间",fmtSec(t.start)+" - "+fmtSec(t.end)],["时长",t.duration+" 秒"],["序号","第 "+t.index+" 段"]],p:t.prompt};
-      return blockHtml(left,width,lane.color,t.duration+"s",tip);
-    }).join("");
-  }
   var segs=tl.segments.filter(function(s){return s.type===lane.type});
   if(!segs.length)return '<div class="tl-none">无此类文本片段</div>';
   return segs.map(function(s){
@@ -453,7 +439,7 @@ function timelineHtml(detail){
     return '<div class="tl-row"><div class="tl-lane-label"><b>'+esc(lane.label)+"</b><span>"+esc(lane.tag)+"</span></div>"
       +'<div class="tl-track">'+laneBlocks(lane,tl)+"</div></div>";
   }).join("");
-  return '<div class="timeline">'+scale+rows+'</div><div class="tl-note">五条轨道共享同一时间刻度：轨 1 为背景音乐（按曲目时长顺序铺排），轨 2-5 为文本拆解出的四类声音（按片段起止时间定位）。将鼠标移到色块上可查看完整详情。</div>';
+  return '<div class="timeline">'+scale+rows+'</div><div class="tl-note">四条轨道共享同一时间刻度，对应文本拆解出的四类声音（按片段起止时间定位）。将鼠标移到色块上可查看完整详情。</div>';
 }
 
 async function renderTaskDetail(){
@@ -571,7 +557,7 @@ function renderCreate(){
     +'<div class="card"><div class="card-h"><span class="card-title">任务参数</span></div><div class="card-b">'
     +'<div class="form">'
     +'<div class="field"><label>用户 ID</label><input type="number" id="cUser" min="1" value="'+esc(state.userId)+'"></div>'
-    +'<div class="field"><label>任务类型</label><select id="cType"><option value="ASMR_TEXT">ASMR_TEXT · 文本拆解</option><option value="ASMR_BACKEND_MUSIC">ASMR_BACKEND_MUSIC · 背景音乐</option></select></div>'
+    +'<div class="field"><label>任务类型</label><input type="text" value="ASMR_TEXT · 文本拆解" disabled></div>'
     +'<div class="field full"><label>作品标题</label><input type="text" id="cTitle" placeholder="作品标题"></div>'
     +'<div class="field"><label>目标时长（分钟）</label><input type="number" id="cDur" min="1" value="15"></div>'
     +'<div class="field"><label>语言</label><select id="cLang"><option value="zh">zh · 中文</option><option value="ja">ja · 日语</option><option value="en">en · 英语</option><option value="ko">ko · 韩语</option></select></div>'
@@ -601,7 +587,7 @@ async function submitTask(){
   if(!refs.length){toast("请至少勾选一个角色","bad");return}
   var payload={
     user_id:userId,
-    type:g("cType").value,
+    type:"ASMR_TEXT",
     title:g("cTitle").value.trim(),
     reference_ids:refs,
     theme:g("cTheme").value.trim(),
