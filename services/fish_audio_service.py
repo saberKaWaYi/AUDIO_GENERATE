@@ -39,6 +39,7 @@ class FishAudioService:
                     "text": text,
                     "reference_id": reference_id,
                     "format": "mp3",
+                    "condition_on_previous_chunks": True,
                 },
                 timeout=fish_audio_settings.fish_audio_timeout,
             )

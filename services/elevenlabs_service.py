@@ -42,12 +42,12 @@ class ElevenLabsService:
                 logger.warning("ElevenLabs 账号额度耗尽，切换下一个，key=%s***", api_key[:8])
         raise ElevenLabsExhaustedError("所有 ElevenLabs 账号额度已耗尽")
 
-    def compose_sound(self, text: str, duration_seconds: float) -> bytes:
+    def compose_sound(self, text: str, duration_seconds: float, loop: bool) -> bytes:
         for api_key in self._api_keys:
             if api_key in self._exhausted:
                 continue
             try:
-                return self._compose_sound(text, api_key, duration_seconds)
+                return self._compose_sound(text, api_key, duration_seconds, loop)
             except ElevenLabsExhaustedError:
                 self._exhausted.add(api_key)
                 logger.warning("ElevenLabs 账号额度耗尽，切换下一个，key=%s***", api_key[:8])
@@ -85,7 +85,7 @@ class ElevenLabsService:
             raise ElevenLabsError("ElevenLabs 返回体不是音频")
         return response.content
 
-    def _compose_sound(self, text: str, api_key: str, duration_seconds: float) -> bytes:
+    def _compose_sound(self, text: str, api_key: str, duration_seconds: float, loop: bool) -> bytes:
         url = f"{elevenlabs_settings.elevenlabs_base_url.rstrip('/')}/v1/sound-generation"
         try:
             response = httpx.post(
@@ -95,6 +95,7 @@ class ElevenLabsService:
                 json={
                     "text": text,
                     "duration_seconds": duration_seconds,
+                    "loop": loop,
                 },
                 timeout=elevenlabs_settings.elevenlabs_timeout,
             )

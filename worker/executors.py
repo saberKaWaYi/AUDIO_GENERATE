@@ -49,7 +49,8 @@ def run_environment(subtask: dict) -> str:
 
     info = subtask["info"]
     duration_seconds = (info["end_time"] - info["start_time"]) / info["polling_count"]
-    audio = elevenlabs_service.compose_sound(info["type_prompt"], duration_seconds)
+    loop = info["type"] == "environmental_sound"
+    audio = elevenlabs_service.compose_sound(info["type_prompt"], duration_seconds, loop)
     save_text_audio(subtask, audio)
     return ENVIRONMENT_SUCCESS
 
