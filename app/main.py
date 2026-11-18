@@ -19,6 +19,9 @@ from models.schemas_task import AUDIO_TASKS_COLLECTION, AUDIO_TASK_INDEXES
 from app.api import character, task
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
+AUDIO_ROOT = Path(web_settings.audio_root_dir)
+if not AUDIO_ROOT.is_absolute():
+    AUDIO_ROOT = STATIC_DIR.parent / AUDIO_ROOT
 
 
 @asynccontextmanager
@@ -83,5 +86,10 @@ app.include_router(
 )
 app.include_router(
     task.router, prefix="/api", tags=["task"], dependencies=[Depends(verify_api_key)]
+)
+app.mount(
+    web_settings.audio_url_path,
+    StaticFiles(directory=AUDIO_ROOT),
+    name="audio",
 )
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")

@@ -25,6 +25,10 @@ services:
       - FISH_AUDIO_BASE_URL=${FISH_AUDIO_BASE_URL:-https://api.fish.audio}
       - FISH_AUDIO_API_KEY=${FISH_AUDIO_API_KEY:?Set FISH_AUDIO_API_KEY}
       - FISH_AUDIO_TIMEOUT=${FISH_AUDIO_TIMEOUT:-30}
+      - AUDIO_ROOT_DIR=${AUDIO_ROOT_DIR:-data}
+      - AUDIO_URL_PATH=${AUDIO_URL_PATH:-/data}
+    volumes:
+      - ./data:/app/data
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/docs', timeout=3)"]
       interval: 10s

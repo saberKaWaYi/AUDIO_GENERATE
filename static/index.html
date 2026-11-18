@@ -234,7 +234,7 @@ tbody tr:hover{background:#fafbfc}
 </div></div>
 <div class="toast" id="toast"></div>
 <script>
-var state={key:"",base:"",view:"overview",userId:1,tasks:[],detail:null,detailTaskId:"",characters:[],charTotal:0,charPage:1};
+var state={key:"",base:"",audioPath:"/data",view:"overview",userId:1,tasks:[],detail:null,detailTaskId:"",characters:[],charTotal:0,charPage:1};
 var TYPE_META={
   ASMR_TEXT:{label:"文本拆解"},
   ASMR_BACKEND_MUSIC:{label:"背景音乐"},
@@ -256,9 +256,15 @@ var LANES=[
   {key:"environmental_sound",label:"环境音",tag:"轨 4 · 文本",type:"environmental_sound",color:"#16a34a"}
 ];
 var TYPE_CN={human_speech:"人声对白",non_verbal_human_sound:"非语言人声",action_generated_sound:"动作音",environmental_sound:"环境音"};
+var AUDIO_SUBDIR={ASMR_BACKEND_SUBMUSIC:"music",ASMR_MUSIC_PERSON:"text",ASMR_MUSIC_ENVIRONMENT:"text"};
 
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]})}
 function apiBase(){if(state.base)return state.base.replace(/\/$/,"");if(location.protocol==="file:")return "http://127.0.0.1:8002";return location.origin}
+function audioBase(){var p=state.audioPath.replace(/^\/+|\/+$/g,"");return apiBase()+"/"+p}
+function audioUrl(taskId,sub){
+  var dir=AUDIO_SUBDIR[sub.type];
+  return audioBase()+"/"+encodeURIComponent(taskId)+"/"+dir+"/"+encodeURIComponent(sub.subtask_id)+".mp3";
+}
 function p2(n){return String(n).padStart(2,"0")}
 function fmtTime(v){if(!v)return "-";var d=new Date(v);if(isNaN(d))return String(v);return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())+" "+p2(d.getHours())+":"+p2(d.getMinutes())}
 function fmtSec(sec){sec=Math.round(sec);var m=Math.floor(sec/60);var s=sec%60;return m+":"+p2(s)}
@@ -283,6 +289,7 @@ async function api(path,opts){
 function boot(){
   state.key=localStorage.getItem("sonora_api_key")||localStorage.getItem("audio_api_key")||"";
   state.base=localStorage.getItem("sonora_api_base")||"";
+  state.audioPath=localStorage.getItem("sonora_audio_path")||"/data";
   var uid=localStorage.getItem("sonora_user_id")||"1";
   state.userId=parseInt(uid,10)||1;
   document.getElementById("uidInput").value=state.userId;
@@ -472,19 +479,20 @@ async function renderTaskDetail(){
       +"</div>";
     html+='<div class="card"><div class="card-h"><span class="card-title">子任务状态分布</span></div><div class="card-b">'+distribHtml(cnt,subs.length)+"</div></div>";
     html+='<div class="card"><div class="card-h"><span class="card-title">声音时间轴 <span class="card-hint">5 条轨道 · 悬停查看详情</span></span></div><div class="card-b">'+timelineHtml(d)+"</div></div>";
-    html+='<div class="card"><div class="card-h"><span class="card-title">子任务明细</span></div><div class="card-b" style="padding:0">'+subTable(subs)+"</div></div>";
+    html+='<div class="card"><div class="card-h"><span class="card-title">子任务明细</span></div><div class="card-b" style="padding:0">'+subTable(subs,d.task_id)+"</div></div>";
     body.innerHTML=html;
     bindSubActions(body);
   }catch(e){body.innerHTML='<div class="err">'+esc(e.message)+"</div>"}
 }
 function kvRow(k,v){return '<tr><td style="width:150px;color:var(--text-2)">'+esc(k)+"</td><td>"+v+"</td></tr>"}
-function subTable(subs){
+function subTable(subs,taskId){
   if(!subs.length)return empty("该任务暂无子任务");
   var h='<table><thead><tr><th>子任务 ID</th><th>类型</th><th>状态</th><th>摘要</th><th>更新</th><th>操作</th></tr></thead><tbody>';
   subs.forEach(function(s){
     var info=s.info||{};
     var summary=info.title||info.prompt||info.type_prompt||"-";
     var acts='<span class="link" onclick="showResult(\''+esc(s.subtask_id)+'\')">结果</span>';
+    if(s.status==="success"&&AUDIO_SUBDIR[s.type])acts+=' <button class="btn sm" style="margin-left:8px" onclick="playAudio(\''+esc(taskId)+'\',\''+esc(s.subtask_id)+'\',\''+esc(s.type)+'\')">播放</button>';
     if(s.status==="debug")acts+=' <button class="btn sm primary" style="margin-left:8px" onclick="releaseSub(\''+esc(s.subtask_id)+'\')">放行</button>';
     h+="<tr>";
     h+='<td class="cell-id" title="'+esc(s.subtask_id)+'">'+esc(s.subtask_id.slice(0,10))+"…</td>";
@@ -534,6 +542,14 @@ function showResult(subId){
   var pretty=raw;
   try{pretty=JSON.stringify(JSON.parse(raw),null,2)}catch(e){}
   openDrawer("子任务结果 · "+((TYPE_META[sub.type]||{}).label||""),'<div style="margin-bottom:12px;color:var(--text-2);font-size:12.5px">'+esc(sub.subtask_id)+"</div>"+'<div class="code-block">'+esc(pretty||"（空）")+"</div>");
+}
+function playAudio(taskId,subId,type){
+  var sub={type:type,subtask_id:subId};
+  var url=audioUrl(taskId,sub);
+  var html='<div style="margin-bottom:14px;color:var(--text-2);font-size:12.5px">'+esc(subId)+"</div>"
+    +'<audio controls autoplay style="width:100%" src="'+esc(url)+'"></audio>'
+    +'<div class="hint" style="margin-top:12px;word-break:break-all">'+esc(url)+"</div>";
+  openDrawer("播放 · "+((TYPE_META[type]||{}).label||""),html);
 }
 async function releaseSub(subId){
   try{
@@ -662,6 +678,7 @@ function renderSettings(){
     +'<div class="form" style="grid-template-columns:1fr">'
     +'<div class="field"><label>API 地址</label><input id="setBase" value="'+esc(env)+'" placeholder="http://127.0.0.1:8002"><div class="hint">服务根地址，不含 /api 后缀。留空则使用当前站点地址</div></div>'
     +'<div class="field"><label>API Key</label><input id="setKey" type="password" value="'+esc(state.key)+'" placeholder="填写 BACKEND_API_KEY"><div class="hint">对应后端 .env 中的 BACKEND_API_KEY，通过 X-API-Key 请求头发送</div></div>'
+    +'<div class="field"><label>音频相对路径</label><input id="setAudio" value="'+esc(state.audioPath)+'" placeholder="/data"><div class="hint">后端挂载音频目录的相对路径，对应 .env 中的 AUDIO_URL_PATH</div></div>'
     +'</div><div style="margin-top:18px;display:flex;gap:10px"><button class="btn primary" onclick="saveSettings()">保存</button><button class="btn" onclick="testConn()">验证连接</button></div>'
     +'<div id="setResult" style="margin-top:14px"></div>'
     +'</div></div>';
@@ -669,10 +686,12 @@ function renderSettings(){
 function saveSettings(){
   var base=document.getElementById("setBase").value.trim();
   var key=document.getElementById("setKey").value.trim();
+  var audio=document.getElementById("setAudio").value.trim()||"/data";
   if(base&&base===location.origin)base="";
-  state.base=base;state.key=key;
+  state.base=base;state.key=key;state.audioPath=audio;
   localStorage.setItem("sonora_api_base",base);
   localStorage.setItem("sonora_api_key",key);
+  localStorage.setItem("sonora_audio_path",audio);
   updateConn();
   toast("已保存","ok");
 }

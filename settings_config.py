@@ -25,6 +25,8 @@ class Settings:
     web_name = web_settings.web_name
     web_version = web_settings.web_version
     web_api_key = web_settings.web_api_key
+    audio_root_dir = web_settings.audio_root_dir
+    audio_url_path = web_settings.audio_url_path
 
     mongodb_host = mongo_settings.mongodb_host
     mongodb_port = mongo_settings.mongodb_port
