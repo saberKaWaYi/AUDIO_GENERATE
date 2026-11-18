@@ -190,6 +190,18 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.65}
 .kv .v{font-family:var(--mono);word-break:break-all}
 .code-block{background:var(--bg);border:1px solid var(--line-soft);border-radius:10px;padding:14px;font:12px/1.65 var(--mono);color:#b8c4d0;white-space:pre-wrap;word-break:break-word;max-height:48vh;overflow:auto}
 .section-cap{font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin:18px 0 9px}
+.tl{font-size:12px}
+.tl .ruler,.tl .row{display:grid;grid-template-columns:150px 1fr;gap:9px;align-items:center}
+.tl .ruler{margin-bottom:4px;color:var(--text-3);font-size:10.5px}
+.tl .ticks{position:relative;height:14px}
+.tl .tick{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.tl .row{min-height:22px}
+.tl .lbl{display:flex;align-items:center;gap:6px;overflow:hidden;white-space:nowrap}
+.tl .sw{width:8px;height:8px;border-radius:2px;flex:none}
+.tl .mt{font:11px var(--mono);color:var(--text-3)}
+.tl .track{position:relative;height:14px;background:var(--panel-2);border-radius:4px}
+.tl .bar{position:absolute;top:0;height:14px;border-radius:4px;color:#07130f;font-size:10px;line-height:14px;text-align:center;overflow:hidden}
+.tl .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;font-size:11px;color:var(--text-2)}
 
 /* ---------- Toast ---------- */
 .toasts{position:fixed;top:18px;right:18px;display:flex;flex-direction:column;gap:10px;z-index:40}
@@ -632,13 +644,54 @@ function renderSubtasks(box,data){
   box.innerHTML=head+rows;
   box.querySelectorAll("[data-release]").forEach(b=>b.addEventListener("click",()=>release(b.dataset.release)));
   box.querySelectorAll("[data-raw]").forEach(c=>c.addEventListener("click",()=>{
-    let parsed;try{parsed=JSON.stringify(JSON.parse(c.dataset.raw),null,2);}catch(e){parsed=c.dataset.raw;}
-    openDrawer("子任务结果",'<div class="code-block">'+esc(parsed)+"</div>");
+    let obj;try{obj=JSON.parse(c.dataset.raw);}catch(e){obj=null;}
+    const tl=obj?timelineHtml(obj):null;
+    const parsed=obj?JSON.stringify(obj,null,2):c.dataset.raw;
+    const body=(tl||"")+'<div class="section-cap">原始结果</div><div class="code-block">'+esc(parsed)+"</div>";
+    openDrawer("子任务结果",body);
   }));
 }
 function infoSummaryText(s){
   const i=s.info||{};
   return i.title||i.prompt||i.type_prompt||s.type;
+}
+function timelineHtml(result){
+  let payload;
+  try{payload=JSON.parse(result&&result.result_text||"");}catch(e){return null;}
+  if(!payload||typeof payload!=="object")return null;
+  const fmtT=v=>Math.round(v)+"s";
+  const grid=ticks=>(ticks.map(t=>'<span class="tick" style="left:'+(t.pct*100).toFixed(2)+'%">'+fmtT(t.v)+"</span>").join(""));
+  const ticksFor=total=>[0,.25,.5,.75,1].map(p=>({pct:p,v:total*p}));
+  if(Array.isArray(payload.segments)){
+    const segs=payload.segments;
+    if(!segs.length)return null;
+    const total=Math.max.apply(null,segs.map(s=>Number(s.end_time)||0));
+    if(!total)return null;
+    const C={human_speech:"#6aa5dc",non_verbal_human_sound:"#8f7ad6",action_generated_sound:"#d9a24e",environmental_sound:"#3fd0a4"};
+    const rows=segs.map(s=>{
+      const st=Number(s.start_time)||0,en=Number(s.end_time)||0;
+      const col=C[s.type]||"#8b96a5";
+      const label=esc(String(s.type_prompt||"").replace(/\s+/g," ").slice(0,18));
+      const pc=s.polling_count!=null?" ×"+s.polling_count:"";
+      return '<div class="row"><div class="lbl"><span class="sw" style="background:'+col+'"></span><span class="mt">'+st+"–"+en+"s</span>"+label+pc+'</div><div class="track"><div class="bar" style="left:'+(st/total*100).toFixed(2)+"%;width:"+((en-st)/total*100).toFixed(2)+"%;background:"+col+'"></div></div></div>';
+    }).join("");
+    const lg=Object.keys(C).map(k=>'<span><span class="sw" style="background:'+C[k]+';display:inline-block;margin-right:5px"></span>'+k+"</span>").join("");
+    return '<div class="section-cap">时间轴 · TEXT segments（'+segs.length+" 段）</div>"+
+      '<div class="tl"><div class="ruler"><div></div><div class="ticks">'+grid(ticksFor(total))+"</div></div>"+rows+'<div class="legend">'+lg+"</div></div>";
+  }
+  if(Array.isArray(payload.tracks)){
+    const tracks=payload.tracks;
+    if(!tracks.length)return null;
+    let acc=0;
+    const spans=tracks.map(t=>{const d=Number(t.duration_seconds)||0;const o={start:acc,dur:d,text:String(t.prompt||"")};acc+=d;return o;});
+    const total=acc;
+    if(!total)return null;
+    const palette=["#3fd0a4","#6aa5dc","#8f7ad6","#d9a24e","#cf7d86"];
+    const rows=spans.map((s,i)=>'<div class="row"><div class="lbl"><span class="sw" style="background:'+palette[i%palette.length]+'"></span><span class="mt">track '+(i+1)+" · "+s.dur+"s</span>"+esc(s.text.replace(/\s+/g," ").slice(0,16))+'</div><div class="track"><div class="bar" style="left:'+(s.start/total*100).toFixed(2)+"%;width:"+(s.dur/total*100).toFixed(2)+"%;background:"+palette[i%palette.length]+'">'+(i+1)+"</div></div></div>").join("");
+    return '<div class="section-cap">时间轴 · BACKEND_MUSIC tracks（'+tracks.length+" 段，顺序累加）</div>"+
+      '<div class="tl"><div class="ruler"><div></div><div class="ticks">'+grid(ticksFor(total))+"</div></div>"+rows+"</div>";
+  }
+  return null;
 }
 async function release(subtaskId){
   toast("正在放行 "+subtaskId+" …","ok");
