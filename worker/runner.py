@@ -19,12 +19,18 @@ from models.schemas_task import (
     TaskType,
 )
 from services.elevenlabs_service import ElevenLabsService
+from services.fish_audio_service import FishAudioService
 from services.mongo_service import MongoService
 from settings.elevenlabs import elevenlabs_settings
 from settings.mongo import mongo_settings
 from settings.worker import worker_settings
 from settings_config import settings
-from worker.executors import EXECUTORS, SUBMUSIC_SUCCESS
+from worker.executors import (
+    ENVIRONMENT_SUCCESS,
+    PERSON_SUCCESS,
+    SUBMUSIC_SUCCESS,
+    EXECUTORS,
+)
 
 import logging
 from logging_config import setup_logging
@@ -34,12 +40,13 @@ logger = logging.getLogger(__name__)
 
 mongo_service: MongoService = None
 elevenlabs_service: ElevenLabsService = None
+fish_audio_service: FishAudioService = None
 
 _stopping = False
 
 
 def _connect() -> None:
-    global mongo_service, elevenlabs_service
+    global mongo_service, elevenlabs_service, fish_audio_service
 
     mongo_service = MongoService(
         host=mongo_settings.mongodb_host,
@@ -52,6 +59,7 @@ def _connect() -> None:
 
     api_keys = [key.strip() for key in elevenlabs_settings.elevenlabs_api_keys.split(",") if key.strip()]
     elevenlabs_service = ElevenLabsService(api_keys)
+    fish_audio_service = FishAudioService()
 
 
 def _handle_stop(signum, frame) -> None:
@@ -234,6 +242,16 @@ def _run_once() -> bool:
                 raise ValueError(f"SUBMUSIC 执行器返回了非预期结果：{outcome!r}")
             _write_success(subtask, outcome)
             logger.info("SUBMUSIC 生成成功, subtask_id=%s", subtask["subtask_id"])
+        elif task_type == TaskType.ASMR_MUSIC_PERSON:
+            if outcome != PERSON_SUCCESS:
+                raise ValueError(f"PERSON 执行器返回了非预期结果：{outcome!r}")
+            _write_success(subtask, outcome)
+            logger.info("PERSON 生成成功, subtask_id=%s", subtask["subtask_id"])
+        elif task_type == TaskType.ASMR_MUSIC_ENVIRONMENT:
+            if outcome != ENVIRONMENT_SUCCESS:
+                raise ValueError(f"ENVIRONMENT 执行器返回了非预期结果：{outcome!r}")
+            _write_success(subtask, outcome)
+            logger.info("ENVIRONMENT 生成成功, subtask_id=%s", subtask["subtask_id"])
         else:
             raise ValueError(f"任务类型 {task_type.value!r} 没有闭合结果处理")
     except Exception as exc:
