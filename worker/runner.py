@@ -9,6 +9,10 @@ from agents.text import TextOutcome
 from models.schemas_task import (
     ASMRBackendSubMusicInfo,
     ASMRBackendSubMusicResult,
+    ASMRMusicEnvironmentInfo,
+    ASMRMusicEnvironmentResult,
+    ASMRMusicPersonInfo,
+    ASMRMusicPersonResult,
     AUDIO_TASKS_COLLECTION,
     AudioTask,
     TaskStatus,
@@ -158,6 +162,34 @@ def _insert_submusic_tasks(subtask: dict, outcome: MusicOutcome) -> None:
         logger.info("插入 SUBMUSIC 任务, subtask_id=%s", task.subtask_id)
 
 
+def _insert_text_tasks(subtask: dict, outcome: TextOutcome) -> None:
+    now = _now()
+    for segment in outcome.segments:
+        data = segment.model_dump()
+        if segment.type in {"human_speech", "non_verbal_human_sound"}:
+            task_type = TaskType.ASMR_MUSIC_PERSON
+            info = ASMRMusicPersonInfo(**data)
+            result_model = ASMRMusicPersonResult
+        else:
+            task_type = TaskType.ASMR_MUSIC_ENVIRONMENT
+            info = ASMRMusicEnvironmentInfo(**data)
+            result_model = ASMRMusicEnvironmentResult
+        task = AudioTask(
+            task_id=subtask["task_id"],
+            subtask_id=uuid4().hex,
+            user_id=subtask["user_id"],
+            type=task_type,
+            info=info,
+            status=TaskStatus.DEBUG if settings.debug else TaskStatus.PENDING,
+            result=result_model(result_text=""),
+            create_time=now,
+            update_time=now,
+            is_deleted=False,
+        )
+        mongo_service.insert_document(AUDIO_TASKS_COLLECTION, task.model_dump(mode="json"))
+        logger.info("插入 TEXT 子任务, type=%s, subtask_id=%s", task_type.value, task.subtask_id)
+
+
 def _run_once() -> bool:
     subtask = _claim_task()
     if subtask is None:
@@ -180,6 +212,7 @@ def _run_once() -> bool:
         if task_type == TaskType.ASMR_TEXT:
             if not isinstance(outcome, TextOutcome):
                 raise ValueError(f"TEXT 执行器返回类型错误：{type(outcome).__name__}")
+            _insert_text_tasks(subtask, outcome)
             _write_llm_success(subtask, outcome)
             logger.info(
                 "TEXT 拆解成功, subtask_id=%s, segments=%d",

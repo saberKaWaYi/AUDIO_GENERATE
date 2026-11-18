@@ -17,6 +17,8 @@ class TaskType(str, Enum):
     ASMR_TEXT = "ASMR_TEXT"
     ASMR_BACKEND_MUSIC = "ASMR_BACKEND_MUSIC"
     ASMR_BACKEND_SUBMUSIC = "ASMR_BACKEND_SUBMUSIC"
+    ASMR_MUSIC_PERSON = "ASMR_MUSIC_PERSON"
+    ASMR_MUSIC_ENVIRONMENT = "ASMR_MUSIC_ENVIRONMENT"
 
 
 class TaskStatus(str, Enum):
@@ -48,7 +50,31 @@ class ASMRBackendSubMusicInfo(BaseModel):
     duration_seconds: int = Field(ge=3, le=180)
 
 
-TaskInfo = ASMRTextInfo | ASMRBackendMusicInfo | ASMRBackendSubMusicInfo
+class ASMRMusicPersonInfo(BaseModel):
+    start_time: int
+    end_time: int
+    type: str
+    reference_id: str | None
+    type_prompt: str
+    polling_count: int | None
+
+
+class ASMRMusicEnvironmentInfo(BaseModel):
+    start_time: int
+    end_time: int
+    type: str
+    reference_id: str | None
+    type_prompt: str
+    polling_count: int | None
+
+
+TaskInfo = (
+    ASMRTextInfo
+    | ASMRBackendMusicInfo
+    | ASMRBackendSubMusicInfo
+    | ASMRMusicPersonInfo
+    | ASMRMusicEnvironmentInfo
+)
 
 
 class ASMRTextResult(BaseModel):
@@ -67,7 +93,21 @@ class ASMRBackendSubMusicResult(BaseModel):
     result_text: str
 
 
-TaskResult = ASMRTextResult | ASMRBackendMusicResult | ASMRBackendSubMusicResult
+class ASMRMusicPersonResult(BaseModel):
+    result_text: str
+
+
+class ASMRMusicEnvironmentResult(BaseModel):
+    result_text: str
+
+
+TaskResult = (
+    ASMRTextResult
+    | ASMRBackendMusicResult
+    | ASMRBackendSubMusicResult
+    | ASMRMusicPersonResult
+    | ASMRMusicEnvironmentResult
+)
 
 
 class AudioTask(BaseModel):
