@@ -3,171 +3,747 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>角色库</title>
+<meta name="color-scheme" content="dark">
+<title>Sonora · 音频生成控制台</title>
 <style>
-:root{color-scheme:dark;--bg:#111418;--card:#1b2027;--line:#2c333d;--text:#e8ecf1;--dim:#8b95a3;--accent:#4c9be8}
-*{box-sizing:border-box}
-body{margin:0;padding:32px;background:var(--bg);color:var(--text);font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
-.wrap{max-width:1080px;margin:0 auto}
-h1{font-size:20px;font-weight:600;margin:0 0 4px}
-.sub{color:var(--dim);margin:0 0 24px;font-size:13px}
-.bar{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:20px}
-.bar label{color:var(--dim);white-space:nowrap}
-.bar input{flex:1}
-.grid{display:grid;grid-template-columns:360px 1fr;gap:20px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:18px}
-.card h2{font-size:15px;font-weight:600;margin:0 0 14px}
-.field{margin-bottom:10px}
-.field label{display:block;color:var(--dim);font-size:12px;margin-bottom:4px}
-input{width:100%;background:#12161c;border:1px solid var(--line);border-radius:5px;color:var(--text);padding:7px 10px;font:inherit;outline:none}
-input:focus{border-color:var(--accent)}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-button{background:var(--accent);border:0;border-radius:5px;color:#fff;padding:8px 18px;font:inherit;cursor:pointer;margin-top:6px}
-button:disabled{opacity:.55;cursor:progress}
-.out{margin-top:14px;background:#12161c;border:1px solid var(--line);border-radius:5px;padding:12px;min-height:60px;max-height:520px;overflow:auto;white-space:pre-wrap;word-break:break-all;font:12px/1.6 Consolas,Monaco,monospace;color:#c9d4df}
-.status{margin-top:10px;font-size:12px;color:var(--dim)}
-.status.ok{color:#63c08d}
-.status.err{color:#e8776f}
-table{border-collapse:collapse;width:100%;font-size:12px;margin-top:10px}
-th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
-th{color:var(--dim);font-weight:500}
-td.title{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tag{display:inline-block;background:#252d38;border-radius:3px;padding:0 5px;margin-right:4px;color:var(--dim)}
-@media(max-width:860px){.grid{grid-template-columns:1fr}body{padding:16px}}
+:root{
+  --bg:#0c0f13;--bg-2:#10141a;--panel:#151a21;--panel-2:#1a2028;--panel-3:#1f2630;
+  --line:#272f3a;--line-soft:#20262f;--text:#e7ebf0;--text-2:#9aa5b3;--text-3:#66717f;
+  --accent:#3fd0a4;--accent-2:#2bb98f;--accent-soft:rgba(63,208,164,.11);--accent-line:rgba(63,208,164,.38);
+  --success:#3fd0a4;--pending:#e0aa54;--processing:#6aa5dc;--failed:#e4707a;--debug:#8b96a5;
+  --radius:14px;--radius-sm:9px;--shadow:0 18px 50px -20px rgba(0,0,0,.7);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:14px/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+::selection{background:var(--accent-line);color:#fff}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:#2b333d;border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:#3a4552}
+::-webkit-scrollbar-track{background:transparent}
+
+.app{display:grid;grid-template-columns:244px 1fr;height:100dvh}
+
+/* ---------- Sidebar ---------- */
+.sidebar{background:var(--bg-2);border-right:1px solid var(--line-soft);display:flex;flex-direction:column;padding:22px 14px 16px;min-height:0}
+.brand{display:flex;align-items:center;gap:11px;padding:4px 10px 26px}
+.brand-mark{width:36px;height:36px;border-radius:11px;background:linear-gradient(145deg,var(--accent),var(--accent-2));display:grid;place-items:center;flex:none;box-shadow:0 6px 18px -6px var(--accent-line)}
+.brand-mark svg{width:20px;height:20px;color:#07130f}
+.brand-name{font-size:16px;font-weight:650;letter-spacing:-.02em;line-height:1.1}
+.brand-sub{font-size:11px;color:var(--text-3);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.nav-label{font-size:10.5px;color:var(--text-3);letter-spacing:.14em;text-transform:uppercase;padding:0 12px;margin:6px 0 10px}
+.nav{display:flex;flex-direction:column;gap:3px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;color:var(--text-2);border:1px solid transparent;background:transparent;text-align:left;width:100%;transition:background .18s,color .18s,border-color .18s}
+.nav-item svg{width:18px;height:18px;flex:none;stroke-width:1.8}
+.nav-item:hover{background:var(--panel);color:var(--text)}
+.nav-item.active{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-line)}
+.nav-item .nav-badge{margin-left:auto;font:11px var(--mono);background:var(--panel-3);color:var(--text-2);padding:1px 7px;border-radius:20px}
+.nav-item.active .nav-badge{background:var(--accent-line);color:var(--accent)}
+.sidebar-foot{margin-top:auto;border-top:1px solid var(--line-soft);padding:14px 10px 0}
+.conn{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--text-2)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--text-3);flex:none;position:relative}
+.dot.on{background:var(--success)}
+.dot.on::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1px solid var(--success);opacity:.35;animation:pulse 2.4s infinite}
+.dot.off{background:var(--failed)}
+@keyframes pulse{0%{transform:scale(.6);opacity:.5}70%{transform:scale(1.5);opacity:0}100%{opacity:0}}
+.conn-key{font:11px var(--mono);color:var(--text-3);margin-top:6px;word-break:break-all}
+
+/* ---------- Main ---------- */
+.main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.topbar{height:70px;flex:none;display:flex;align-items:center;gap:16px;padding:0 30px;border-bottom:1px solid var(--line-soft);background:rgba(12,15,19,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:5}
+.crumb{font-size:12px;color:var(--text-3)}
+.crumb b{color:var(--text);font-weight:600}
+.page-title{font-size:19px;font-weight:650;letter-spacing:-.02em;margin-top:1px}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
+
+.btn{display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border-radius:9px;border:1px solid var(--line);background:var(--panel-2);color:var(--text);font-size:13px;font-weight:500;transition:transform .12s,background .18s,border-color .18s}
+.btn:hover{background:var(--panel-3);border-color:#38424f}
+.btn:active{transform:scale(.98)}
+.btn svg{width:16px;height:16px;stroke-width:1.9}
+.btn.primary{background:var(--accent);color:#07130f;border-color:var(--accent);font-weight:650}
+.btn.primary:hover{background:var(--accent-2)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:6px 11px;font-size:12px}
+.btn.danger{color:var(--failed);border-color:rgba(228,112,122,.3)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+.content{flex:1;overflow:auto;padding:28px 30px 60px;min-height:0}
+.view{display:none;animation:viewIn .34s cubic-bezier(.16,1,.3,1)}
+.view.active{display:block}
+@keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ---------- Cards & stats ---------- */
+.grid{display:grid;gap:18px}
+.stats{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius);padding:20px}
+.card-h{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.card-h h2{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.card-h .sub{font-size:12px;color:var(--text-3);font-weight:400}
+.card-h .right{margin-left:auto;display:flex;gap:8px}
+
+.stat{position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);opacity:.55}
+.stat .label{font-size:12px;color:var(--text-2);display:flex;align-items:center;gap:8px}
+.stat .label svg{width:15px;height:15px}
+.stat .num{font:600 34px/1.1 var(--mono);letter-spacing:-.03em;margin:12px 0 2px}
+.stat .foot{font-size:11.5px;color:var(--text-3)}
+.stat.c-success::before{background:var(--success)}
+.stat.c-pending::before{background:var(--pending)}
+.stat.c-failed::before{background:var(--failed)}
+.stat.c-accent::before{background:var(--accent)}
+
+.two-col{grid-template-columns:1.45fr 1fr;margin-top:18px}
+
+/* status distribution */
+.dist-row{display:flex;align-items:center;gap:10px;margin:11px 0;font-size:12.5px}
+.dist-row .name{width:74px;color:var(--text-2);display:flex;align-items:center;gap:7px}
+.dist-row .bar-track{flex:1;height:8px;background:var(--panel-3);border-radius:20px;overflow:hidden}
+.dist-row .bar-fill{height:100%;border-radius:20px;width:0;transition:width .8s cubic-bezier(.16,1,.3,1)}
+.dist-row .cnt{width:34px;text-align:right;font:12px var(--mono);color:var(--text-2)}
+
+/* quick actions */
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quick button{display:flex;flex-direction:column;align-items:flex-start;gap:9px;text-align:left;padding:15px;border-radius:11px;border:1px solid var(--line);background:var(--panel-2);transition:border-color .18s,transform .12s,background .18s}
+.quick button:hover{border-color:var(--accent-line);background:var(--accent-soft);transform:translateY(-2px)}
+.quick button:active{transform:scale(.98)}
+.quick svg{width:20px;height:20px;color:var(--accent)}
+.quick b{font-size:13px;font-weight:600}
+.quick span{font-size:11.5px;color:var(--text-3)}
+
+/* ---------- Table ---------- */
+.tbl-wrap{overflow:auto;border-radius:var(--radius-sm);border:1px solid var(--line-soft)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th{text-align:left;color:var(--text-3);font-weight:500;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:11px 14px;background:var(--panel-2);white-space:nowrap;position:sticky;top:0}
+td{padding:12px 14px;border-top:1px solid var(--line-soft);vertical-align:middle}
+tbody tr{transition:background .15s}
+tbody tr:hover{background:var(--panel-2)}
+.clickable{cursor:pointer}
+.mono{font-family:var(--mono)}
+.muted{color:var(--text-3)}
+.truncate{max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:550;white-space:nowrap;border:1px solid transparent}
+.badge .dot{width:6px;height:6px}
+.badge.success{background:rgba(63,208,164,.1);color:var(--success);border-color:rgba(63,208,164,.25)}
+.badge.pending{background:rgba(224,170,84,.1);color:var(--pending);border-color:rgba(224,170,84,.25)}
+.badge.processing{background:rgba(106,165,220,.1);color:var(--processing);border-color:rgba(106,165,220,.25)}
+.badge.processing .dot{background:var(--processing);animation:pulse 1.6s infinite}
+.badge.failed{background:rgba(228,112,122,.1);color:var(--failed);border-color:rgba(228,112,122,.25)}
+.badge.debug{background:rgba(139,150,165,.1);color:var(--debug);border-color:rgba(139,150,165,.25)}
+
+/* filters */
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:16px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:11px;color:var(--text-3);letter-spacing:.03em}
+.input,select.input,textarea.input{background:var(--bg-2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;outline:none;transition:border-color .18s,box-shadow .18s;width:100%}
+.input:focus{border-color:var(--accent-line);box-shadow:0 0 0 3px var(--accent-soft)}
+.input::placeholder{color:var(--text-3)}
+textarea.input{resize:vertical;min-height:80px;line-height:1.65}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field.full{grid-column:1/-1}
+.hint{font-size:11px;color:var(--text-3);margin-top:5px}
+
+/* states */
+.state{padding:48px 20px;text-align:center;color:var(--text-3)}
+.state svg{width:34px;height:34px;opacity:.5;margin-bottom:12px}
+.state b{display:block;color:var(--text-2);font-weight:550;margin-bottom:4px}
+.state.error svg,.state.error b{color:var(--failed)}
+.skeleton{background:linear-gradient(90deg,var(--panel-2) 25%,var(--panel-3) 50%,var(--panel-2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:7px;height:14px}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+/* subtask expand */
+.subtasks{background:var(--bg-2)}
+.subtasks td{padding:0}
+.subtask-inner{padding:8px 14px 14px 34px}
+.subtask-row{display:grid;grid-template-columns:1.1fr .4fr 90px 1.6fr 74px;gap:12px;align-items:center;padding:11px 12px;border-top:1px solid var(--line-soft);font-size:12px}
+.subtask-row:first-child{border-top:0}
+.subtask-head{color:var(--text-3);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px 4px}
+.type-tag{font:11px var(--mono);color:var(--text-2);background:var(--panel-2);border:1px solid var(--line);padding:2px 7px;border-radius:6px;white-space:nowrap}
+.result-chip{font:11px var(--mono);color:var(--text-3);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.result-chip:hover{color:var(--accent)}
+
+/* pagination */
+.pager{display:flex;align-items:center;gap:8px;margin-top:16px;justify-content:flex-end;font-size:12px;color:var(--text-2)}
+.pager button{padding:6px 11px}
+
+/* avatar */
+.av{width:30px;height:30px;border-radius:9px;background:linear-gradient(145deg,#2a3440,#1d252e);display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--text-2);flex:none;overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover}
+.cell-user{display:flex;align-items:center;gap:10px}
+
+/* ---------- Drawer ---------- */
+.overlay{position:fixed;inset:0;background:rgba(4,6,9,.6);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .25s;z-index:20}
+.overlay.show{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,94vw);background:var(--bg-2);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .34s cubic-bezier(.16,1,.3,1);z-index:21;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.drawer.show{transform:none}
+.drawer-h{padding:20px 24px;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;gap:12px}
+.drawer-h h3{font-size:16px;font-weight:650}
+.drawer-h .x{margin-left:auto;background:transparent;border:0;color:var(--text-2);padding:6px;border-radius:8px}
+.drawer-h .x:hover{background:var(--panel-2);color:var(--text)}
+.drawer-h .x svg{width:18px;height:18px}
+.drawer-body{padding:22px 24px;overflow:auto;flex:1}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:9px 14px;font-size:12.5px;margin-bottom:20px}
+.kv .k{color:var(--text-3)}
+.kv .v{font-family:var(--mono);word-break:break-all}
+.code-block{background:var(--bg);border:1px solid var(--line-soft);border-radius:10px;padding:14px;font:12px/1.65 var(--mono);color:#b8c4d0;white-space:pre-wrap;word-break:break-word;max-height:48vh;overflow:auto}
+.section-cap{font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin:18px 0 9px}
+
+/* ---------- Toast ---------- */
+.toasts{position:fixed;top:18px;right:18px;display:flex;flex-direction:column;gap:10px;z-index:40}
+.toast{min-width:260px;max-width:380px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:12px 15px;font-size:13px;box-shadow:var(--shadow);animation:toastIn .32s cubic-bezier(.16,1,.3,1);display:flex;gap:10px;align-items:flex-start}
+.toast.err{border-left-color:var(--failed)}
+.toast.ok{border-left-color:var(--success)}
+.toast svg{width:17px;height:17px;flex:none;margin-top:2px;color:var(--accent)}
+.toast.err svg{color:var(--failed)}
+.toast.ok svg{color:var(--success)}
+@keyframes toastIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+
+/* role picker */
+.role-pick{border:1px solid var(--line);border-radius:10px;max-height:230px;overflow:auto;background:var(--bg-2)}
+.role-opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line-soft);cursor:pointer;transition:background .15s}
+.role-opt:last-child{border-bottom:0}
+.role-opt:hover{background:var(--panel-2)}
+.role-opt input{accent-color:var(--accent);width:15px;height:15px}
+.role-opt .r-name{font-size:12.5px}
+.role-opt .r-id{font:11px var(--mono);color:var(--text-3);margin-left:auto;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chk-row{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--text-2)}
+.chk-row input{accent-color:var(--accent);width:15px;height:15px}
+
+/* mobile */
+.mobile-top{display:none}
+@media(max-width:900px){
+  .app{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:250px;transform:translateX(-100%);transition:transform .3s cubic-bezier(.16,1,.3,1);z-index:30}
+  .sidebar.open{transform:none}
+  .mobile-top{display:flex;align-items:center;gap:12px;padding:0 18px;height:58px;border-bottom:1px solid var(--line-soft);background:var(--bg-2);position:sticky;top:0;z-index:6}
+  .mobile-top .menu{background:transparent;border:0;color:var(--text)}
+  .mobile-top .menu svg{width:22px;height:22px}
+  .mobile-top b{font-size:15px}
+  .topbar{height:58px;padding:0 18px}
+  .crumb{display:none}
+  .content{padding:20px 16px 50px}
+  .stats{grid-template-columns:1fr 1fr}
+  .two-col{grid-template-columns:1fr}
+  .screen-scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:25;opacity:0;pointer-events:none;transition:opacity .3s}
+  .screen-scrim.show{opacity:1;pointer-events:auto}
+}
+@media(min-width:901px){.screen-scrim{display:none}}
+@media(max-width:560px){
+  .stats{grid-template-columns:1fr}
+  .field-row{grid-template-columns:1fr}
+  .subtask-row{grid-template-columns:1fr 1fr;gap:6px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<div class="wrap">
-<h1>角色库</h1>
-<p class="sub">插入：按 ID 从 Fish Audio 拉取并入库　·　查询：只读本地库</p>
+<div class="app">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2"/></svg></div>
+      <div><div class="brand-name">Sonora</div><div class="brand-sub">Audio Console</div></div>
+    </div>
+    <div class="nav-label">工作台</div>
+    <nav class="nav" id="nav">
+      <button class="nav-item active" data-view="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>概览</button>
+      <button class="nav-item" data-view="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>任务中心<span class="nav-badge" id="navTaskCount">—</span></button>
+      <button class="nav-item" data-view="create"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>下发任务</button>
+      <button class="nav-item" data-view="characters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0M16 5.5a3 3 0 0 1 0 5M18 20a5.5 5.5 0 0 0-2-4.3"/></svg>角色库<span class="nav-badge" id="navCharCount">—</span></button>
+    </nav>
+    <div class="nav-label" style="margin-top:22px">系统</div>
+    <nav class="nav">
+      <button class="nav-item" data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2.3"/><circle cx="15" cy="17" r="2.3"/></svg>连接设置</button>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="conn"><span class="dot" id="connDot"></span><span id="connText">未验证连接</span></div>
+      <div class="conn-key" id="connKey">未设置 API Key</div>
+    </div>
+  </aside>
+  <div class="screen-scrim" id="scrim"></div>
 
-<div class="bar">
-<label for="apiKey">X-API-Key</label>
-<input id="apiKey" placeholder="与 .env 的 BACKEND_API_KEY 一致">
+  <!-- ============ MAIN ============ -->
+  <div class="main">
+    <div class="mobile-top">
+      <button class="menu" id="menuBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <b>Sonora</b>
+    </div>
+    <header class="topbar">
+      <div><div class="crumb">控制台 / <b id="crumbName">概览</b></div><div class="page-title" id="pageTitle">概览</div></div>
+      <div class="topbar-actions">
+        <button class="btn ghost" id="testBtn" title="验证连接"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>验证连接</span></button>
+        <button class="btn primary" id="refreshBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/></svg><span>刷新</span></button>
+      </div>
+    </header>
+    <main class="content" id="content">
+
+      <!-- OVERVIEW -->
+      <section class="view active" id="view-overview">
+        <div class="grid stats" id="statCards"></div>
+        <div class="grid two-col">
+          <div class="card">
+            <div class="card-h"><h2>任务状态分布</h2><span class="sub" id="distTotal"></span></div>
+            <div id="distBody"></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><h2>快捷操作</h2></div>
+            <div class="quick">
+              <button data-goto="create"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg><b>下发任务</b><span>创建 ASMR 生成任务</span></button>
+              <button data-goto="characters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/></svg><b>角色库</b><span>管理 Fish Audio 音色</span></button>
+              <button data-goto="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><b>任务中心</b><span>查看与放行子任务</span></button>
+              <button data-goto="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2.3"/><circle cx="15" cy="17" r="2.3"/></svg><b>连接设置</b><span>配置 API Key 与地址</span></button>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:18px">
+          <div class="card-h"><h2>最近任务</h2><span class="sub">按更新时间排序 · 最多 8 条</span><div class="right"><button class="btn sm ghost" data-goto="tasks">查看全部</button></div></div>
+          <div id="recentTasks"></div>
+        </div>
+      </section>
+
+      <!-- TASKS -->
+      <section class="view" id="view-tasks">
+        <div class="card">
+          <div class="card-h"><h2>任务列表</h2><span class="sub" id="taskListMeta"></span></div>
+          <div class="filters">
+            <div class="field" style="min-width:200px"><label>搜索 task_id / user_id</label><input class="input" id="taskSearch" placeholder="输入后按回车或自动筛选"></div>
+            <div class="field"><label>状态筛选</label><select class="input" id="taskStatusFilter"><option value="">全部状态</option><option value="debug">debug</option><option value="pending">pending</option><option value="processing">processing</option><option value="success">success</option><option value="failed">failed</option></select></div>
+          </div>
+          <div id="taskList"></div>
+        </div>
+      </section>
+
+      <!-- CREATE -->
+      <section class="view" id="view-create">
+        <div class="card">
+          <div class="card-h"><h2>下发生成任务</h2><span class="sub">提交后自动创建并查询一次任务状态</span></div>
+          <div class="field-row">
+            <div class="field"><label>user_id · 提交者身份</label><input class="input" id="cUserId" type="number" min="1" value="1"></div>
+            <div class="field"><label>type · 任务类型</label><select class="input" id="cType"><option value="ASMR_TEXT">ASMR_TEXT · 文本拆解</option><option value="ASMR_BACKEND_MUSIC">ASMR_BACKEND_MUSIC · 背景音乐</option></select></div>
+            <div class="field"><label>title · 作品标题</label><input class="input" id="cTitle" value="海边的约定"></div>
+            <div class="field"><label>language · 语言</label><select class="input" id="cLang"><option value="zh">zh · 中文</option><option value="ja">ja · 日语</option><option value="en">en · 英语</option><option value="ko">ko · 韩语</option></select></div>
+            <div class="field"><label>duration_minutes · 目标时长（分钟）</label><input class="input" id="cDuration" type="number" min="1" value="30"></div>
+            <div class="field"><label>背景音乐</label><label class="chk-row" style="height:40px"><input type="checkbox" id="cBgm" checked>启用 background_music（额外下发一条子任务）</label></div>
+            <div class="field full"><label>theme · 创作主题</label><textarea class="input" id="cTheme">黄昏的海边，两人并肩行走，海浪与晚风交织</textarea></div>
+            <div class="field full">
+              <label>参与角色 · 从角色库加载后勾选（至少一个）</label>
+              <div style="display:flex;gap:8px;align-items:center;margin:6px 0"><button class="btn sm" id="loadRolesBtn">从角色库加载</button><span class="hint" id="roleHint">先填 user_id，再加载</span></div>
+              <div class="role-pick" id="rolePick"><div class="state" style="padding:24px">尚未加载角色</div></div>
+            </div>
+          </div>
+          <div style="margin-top:18px;display:flex;gap:10px;align-items:center">
+            <button class="btn primary" id="submitTaskBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>下发并查询</button>
+            <span class="hint" id="createHint"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHARACTERS -->
+      <section class="view" id="view-characters">
+        <div class="grid" style="grid-template-columns:330px 1fr;align-items:start" id="charGrid">
+          <div class="card">
+            <div class="card-h"><h2>插入角色</h2></div>
+            <div class="field" style="margin-bottom:12px"><label>user_id</label><input class="input" id="iUserId" type="number" min="1" value="1"></div>
+            <div class="field"><label>reference_id · Fish Audio 模型 ID</label><input class="input" id="iRefId" placeholder="从 Fish Audio 拉取并入库"></div>
+            <button class="btn primary" id="insertCharBtn" style="margin-top:14px;width:100%">插入角色</button>
+            <p class="hint">按模型 ID 从 Fish Audio 拉取角色信息并写入本地库。</p>
+            <div id="insertResult"></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><h2>角色列表</h2><span class="sub" id="charMeta"></span></div>
+            <div class="filters">
+              <div class="field"><label>user_id</label><input class="input" id="qUserId" type="number" min="1" value="1" style="width:110px"></div>
+              <div class="field"><label>关键词（名称）</label><input class="input" id="qKeyword" placeholder="模糊匹配"></div>
+              <div class="field"><label>标签</label><input class="input" id="qTag" placeholder="精确"></div>
+              <div class="field"><label>状态</label><input class="input" id="qState" placeholder="精确"></div>
+              <div class="field"><label>每页</label><select class="input" id="qPageSize" style="width:78px"><option>10</option><option>20</option><option>50</option></select></div>
+              <button class="btn" id="queryCharBtn">查询</button>
+            </div>
+            <div class="field" style="margin-bottom:14px"><label>reference_id（精确，可选）</label><input class="input" id="qRefId" placeholder="留空则不按 ID 过滤"></div>
+            <div id="charList"></div>
+            <div class="pager" id="charPager"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="view" id="view-settings">
+        <div class="card" style="max-width:720px">
+          <div class="card-h"><h2>连接设置</h2><span class="sub">保存在本机浏览器 localStorage</span></div>
+          <div class="field-row">
+            <div class="field full"><label>X-API-Key（与服务端 BACKEND_API_KEY 一致）</label><input class="input" id="setKey" placeholder="留空则请求不带 Key" autocomplete="off"></div>
+            <div class="field full"><label>API 根地址</label><input class="input" id="setBase" placeholder="留空 = 与页面同源；本地文件打开时填 http://127.0.0.1:8002"></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:18px">
+            <button class="btn primary" id="saveSettingsBtn">保存设置</button>
+            <button class="btn" id="testBtn2">验证连接</button>
+          </div>
+          <div class="section-cap">说明</div>
+          <p class="hint" style="line-height:1.9">
+            本控制台通过同源接口与后端通信，所有接口都需要 X-API-Key。<br>
+            若以本地文件方式打开（file://），浏览器会拦截跨域请求，请在 API 根地址填入服务地址。<br>
+            快捷访问：<span class="mono" id="originHint"></span>
+          </p>
+          <div id="settingsResult"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
 </div>
 
-<div class="grid">
-<div>
-<div class="card">
-<h2>插入角色</h2>
-<div class="field"><label>user_id</label><input id="insUserId" type="number" value="1"></div>
-<div class="field"><label>reference_id</label><input id="insRefId" placeholder="Fish Audio 模型 ID"></div>
-<button id="insBtn">插入</button>
-<div id="insStatus" class="status"></div>
-</div>
-<div class="card" style="margin-top:20px">
-<h2>响应</h2>
-<div id="insOut" class="out">—</div>
-</div>
-</div>
-
-<div>
-<div class="card">
-<h2>查询角色</h2>
-<div class="row">
-<div class="field"><label>user_id</label><input id="qryUserId" type="number" value="1"></div>
-<div class="field"><label>page</label><input id="qryPage" type="number" value="1"></div>
-</div>
-<div class="row">
-<div class="field"><label>page_size</label><input id="qryPageSize" type="number" value="10"></div>
-<div class="field"><label>reference_id</label><input id="qryRefId" placeholder="精确匹配"></div>
-</div>
-<div class="row">
-<div class="field"><label>keyword</label><input id="qryKeyword" placeholder="名称模糊"></div>
-<div class="field"><label>tag</label><input id="qryTag" placeholder="标签精确"></div>
-</div>
-<div class="field"><label>state</label><input id="qryState" placeholder="状态精确"></div>
-<button id="qryBtn">查询</button>
-<div id="qryStatus" class="status"></div>
-<div id="qryTable"></div>
-</div>
-<div class="card" style="margin-top:20px">
-<h2>响应</h2>
-<div id="qryOut" class="out">—</div>
-</div>
-</div>
-</div>
-</div>
+<!-- drawer + toast -->
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-h"><h3 id="drawerTitle">详情</h3><button class="x" id="drawerClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="drawer-body" id="drawerBody"></div>
+</aside>
+<div class="toasts" id="toasts"></div>
 
 <script>
-const $ = id => document.getElementById(id);
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const VIEW_TITLES={overview:"概览",tasks:"任务中心",create:"下发任务",characters:"角色库",settings:"连接设置"};
+const state={key:"",base:"",tasks:[],chars:{items:[],total:0,page:1,page_size:10},expanded:null,view:"overview"};
 
-const savedKey = localStorage.getItem('audio_api_key');
-if (savedKey !== null) $('apiKey').value = savedKey;
-$('apiKey').addEventListener('change', e => localStorage.setItem('audio_api_key', e.target.value.trim()));
-
-function headers() {
-  return {'X-API-Key': $('apiKey').value.trim(), 'Content-Type': 'application/json'};
+/* ---------- boot ---------- */
+function boot(){
+  state.key=localStorage.getItem("sonora_api_key")||"";
+  state.base=localStorage.getItem("sonora_api_base")||"";
+  $("setKey").value=state.key;
+  $("setBase").value=state.base;
+  $("originHint").textContent=location.protocol==="file:"?"请在上方填入 http://127.0.0.1:8002":location.origin;
+  bind();
+  const hash=(location.hash||"").replace("#/","");
+  go(VIEW_TITLES[hash]?hash:"overview");
+  loadOverview();
+  updateConnLabel();
 }
 
-async function request(url, options, statusId, outId) {
-  const status = $(statusId), out = $(outId);
-  status.className = 'status';
-  status.textContent = '请求中…';
-  out.textContent = '—';
-  try {
-    const res = await fetch(url, options);
-    const data = await res.json();
-    out.textContent = JSON.stringify(data, null, 2);
-    status.className = res.ok ? 'status ok' : 'status err';
-    status.textContent = `HTTP ${res.status}${res.ok ? ' · 成功' : ' · 失败'}`;
-    return res.ok ? data : null;
-  } catch (e) {
-    status.className = 'status err';
-    status.textContent = `请求异常：${e.message}`;
-    out.textContent = '—';
-    return null;
+/* ---------- api ---------- */
+function apiBase(){return state.base||(location.protocol==="file:"?"http://127.0.0.1:8002":"");}
+function headers(withJson){const h={};if(state.key)h["X-API-Key"]=state.key;if(withJson)h["Content-Type"]="application/json";return h;}
+async function api(path,opts){
+  opts=opts||{};
+  const res=await fetch(apiBase()+path,{method:opts.method||"GET",headers:headers(!!opts.body),body:opts.body});
+  let data;try{data=await res.json();}catch(e){data={detail:res.statusText};}
+  return{ok:res.ok,status:res.status,data};
+}
+
+/* ---------- util ---------- */
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function fmtTime(v){if(!v)return "—";const d=new Date(v);if(isNaN(d))return String(v);const p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds());}
+function statusBadge(s){return '<span class="badge '+esc(s)+'"><span class="dot"></span>'+esc(s)+"</span>";}
+function toast(msg,type){
+  type=type||"ok";
+  const icons={ok:'<path d="M20 6 9 17l-5-5"/>',err:'<path d="M12 8v5M12 17h.01"/><circle cx="12" cy="12" r="9"/>'};
+  const el=document.createElement("div");
+  el.className="toast "+type;
+  el.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(icons[type]||icons.ok)+"</svg><span>"+esc(msg)+"</span>";
+  $("toasts").appendChild(el);
+  setTimeout(()=>{el.style.opacity="0";el.style.transition="opacity .3s";setTimeout(()=>el.remove(),320);},3600);
+}
+function errorText(r){return (r.data&&r.data.detail)||("HTTP "+r.status);}
+function skeleton(rows){let s="";for(let i=0;i<rows;i++)s+='<div style="padding:13px 14px;border-top:1px solid var(--line-soft)"><div class="skeleton" style="width:'+(45+Math.random()*40)+'%"></div></div>';return '<div class="tbl-wrap">'+s+"</div>";}
+function stateBox(kind,title,sub){
+  const svg=kind==="error"?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 17h.01"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7h18v12H3zM3 7l2-3h14l2 3"/></svg>';
+  return '<div class="state '+(kind||"")+'">'+svg+"<b>"+esc(title)+"</b>"+(sub?"<span>"+esc(sub)+"</span>":"")+"</div>";
+}
+
+/* ---------- nav ---------- */
+function go(view){
+  state.view=view;
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.toggle("active",n.dataset.view===view));
+  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="view-"+view));
+  $("pageTitle").textContent=VIEW_TITLES[view];
+  $("crumbName").textContent=VIEW_TITLES[view];
+  history.replaceState(null,"","#/"+view);
+  closeDrawer();closeSidebar();
+  $("content").scrollTop=0;
+  if(view==="overview")loadOverview();
+  if(view==="tasks")loadTasks();
+  if(view==="characters")queryChars();
+}
+function closeSidebar(){$("sidebar").classList.remove("open");$("scrim").classList.remove("show");}
+function bind(){
+  document.querySelectorAll(".nav-item").forEach(n=>n.addEventListener("click",()=>go(n.dataset.view)));
+  document.querySelectorAll("[data-goto]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.goto)));
+  $("menuBtn").addEventListener("click",()=>{$("sidebar").classList.toggle("open");$("scrim").classList.toggle("show");});
+  $("scrim").addEventListener("click",closeSidebar);
+  $("refreshBtn").addEventListener("click",()=>go(state.view));
+  $("testBtn").addEventListener("click",testConn);
+  $("testBtn2").addEventListener("click",testConn);
+  $("drawerClose").addEventListener("click",closeDrawer);
+  $("overlay").addEventListener("click",closeDrawer);
+  $("saveSettingsBtn").addEventListener("click",saveSettings);
+  $("taskSearch").addEventListener("input",renderTaskList);
+  $("taskStatusFilter").addEventListener("change",renderTaskList);
+  $("queryCharBtn").addEventListener("click",()=>{state.chars.page=1;queryChars();});
+  $("qPageSize").addEventListener("change",()=>{state.chars.page=1;queryChars();});
+  $("loadRolesBtn").addEventListener("click",loadRoles);
+  $("submitTaskBtn").addEventListener("click",submitTask);
+  $("insertCharBtn").addEventListener("click",insertChar);
+}
+
+/* ---------- settings / conn ---------- */
+function saveSettings(){
+  state.key=$("setKey").value.trim();
+  state.base=$("setBase").value.trim();
+  localStorage.setItem("sonora_api_key",state.key);
+  localStorage.setItem("sonora_api_base",state.base);
+  updateConnLabel();
+  $("settingsResult").innerHTML='<p class="hint" style="color:var(--success);margin-top:14px">设置已保存到本机浏览器。</p>';
+  toast("设置已保存","ok");
+}
+function updateConnLabel(){
+  $("connKey").textContent=state.key?("Key: "+state.key.slice(0,6)+"••••"):"未设置 API Key";
+}
+async function testConn(){
+  toast("正在验证连接…","ok");
+  const r=await api("/api/audio/tasks");
+  if(r.ok){setConn(true);toast("连接正常 · 可见 "+((r.data&&r.data.total)||0)+" 个任务","ok");}
+  else{setConn(false);toast("连接失败："+errorText(r),"err");}
+}
+function setConn(ok){
+  $("connDot").className="dot "+(ok?"on":"off");
+  $("connText").textContent=ok?"连接正常":"连接失败";
+}
+
+/* ---------- OVERVIEW ---------- */
+async function loadOverview(){
+  $("statCards").innerHTML='<div class="card stat"><div class="skeleton" style="width:60%"></div><div class="skeleton" style="width:40%;height:32px;margin-top:14px"></div></div>'.repeat(4);
+  $("distBody").innerHTML=skeleton(5);
+  $("recentTasks").innerHTML=skeleton(3);
+  const r=await api("/api/audio/tasks");
+  if(!r.ok){
+    $("statCards").innerHTML=stateBox("error","任务数据加载失败",errorText(r));
+    $("distBody").innerHTML=stateBox("error","无法加载分布",errorText(r));
+    $("recentTasks").innerHTML=stateBox("error","无法加载任务",errorText(r));
+    setConn(false);return;
+  }
+  setConn(true);
+  state.tasks=r.data.items||[];
+  const t=state.tasks;
+  const cnt=s=>t.filter(x=>x.status===s).length;
+  const subTotal=t.reduce((a,x)=>a+(x.subtask_count||0),0);
+  const stats=[
+    {label:"任务总数",num:t.length,foot:"子任务合计 "+subTotal+" 条",cls:"c-accent",icon:'<path d="M4 6h16M4 12h16M4 18h16"/>'},
+    {label:"已完成",num:cnt("success"),foot:"success",cls:"c-success",icon:'<path d="M20 6 9 17l-5-5"/>'},
+    {label:"进行中",num:cnt("pending")+cnt("processing"),foot:"pending + processing",cls:"c-pending",icon:'<path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9"/>'},
+    {label:"失败",num:cnt("failed"),foot:"failed",cls:"c-failed",icon:'<path d="M12 8v5M12 17h.01"/><circle cx="12" cy="12" r="9"/>'}
+  ];
+  $("statCards").innerHTML=stats.map(s=>'<div class="card stat '+s.cls+'"><div class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+s.icon+"</svg>"+s.label+'</div><div class="num">'+s.num+'</div><div class="foot">'+s.foot+"</div></div>").join("");
+  const order=["success","pending","processing","debug","failed"];
+  const colors={success:"var(--success)",pending:"var(--pending)",processing:"var(--processing)",debug:"var(--debug)",failed:"var(--failed)"};
+  const total=t.length||1;
+  $("distTotal").textContent="共 "+t.length+" 个任务";
+  $("distBody").innerHTML=order.map(s=>{const c=cnt(s);const pct=Math.round(c/total*100);return '<div class="dist-row"><div class="name"><span class="dot" style="background:'+colors[s]+'"></span>'+s+'</div><div class="bar-track"><div class="bar-fill" data-w="'+pct+'" style="background:'+colors[s]+'"></div></div><div class="cnt">'+c+"</div></div>";}).join("");
+  requestAnimationFrame(()=>document.querySelectorAll("#distBody .bar-fill").forEach(b=>b.style.width=b.dataset.w+"%"));
+  $("navTaskCount").textContent=t.length;
+  const recent=t.slice().sort((a,b)=>new Date(b.update_time)-new Date(a.update_time)).slice(0,8);
+  $("recentTasks").innerHTML=recent.length?taskTable(recent,false):stateBox("","暂无任务","下发一个任务后会显示在这里");
+}
+
+/* ---------- TASKS ---------- */
+async function loadTasks(){
+  $("taskList").innerHTML=skeleton(6);
+  const r=await api("/api/audio/tasks");
+  if(!r.ok){$("taskList").innerHTML=stateBox("error","任务列表加载失败",errorText(r));return;}
+  setConn(true);
+  state.tasks=r.data.items||[];
+  $("navTaskCount").textContent=state.tasks.length;
+  renderTaskList();
+}
+function renderTaskList(){
+  const kw=$("taskSearch").value.trim().toLowerCase();
+  const st=$("taskStatusFilter").value;
+  let t=state.tasks.filter(x=>(!st||x.status===st)&&(!kw||String(x.task_id).toLowerCase().includes(kw)||String(x.user_id).includes(kw)));
+  $("taskListMeta").textContent="显示 "+t.length+" / "+state.tasks.length+" 个任务";
+  $("taskList").innerHTML=t.length?taskTable(t,true):stateBox("","没有匹配的任务","调整搜索或筛选条件试试");
+  bindTaskRows();
+}
+function taskTable(rows,expandable){
+  const head='<thead><tr>'+(expandable?'<th style="width:26px"></th>':"")+"<th>task_id</th><th>user_id</th><th>状态</th><th>子任务</th><th>创建时间</th><th>更新时间</th></tr></thead>";
+  const body=rows.map(x=>{
+    const arrow=expandable?'<span class="mono muted" data-arrow="'+esc(x.task_id)+'">▸</span>':"";
+    return '<tr class="'+(expandable?"clickable":"")+'" data-task="'+esc(x.task_id)+'" data-user="'+x.user_id+'">'+
+      (expandable?"<td>"+arrow+"</td>":"")+
+      '<td class="mono truncate" title="'+esc(x.task_id)+'">'+esc(x.task_id)+"</td>"+
+      "<td>"+x.user_id+"</td>"+
+      "<td>"+statusBadge(x.status)+"</td>"+
+      '<td class="mono">'+x.subtask_count+"</td>"+
+      '<td class="muted" style="white-space:nowrap">'+fmtTime(x.create_time)+"</td>"+
+      '<td class="muted" style="white-space:nowrap">'+fmtTime(x.update_time)+"</td></tr>"+
+      (expandable?'<tr class="subtasks" style="display:none" data-subrow="'+esc(x.task_id)+'"><td colspan="7"><div class="subtask-inner">加载中…</div></td></tr>':"");
+  }).join("");
+  return '<div class="tbl-wrap"><table>'+head+"<tbody>"+body+"</tbody></table></div>";
+}
+function bindTaskRows(){
+  document.querySelectorAll("#taskList tr.clickable").forEach(tr=>{
+    tr.addEventListener("click",()=>toggleTask(tr.dataset.task,tr.dataset.user,tr));
+  });
+}
+async function toggleTask(taskId,userId,tr){
+  const subrow=document.querySelector('[data-subrow="'+CSS.escape(taskId)+'"]');
+  const arrow=tr.querySelector("[data-arrow]");
+  if(subrow.style.display!=="none"){
+    subrow.style.display="none";if(arrow)arrow.textContent="▸";return;
+  }
+  subrow.style.display="";if(arrow)arrow.textContent="▾";
+  subrow.querySelector(".subtask-inner").innerHTML='<div class="skeleton" style="height:60px"></div>';
+  const r=await api("/api/audio/tasks/"+encodeURIComponent(taskId)+"?user_id="+encodeURIComponent(userId));
+  if(!r.ok){subrow.querySelector(".subtask-inner").innerHTML=stateBox("error","子任务加载失败",errorText(r));return;}
+  renderSubtasks(subrow.querySelector(".subtask-inner"),r.data);
+}
+function infoSummary(sub){
+  const t=sub.type,info=sub.info||{};
+  switch(t){
+    case "ASMR_TEXT":
+    case "ASMR_BACKEND_MUSIC":
+      return esc(info.title)+(info.theme?' <span class="muted">· '+esc(info.theme)+"</span>":"");
+    case "ASMR_BACKEND_SUBMUSIC":
+      return esc(info.prompt)+(info.duration_seconds?' <span class="muted">· '+info.duration_seconds+"s</span>":"");
+    case "ASMR_MUSIC_PERSON":
+    case "ASMR_MUSIC_ENVIRONMENT":
+      return '<span class="type-tag">'+esc(info.type)+"</span> "+esc(info.type_prompt)+' <span class="muted">· '+info.start_time+"–"+info.end_time+"s · ×"+info.polling_count+"</span>";
+    default:
+      return '<span class="mono">'+esc(JSON.stringify(info))+"</span>";
   }
 }
+function renderSubtasks(box,data){
+  const subs=data.subtasks||[];
+  if(!subs.length){box.innerHTML=stateBox("","该任务暂无子任务");return;}
+  const head='<div class="subtask-head"><span>内容</span><span>类型</span><span>状态</span><span>结果</span><span>操作</span></div>';
+  const rows=subs.map(s=>{
+    const raw=JSON.stringify(s.result||{});
+    const preview=s.result&&s.result.result_text?String(s.result.result_text).replace(/\s+/g," ").slice(0,60):"—";
+    const release=s.status==="debug"?'<button class="btn sm primary" data-release="'+esc(s.subtask_id)+'">放行</button>':"";
+    return '<div class="subtask-row">'+
+      '<div class="truncate" title="'+esc(infoSummaryText(s))+'">'+infoSummary(s)+"</div>"+
+      '<div><span class="type-tag">'+esc(s.type.replace("ASMR_",""))+"</span></div>"+
+      "<div>"+statusBadge(s.status)+"</div>"+
+      '<div class="result-chip" data-raw="'+esc(raw)+'">'+esc(preview)+"</div>"+
+      "<div>"+release+"</div></div>";
+  }).join("");
+  box.innerHTML=head+rows;
+  box.querySelectorAll("[data-release]").forEach(b=>b.addEventListener("click",()=>release(b.dataset.release)));
+  box.querySelectorAll("[data-raw]").forEach(c=>c.addEventListener("click",()=>{
+    let parsed;try{parsed=JSON.stringify(JSON.parse(c.dataset.raw),null,2);}catch(e){parsed=c.dataset.raw;}
+    openDrawer("子任务结果",'<div class="code-block">'+esc(parsed)+"</div>");
+  }));
+}
+function infoSummaryText(s){
+  const i=s.info||{};
+  return i.title||i.prompt||i.type_prompt||s.type;
+}
+async function release(subtaskId){
+  toast("正在放行 "+subtaskId+" …","ok");
+  const r=await api("/api/audio/tasks/"+encodeURIComponent(subtaskId)+"/release",{method:"POST"});
+  if(!r.ok){toast("放行失败："+errorText(r),"err");return;}
+  toast("放行成功 → "+r.data.status,"ok");
+  go("tasks");
+}
 
-$('insBtn').addEventListener('click', async e => {
-  const btn = e.currentTarget;
-  btn.disabled = true;
-  await request('/api/audio/characters', {
-    method: 'POST',
-    headers: headers(),
-    body: JSON.stringify({
-      user_id: Number($('insUserId').value),
-      reference_id: $('insRefId').value.trim()
-    })
-  }, 'insStatus', 'insOut');
-  btn.disabled = false;
-});
-
-$('qryBtn').addEventListener('click', async e => {
-  const btn = e.currentTarget;
-  const params = new URLSearchParams({user_id: $('qryUserId').value, page: $('qryPage').value, page_size: $('qryPageSize').value});
-  const extra = {
-    reference_id: $('qryRefId').value,
-    keyword: $('qryKeyword').value,
-    tag: $('qryTag').value,
-    state: $('qryState').value
+/* ---------- CREATE ---------- */
+async function loadRoles(){
+  const uid=Number($("cUserId").value);
+  if(!uid||uid<1){$("roleHint").textContent="请先填写有效 user_id";return;}
+  $("roleHint").textContent="加载中…";
+  const r=await api("/api/audio/characters?user_id="+uid+"&page=1&page_size=50");
+  if(!r.ok){$("roleHint").textContent="加载失败："+errorText(r);$("rolePick").innerHTML=stateBox("error","角色加载失败",errorText(r));return;}
+  const items=r.data.items||[];
+  if(!items.length){$("roleHint").textContent="该用户暂无角色";$("rolePick").innerHTML=stateBox("","没有角色","请先在角色库插入角色");return;}
+  $("roleHint").textContent="共 "+items.length+" 个角色，勾选参与角色";
+  $("rolePick").innerHTML=items.map(c=>'<label class="role-opt"><input type="checkbox" class="roleChk" value="'+esc(c.reference_id)+'"><span class="av">'+(c.cover_image?'<img src="'+esc(c.cover_image)+'" alt="">':esc((c.title||"?").slice(0,1)))+'</span><span class="r-name">'+esc(c.title)+'</span><span class="r-id">'+esc(c.reference_id)+"</span></label>").join("");
+}
+async function submitTask(){
+  const btn=$("submitTaskBtn"),hint=$("createHint");
+  const ids=Array.from(document.querySelectorAll(".roleChk:checked")).map(el=>el.value);
+  if(!ids.length){hint.textContent="请先加载并勾选至少一个参与角色";toast("请勾选参与角色","err");return;}
+  const body={
+    user_id:Number($("cUserId").value),
+    type:$("cType").value,
+    title:$("cTitle").value.trim(),
+    reference_ids:ids,
+    theme:$("cTheme").value.trim(),
+    duration_minutes:Number($("cDuration").value),
+    language:$("cLang").value,
+    background_music:$("cBgm").checked
   };
-  for (const [k, v] of Object.entries(extra)) if (v.trim()) params.set(k, v.trim());
-
-  btn.disabled = true;
-  const data = await request(`/api/audio/characters?${params}`, {headers: headers()}, 'qryStatus', 'qryOut');
-  if (data !== null) renderTable(data);
-  btn.disabled = false;
-});
-
-function renderTable(data) {
-  const box = $('qryTable');
-  if (!data.items.length) { box.innerHTML = ''; return; }
-  const rows = data.items.map(c => `<tr>
-<td>${esc(c.reference_id)}</td>
-<td class="title" title="${esc(c.title)}">${esc(c.title)}</td>
-<td>${esc(c.type)} / ${esc(c.state)}</td>
-<td>${c.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</td>
-<td>${esc(String(c.update_time).replace('T', ' ').slice(0, 19))}</td>
-</tr>`).join('');
-  box.innerHTML = `<div class="status">共 ${data.total} 条，当前 ${data.items.length} 条</div>
-<table><thead><tr><th>reference_id</th><th>名称</th><th>类型 / 状态</th><th>标签</th><th>更新时间</th></tr></thead><tbody>${rows}</tbody></table>`;
+  btn.disabled=true;hint.textContent="下发中…";
+  const r=await api("/api/audio/tasks",{method:"POST",body:JSON.stringify(body)});
+  if(!r.ok){hint.textContent="下发失败："+errorText(r);toast("下发失败："+errorText(r),"err");btn.disabled=false;return;}
+  hint.textContent="下发成功，task_id="+r.data.task_id+" → "+r.data.status;
+  toast("任务已下发 · "+r.data.task_id,"ok");
+  btn.disabled=false;
+  go("tasks");
+  setTimeout(()=>{
+    const tr=document.querySelector('[data-task="'+CSS.escape(r.data.task_id)+'"]');
+    if(tr)tr.click();
+  },600);
 }
 
-function esc(s) {
-  return String(s).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+/* ---------- CHARACTERS ---------- */
+async function queryChars(){
+  const box=$("charList");
+  box.innerHTML=skeleton(5);
+  const p=state.chars;
+  const params=new URLSearchParams({user_id:$("qUserId").value,page:p.page,page_size:p.page_size});
+  const extra={keyword:$("qKeyword").value,tag:$("qTag").value,state:$("qState").value,reference_id:$("qRefId").value};
+  Object.entries(extra).forEach(([k,v])=>{if(v.trim())params.set(k,v.trim());});
+  const r=await api("/api/audio/characters?"+params);
+  if(!r.ok){box.innerHTML=stateBox("error","角色查询失败",errorText(r));return;}
+  state.chars={items:r.data.items||[],total:r.data.total||0,page:r.data.page||1,page_size:r.data.page_size||10};
+  renderChars();
 }
+function renderChars(){
+  const c=state.chars;
+  $("charMeta").textContent="共 "+c.total+" 个 · 第 "+c.page+" 页";
+  $("navCharCount").textContent=c.total;
+  if(!c.items.length){$("charList").innerHTML=stateBox("","没有角色","调整筛选条件或插入一个新角色");$("charPager").innerHTML="";return;}
+  const head='<thead><tr><th>角色</th><th>reference_id</th><th>类型 / 状态</th><th>标签</th><th>更新时间</th></tr></thead>';
+  const rows=c.items.map(x=>'<tr>'+
+    '<td><div class="cell-user"><span class="av">'+(x.cover_image?'<img src="'+esc(x.cover_image)+'" alt="">':esc((x.title||"?").slice(0,1)))+'</span><span class="truncate" title="'+esc(x.title)+'">'+esc(x.title)+"</span></div></td>"+
+    '<td class="mono truncate" style="max-width:200px" title="'+esc(x.reference_id)+'">'+esc(x.reference_id)+"</td>"+
+    "<td>"+esc(x.type)+" / "+esc(x.state)+"</td>"+
+    "<td>"+((x.tags||[]).map(t=>'<span class="type-tag">'+esc(t)+"</span>").join(" ")||'<span class="muted">—</span>')+"</td>"+
+    '<td class="muted" style="white-space:nowrap">'+fmtTime(x.update_time)+"</td></tr>").join("");
+  $("charList").innerHTML='<div class="tbl-wrap"><table>'+head+"<tbody>"+rows+"</tbody></table></div>";
+  const pages=Math.max(1,Math.ceil(c.total/c.page_size));
+  $("charPager").innerHTML='<span>第 '+c.page+" / "+pages+" 页</span>"+
+    '<button class="btn sm" data-page="prev" '+(c.page<=1?"disabled":"")+">上一页</button>"+
+    '<button class="btn sm" data-page="next" '+(c.page>=pages?"disabled":"")+">下一页</button>";
+  $("charPager").querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>{
+    if(b.dataset.page==="prev"&&c.page>1)state.chars.page--;
+    if(b.dataset.page==="next"&&c.page<pages)state.chars.page++;
+    queryChars();
+  }));
+}
+async function insertChar(){
+  const btn=$("insertCharBtn"),box=$("insertResult");
+  const body={user_id:Number($("iUserId").value),reference_id:$("iRefId").value.trim()};
+  if(!body.user_id||body.user_id<1){box.innerHTML='<p class="hint" style="color:var(--failed)">请填写有效 user_id</p>';return;}
+  if(!body.reference_id){box.innerHTML='<p class="hint" style="color:var(--failed)">请填写 reference_id</p>';return;}
+  btn.disabled=true;
+  box.innerHTML='<p class="hint">拉取中…</p>';
+  const r=await api("/api/audio/characters",{method:"POST",body:JSON.stringify(body)});
+  btn.disabled=false;
+  if(!r.ok){box.innerHTML='<p class="hint" style="color:var(--failed)">插入失败：'+esc(errorText(r))+"</p>";toast("插入失败","err");return;}
+  box.innerHTML='<p class="hint" style="color:var(--success)">'+esc(r.data.title)+" · "+(r.data.created?"新建":"已存在")+"</p>";
+  toast("角色已插入","ok");
+  queryChars();
+}
+
+/* ---------- DRAWER ---------- */
+function openDrawer(title,html){$("drawerTitle").textContent=title;$("drawerBody").innerHTML=html;$("overlay").classList.add("show");$("drawer").classList.add("show");}
+function closeDrawer(){$("overlay").classList.remove("show");$("drawer").classList.remove("show");}
+
+boot();
+})();
 </script>
 </body>
 </html>
