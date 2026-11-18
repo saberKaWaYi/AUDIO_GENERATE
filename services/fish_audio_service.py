@@ -45,7 +45,7 @@ class FishAudioService:
                 timeout=fish_audio_settings.fish_audio_timeout,
             )
         except httpx.HTTPError as e:
-            logger.error("Fish Audio TTS request failed, reference_id=%s", reference_id)
+            logger.exception("Fish Audio TTS request failed, reference_id=%s", reference_id)
             raise FishAudioError("Fish Audio TTS 请求失败") from e
 
         if response.status_code in (401, 403):

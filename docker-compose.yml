@@ -44,6 +44,7 @@ services:
     command: python main.py worker
     extra_hosts:
       - "host.docker.internal:host-gateway"
+      - "api.fish.audio:104.18.0.100"
     depends_on:
       web:
         condition: service_healthy
