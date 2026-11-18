@@ -1183,7 +1183,7 @@ The following is an illustrative output for the input example above.
       "type": "non_verbal_human_sound",
       "reference_id": "voice_001",
       "polling_count": null,
-      "type_prompt": "[轻轻吸气，随后缓慢而柔和地呼气] 哈……"
+      "type_prompt": "[a soft inhale, then a slow gentle exhale] haah..."
     },
     {
       "start_time": 130,
