@@ -69,6 +69,11 @@ class TextSegment(BaseModel):
                 f"{self.type} 单段音频时长超过 30 秒："
                 f"({self.end_time} - {self.start_time}) / {self.polling_count} > 30"
             )
+        elif (self.end_time - self.start_time) * 2 < self.polling_count:
+            raise ValueError(
+                f"{self.type} 单段音频时长低于 0.5 秒："
+                f"({self.end_time} - {self.start_time}) / {self.polling_count} < 0.5"
+            )
         return self
 
 

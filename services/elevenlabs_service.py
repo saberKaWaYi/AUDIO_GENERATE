@@ -90,7 +90,7 @@ class ElevenLabsService:
         try:
             response = httpx.post(
                 url,
-                params={"output_format": "mp3_44100_128"},
+                params={"output_format": "mp3_44100_192"},
                 headers={"xi-api-key": api_key, "Content-Type": "application/json"},
                 json={
                     "text": text,
