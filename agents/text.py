@@ -64,6 +64,11 @@ class TextSegment(BaseModel):
             raise ValueError(f"{self.type} 必须指定 polling_count")
         elif self.polling_count < 1:
             raise ValueError(f"{self.type} 的 polling_count 必须为正整数：{self.polling_count}")
+        elif self.end_time - self.start_time > self.polling_count * 30:
+            raise ValueError(
+                f"{self.type} 单段音频时长超过 30 秒："
+                f"({self.end_time} - {self.start_time}) / {self.polling_count} > 30"
+            )
         return self
 
 

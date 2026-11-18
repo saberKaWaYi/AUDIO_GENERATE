@@ -411,14 +411,33 @@ The `polling_count` field specifies how many times the same generated audio clip
 - For `human_speech` and `non_verbal_human_sound`, `polling_count` must always be `null`. Human vocal events must not use audio repetition.
 - For each non-human sound event, only one audio clip is generated from its `type_prompt`. The same generated audio clip is then repeated `polling_count` times to cover the event's entire time range.
 - The backend calculates the target duration of the single generated audio clip automatically using `(end_time - start_time) / polling_count`.
+- **A single generated audio clip must never exceed 30 seconds in duration. Therefore, for every `action_generated_sound` and `environmental_sound` event, `polling_count` must satisfy `(end_time - start_time) / polling_count <= 30`.**
+- **The minimum valid `polling_count` for a non-human sound event is `ceil((end_time - start_time) / 30)`. When possible, use this minimum value so that the generated clip is as long as possible without exceeding the 30-second limit.**
 - For example, if an event lasts 180 seconds and has `polling_count = 6`, generate one audio clip with a target duration of 30 seconds and repeat that same clip 6 times. Do not generate 6 different audio clips.
+- For example, if an event lasts 75 seconds, use `polling_count = 3`, resulting in a single generated audio clip with a target duration of 25 seconds that is repeated 3 times.
+- For example, if an event lasts 30 seconds or less, `polling_count = 1` is sufficient unless another value is specifically justified by the sound design.
 - Use a reasonable polling count. Do not create excessive repetitions or assign high counts to short, one-off sounds unnecessarily.
 - Continuous or sustained non-human sounds may use multiple repetitions when the same audio clip can naturally repeat throughout the event.
-- Short, discrete, or one-time non-human sounds should generally use a polling count of `1`.
+- Short, discrete, or one-time non-human sounds should generally use a polling count of `1` when the event duration does not exceed 30 seconds.
 - Consider whether repeating the same audio clip will sound natural and maintain the intended acoustic continuity. Avoid assigning multiple repetitions to sounds whose natural progression requires distinct audio variations.
-- The polling count must be consistent with the event's time range and the nature of the sound.
+- The polling count must be consistent with the event's time range, the 30-second maximum generation limit, and the nature of the sound.
 - Do not calculate or output individual playback timestamps. Only provide the total event time range and `polling_count`.
-- Repetition is an implementation detail for non-human sound playback. It must not change the creative content, natural continuity, or intended listening experience of the event.
+- Repetition is an implementation detail for non-human sound playback. It must not change the creative content, natural continuity, or intended listening experience.
+
+### 5.6 Non-human Audio Generation Duration Limit
+
+For `action_generated_sound` and `environmental_sound`, the target duration of each individual generated audio clip is determined by:
+
+`(end_time - start_time) / polling_count`
+
+The following hard constraint applies:
+
+- The target duration of every individual generated non-human audio clip must be **30 seconds or less**.
+- Never assign a `polling_count` that causes the calculated individual clip duration to exceed 30 seconds.
+- If an event lasts longer than 30 seconds, increase `polling_count` as necessary rather than allowing a single generated clip to exceed 30 seconds.
+- Prefer the smallest `polling_count` that satisfies the 30-second maximum, unless the sound design requires a higher repetition count.
+- This limitation applies to the generated audio clip itself, not to the total event duration. A complete event may be much longer than 30 seconds through repetition of the generated clip.
+- This limitation does not require an event itself to be split into multiple Segments. A long continuous non-human sound may remain one Segment with an appropriate `polling_count`.
 
 ## 6. type_prompt Writing Guidelines
 
@@ -436,8 +455,6 @@ This applies to all content in all four event types:
 - `environmental_sound`: Environment and sound descriptions.
 
 Do not use another language in any part of `type_prompt`, including descriptions, explanations, and square-bracket instructions.
-
-The language specified by `info.language` takes precedence over all languages used in examples or references.
 
 For example, when `info.language = "ja"`, all content in `type_prompt`, including dialogue, sound descriptions, and square-bracket instructions, must be written in Japanese.
 
@@ -621,7 +638,7 @@ Output a valid JSON object whose only top-level field is `segments`.
       "end_time": 60,
       "type": "environmental_sound",
       "reference_id": null,
-      "polling_count": 3,
+      "polling_count": 2,
       "type_prompt": "夏日森林中，微风轻轻吹过树叶，持续发出柔和细腻的沙沙声。"
     }
   ]
@@ -658,6 +675,8 @@ Every Segment must contain exactly these six fields:
 - `action_generated_sound`: Must be a positive integer greater than or equal to `1`.
 - `environmental_sound`: Must be a positive integer greater than or equal to `1`.
 - Choose the polling count according to the event's duration and sound characteristics, following Section 5.5.
+- **For every `action_generated_sound` and `environmental_sound` event, `polling_count` must also satisfy `(end_time - start_time) / polling_count <= 30`.**
+- **The minimum valid `polling_count` is `ceil((end_time - start_time) / 30)`. Prefer this minimum value unless a higher value is justified by the sound design.**
 - For non-human sound events, this value indicates how many times the same single generated audio clip will be repeated. It does not indicate how many different audio clips should be generated.
 - Do not omit this field from any Segment.
 
@@ -676,10 +695,11 @@ Every Segment must contain exactly these six fields:
    - `environmental_sound`
 8. `type_prompt` must not be empty and must follow the language requirements in Section 6.1.
 9. `polling_count` must be present in every Segment and must follow the rules in Section 7.3.
-10. Do not forcibly eliminate reasonable time overlaps, while respecting the same-character vocal overlap restriction in Section 5.2.
-11. Do not merge dialogue from multiple characters into the same event.
-12. Do not generate audible listener dialogue or assign a voice ID to the listener.
-13. Ensure that all events are chronologically coherent and that their durations and overlaps are physically and acoustically reasonable.
+10. **For every `action_generated_sound` and `environmental_sound` event, the generated audio clip duration calculated as `(end_time - start_time) / polling_count` must not exceed 30 seconds.**
+11. Do not forcibly eliminate reasonable time overlaps, while respecting the same-character vocal overlap restriction in Section 5.2.
+12. Do not merge dialogue from multiple characters into the same event.
+13. Do not generate audible listener dialogue or assign a voice ID to the listener.
+14. Ensure that all events are chronologically coherent and that their durations and overlaps are physically and acoustically reasonable.
 
 ## 8. Final Instructions
 
@@ -696,6 +716,7 @@ Always follow this priority order:
 3. Character identities, relationships, and voice constraints.
 4. Overall listening experience, listener interaction, and content continuity.
 5. Sound event presentation, timing, polling count, and classification.
-6. Output structure and field constraints.
+6. **The maximum 30-second duration limit for each individual generated non-human audio clip.**
+7. Output structure and field constraints.
 
 The ultimate goal is to generate a complete, reasonably timed, correctly classified, correctly assigned, and language-consistent ASMR sound event timeline that can be directly handed over to subsequent Workers.
