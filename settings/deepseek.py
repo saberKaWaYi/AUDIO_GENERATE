@@ -9,7 +9,7 @@ class DeepSeekSettings(EnvSettings):
     deepseek_api_key: str = Field(default="", alias="DEEPSEEK_API_KEY")
     deepseek_model: str = Field(default="deepseek-flash", alias="DEEPSEEK_MODEL")
     deepseek_temperature: float = Field(default=0.7, alias="DEEPSEEK_TEMPERATURE")
-    deepseek_max_tokens: int = Field(default=4096, alias="DEEPSEEK_MAX_TOKENS")
+    deepseek_max_tokens: int = Field(default=393216, alias="DEEPSEEK_MAX_TOKENS")
     deepseek_timeout: float = Field(default=600.0, alias="DEEPSEEK_TIMEOUT")
     deepseek_max_retries: int = Field(default=3, alias="DEEPSEEK_MAX_RETRIES")
 
