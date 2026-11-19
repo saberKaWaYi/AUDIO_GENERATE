@@ -5,6 +5,7 @@ from settings.fish_audio import fish_audio_settings
 from settings.elevenlabs import elevenlabs_settings
 from settings.deepseek import deepseek_settings
 from settings.worker import worker_settings
+from settings.auth import auth_settings
 
 
 class Settings:
@@ -24,7 +25,6 @@ class Settings:
     web_debug = web_settings.web_debug
     web_name = web_settings.web_name
     web_version = web_settings.web_version
-    web_api_key = web_settings.web_api_key
 
     mongodb_host = mongo_settings.mongodb_host
     mongodb_port = mongo_settings.mongodb_port
@@ -53,6 +53,11 @@ class Settings:
     worker_debug = worker_settings.worker_debug
     worker_poll_interval = worker_settings.worker_poll_interval
     music_data_dir = worker_settings.music_data_dir
+
+    google_client_id = auth_settings.google_client_id
+    session_secret = auth_settings.session_secret
+    session_ttl_seconds = auth_settings.session_ttl_seconds
+    allowed_origins = auth_settings.allowed_origins
 
 
 settings = Settings()

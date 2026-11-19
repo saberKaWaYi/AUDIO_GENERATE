@@ -15,7 +15,7 @@ from models.schemas_character import (
 from services.fish_audio_service import FishAudioError
 
 
-def insert_character(mongo, fish, payload: InsertCharacterRequest) -> InsertCharacterResponse:
+def insert_character(mongo, fish, user_id: int, payload: InsertCharacterRequest) -> InsertCharacterResponse:
     reference_id = payload.reference_id.strip()
     if not reference_id:
         raise ValueError("reference_id 不能为空")
@@ -28,14 +28,14 @@ def insert_character(mongo, fish, payload: InsertCharacterRequest) -> InsertChar
 
     now = datetime.utcnow()
     character = AudioCharacter(
-        user_id=payload.user_id,
+        user_id=user_id,
         **entity.model_dump(),
         create_time=now,
         update_time=now,
         is_deleted=False,
     )
     document = character.model_dump(mode="json")
-    query = {"user_id": payload.user_id, "reference_id": reference_id, "is_deleted": False}
+    query = {"user_id": user_id, "reference_id": reference_id, "is_deleted": False}
 
     created = mongo.find_one(AUDIO_CHARACTERS_COLLECTION, query) is None
     if created:

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 - Audio Generate</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-card">
+      <h1>Audio Generate</h1>
+      <p class="sub">请使用 Google 账号登录</p>
+      <div id="googleBtn"></div>
+      <p class="msg" id="msg"></p>
+    </div>
+  </div>
+
+  <script>
+    const msg = document.getElementById("msg");
+
+    function showMessage(text) {
+      msg.textContent = text;
+    }
+
+    async function init() {
+      try {
+        const check = await fetch("/api/auth/me", { credentials: "same-origin" });
+        if (check.ok) {
+          window.location.replace("/index.html");
+          return;
+        }
+      } catch (e) {
+        showMessage("无法连接服务，请稍后重试");
+        return;
+      }
+
+      let config;
+      try {
+        const res = await fetch("/api/auth/config", { credentials: "same-origin" });
+        if (!res.ok) {
+          showMessage("登录配置读取失败");
+          return;
+        }
+        config = await res.json();
+      } catch (e) {
+        showMessage("登录配置读取失败");
+        return;
+      }
+
+      if (!config.google_client_id) {
+        showMessage("服务端尚未配置 GOOGLE_CLIENT_ID");
+        return;
+      }
+
+      if (typeof google === "undefined" || !google.accounts) {
+        showMessage("Google 登录组件加载失败，请刷新重试");
+        return;
+      }
+
+      google.accounts.id.initialize({
+        client_id: config.google_client_id,
+        callback: handleCredential,
+      });
+      google.accounts.id.renderButton(document.getElementById("googleBtn"), {
+        theme: "outline",
+        size: "large",
+        width: 320,
+        text: "signin_with",
+      });
+    }
+
+    async function handleCredential(response) {
+      showMessage("正在登录...");
+      try {
+        const res = await fetch("/api/auth/google", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ credential: response.credential }),
+        });
+        if (res.ok) {
+          window.location.replace("/index.html");
+          return;
+        }
+        const data = await res.json();
+        showMessage(data.detail || "登录失败");
+      } catch (e) {
+        showMessage("登录请求失败，请稍后重试");
+      }
+    }
+
+    window.addEventListener("load", init);
+  </script>
+</body>
+</html>

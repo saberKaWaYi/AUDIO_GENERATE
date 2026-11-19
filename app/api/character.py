@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import ValidationError
 
 from app.api.character_bl import (
@@ -7,6 +7,7 @@ from app.api.character_bl import (
 )
 from app.api.character_req import InsertCharacterRequest
 from app.api.character_res import InsertCharacterResponse, CharacterListResponse
+from app.auth.deps import get_current_user
 from services.fish_audio_service import (
     FishAudioError,
     FishAudioNotFoundError,
@@ -25,9 +26,9 @@ router = APIRouter()
     response_model=InsertCharacterResponse,
     summary="Insert a character",
 )
-async def insert_character(payload: InsertCharacterRequest, request: Request):
+async def insert_character(payload: InsertCharacterRequest, request: Request, user=Depends(get_current_user)):
     try:
-        return insert_character_bl(request.app.state.mongo, request.app.state.fish, payload)
+        return insert_character_bl(request.app.state.mongo, request.app.state.fish, user.user_id, payload)
     except ValidationError:
         raise HTTPException(status_code=502, detail="上游角色数据结构异常")
     except ValueError as e:
@@ -52,7 +53,7 @@ async def insert_character(payload: InsertCharacterRequest, request: Request):
 )
 async def list_characters(
     request: Request,
-    user_id: int = Query(..., ge=1, description="用户身份"),
+    user=Depends(get_current_user),
     page: int = Query(1, ge=1, description="页码，从 1 开始"),
     page_size: int = Query(10, ge=1, le=50, description="每页条数，最多 50"),
     keyword: str | None = Query(None, description="名称模糊匹配"),
@@ -63,7 +64,7 @@ async def list_characters(
     try:
         return list_characters_bl(
             request.app.state.mongo,
-            user_id,
+            user.user_id,
             page,
             page_size,
             keyword,

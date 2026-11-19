@@ -1,11 +1,11 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import APIKeyHeader
 from fastapi.staticfiles import StaticFiles
 
+from settings.auth import auth_settings
 from settings.mongo import mongo_settings
 from settings.web import web_settings
 from logging_config import setup_logging
@@ -16,7 +16,17 @@ from services.mongo_service import MongoService
 from services.fish_audio_service import FishAudioService
 from models.schemas_character import AUDIO_CHARACTERS_COLLECTION, AUDIO_CHARACTER_INDEXES
 from models.schemas_task import AUDIO_TASKS_COLLECTION, AUDIO_TASK_INDEXES
+from models.schemas_user import (
+    AUDIO_COUNTERS_COLLECTION,
+    AUDIO_USER_IDENTITIES_COLLECTION,
+    AUDIO_USER_IDENTITY_INDEXES,
+    AUDIO_USERS_COLLECTION,
+    AUDIO_USER_INDEXES,
+    USER_ID_COUNTER_KEY,
+    AudioCounter,
+)
 from app.api import character, task
+from app.auth import auth
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
@@ -42,6 +52,19 @@ async def lifespan(app: FastAPI):
     for index in AUDIO_TASK_INDEXES:
         mongo.create_index(AUDIO_TASKS_COLLECTION, index["field"], index["unique"])
 
+    mongo.create_collection(AUDIO_USERS_COLLECTION)
+    for index in AUDIO_USER_INDEXES:
+        mongo.create_index(AUDIO_USERS_COLLECTION, index["field"], index["unique"])
+
+    mongo.create_collection(AUDIO_USER_IDENTITIES_COLLECTION)
+    for index in AUDIO_USER_IDENTITY_INDEXES:
+        mongo.create_index(AUDIO_USER_IDENTITIES_COLLECTION, index["field"], index["unique"])
+
+    mongo.create_collection(AUDIO_COUNTERS_COLLECTION)
+    if mongo.find_one(AUDIO_COUNTERS_COLLECTION, {"key": USER_ID_COUNTER_KEY}) is None:
+        counter = AudioCounter(key=USER_ID_COUNTER_KEY, value=0)
+        mongo.insert_document(AUDIO_COUNTERS_COLLECTION, counter.model_dump(mode="json"))
+
     yield
 
     mongo.close()
@@ -54,9 +77,14 @@ def create_app() -> FastAPI:
         debug=web_settings.web_debug,
         lifespan=lifespan,
     )
+    allowed_origins = [
+        origin.strip()
+        for origin in auth_settings.allowed_origins.split(",")
+        if origin.strip()
+    ]
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=allowed_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -64,24 +92,8 @@ def create_app() -> FastAPI:
     return app
 
 
-API_KEY_NAME = "X-API-Key"
-api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
-
-
-def verify_api_key(api_key: str = Depends(api_key_header)):
-    expected = web_settings.web_api_key.strip()
-    if not expected:
-        raise HTTPException(status_code=503, detail="BACKEND_API_KEY 未配置")
-    if not api_key or api_key != expected:
-        raise HTTPException(status_code=401, detail="Invalid or missing API key")
-    return api_key
-
-
 app = create_app()
-app.include_router(
-    character.router, prefix="/api", tags=["character"], dependencies=[Depends(verify_api_key)]
-)
-app.include_router(
-    task.router, prefix="/api", tags=["task"], dependencies=[Depends(verify_api_key)]
-)
+app.include_router(auth.router, prefix="/api", tags=["auth"])
+app.include_router(character.router, prefix="/api", tags=["character"])
+app.include_router(task.router, prefix="/api", tags=["task"])
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")

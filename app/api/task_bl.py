@@ -34,12 +34,12 @@ def _new_result(task_type: TaskType) -> TaskResult:
 
 
 def _new_task(
-    task_id: str, request: CreateTaskRequest, task_type: TaskType, now: datetime
+    task_id: str, user_id: int, request: CreateTaskRequest, task_type: TaskType, now: datetime
 ) -> AudioTask:
     return AudioTask(
         task_id=task_id,
         subtask_id=uuid4().hex,
-        user_id=request.user_id,
+        user_id=user_id,
         type=task_type,
         info=_new_info(request, task_type),
         status=TaskStatus.DEBUG,
@@ -50,7 +50,7 @@ def _new_task(
     )
 
 
-def create_task(mongo, request: CreateTaskRequest) -> CreateTaskResponse:
+def create_task(mongo, user_id: int, request: CreateTaskRequest) -> CreateTaskResponse:
     if not request.title.strip():
         raise ValueError("作品标题不能为空")
     if not request.theme.strip():
@@ -58,7 +58,7 @@ def create_task(mongo, request: CreateTaskRequest) -> CreateTaskResponse:
 
     now = datetime.utcnow()
     task_id = uuid4().hex
-    task = _new_task(task_id, request, request.type, now)
+    task = _new_task(task_id, user_id, request, request.type, now)
     mongo.insert_document(AUDIO_TASKS_COLLECTION, task.model_dump(mode="json"))
 
     return CreateTaskResponse(task_id=task_id, status=task.status)

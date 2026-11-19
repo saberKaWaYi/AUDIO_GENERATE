@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audio Generate</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Audio Generate</div>
+    <div class="user-area">
+      <img id="avatar" class="avatar" alt="" hidden>
+      <span id="userName"></span>
+      <button id="logoutBtn">退出登录</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <h2>工作台</h2>
+    <p class="hint">当前登录用户 ID：<span id="userId"></span></p>
+    <p class="hint">任务与角色管理界面后续接入。</p>
+  </main>
+
+  <script>
+    function redirectToLogin() {
+      window.location.replace("/login.html");
+    }
+
+    async function loadMe() {
+      let res;
+      try {
+        res = await fetch("/api/auth/me", { credentials: "same-origin" });
+      } catch (e) {
+        return;
+      }
+      if (!res.ok) {
+        redirectToLogin();
+        return;
+      }
+      const user = await res.json();
+      document.getElementById("userId").textContent = user.user_id;
+      document.getElementById("userName").textContent = user.name || user.email || ("用户 " + user.user_id);
+      if (user.picture) {
+        const avatar = document.getElementById("avatar");
+        avatar.src = user.picture;
+        avatar.hidden = false;
+      }
+    }
+
+    async function logout() {
+      try {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          credentials: "same-origin",
+        });
+      } finally {
+        redirectToLogin();
+      }
+    }
+
+    document.getElementById("logoutBtn").addEventListener("click", logout);
+    window.addEventListener("load", loadMe);
+  </script>
+</body>
+</html>

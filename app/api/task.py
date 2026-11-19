@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.api.task_bl import create_task as create_task_bl
 from app.api.task_bl import query_task as query_task_bl
+from app.auth.deps import get_current_user
 from app.api.task_req import CreateTaskRequest
 from app.api.task_res import CreateTaskResponse, TaskQueryResponse
 
@@ -17,9 +18,9 @@ router = APIRouter()
     response_model=CreateTaskResponse,
     summary="Create an audio generation task",
 )
-async def create_task(payload: CreateTaskRequest, request: Request):
+async def create_task(payload: CreateTaskRequest, request: Request, user=Depends(get_current_user)):
     try:
-        return create_task_bl(request.app.state.mongo, payload)
+        return create_task_bl(request.app.state.mongo, user.user_id, payload)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError:
@@ -37,10 +38,10 @@ async def create_task(payload: CreateTaskRequest, request: Request):
 async def query_task(
     task_id: str,
     request: Request,
-    user_id: int = Query(..., ge=1, description="提交者身份；别人的任务返回 404"),
+    user=Depends(get_current_user),
 ):
     try:
-        task = query_task_bl(request.app.state.mongo, task_id, user_id)
+        task = query_task_bl(request.app.state.mongo, task_id, user.user_id)
     except RuntimeError:
         raise HTTPException(status_code=503, detail="数据库未就绪")
     except Exception as e:
