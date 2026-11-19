@@ -50,6 +50,8 @@ class Settings:
     deepseek_timeout = deepseek_settings.deepseek_timeout
     deepseek_max_retries = deepseek_settings.deepseek_max_retries
 
+    worker_poll_interval = worker_settings.worker_poll_interval
+    music_data_dir = worker_settings.music_data_dir
 
 
 settings = Settings()

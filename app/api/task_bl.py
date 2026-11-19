@@ -4,8 +4,6 @@ from uuid import uuid4
 from app.api.task_req import CreateTaskRequest
 from app.api.task_res import CreateTaskResponse, TaskQueryResponse, TaskSubtaskResponse
 from models.schemas_task import (
-    ASMRBackendMusicInfo,
-    ASMRBackendMusicResult,
     ASMRTextInfo,
     ASMRTextResult,
     AUDIO_TASKS_COLLECTION,
@@ -26,20 +24,12 @@ def _new_info(request: CreateTaskRequest, task_type: TaskType) -> TaskInfo:
             duration_minutes=request.duration_minutes,
             language=request.language,
         )
-    if task_type == TaskType.ASMR_BACKEND_MUSIC:
-        return ASMRBackendMusicInfo(
-            title=request.title,
-            reference_ids=request.reference_ids,
-            theme=request.theme,
-        )
     raise ValueError(f"不支持的任务类型：{task_type}")
 
 
 def _new_result(task_type: TaskType) -> TaskResult:
     if task_type == TaskType.ASMR_TEXT:
         return ASMRTextResult(result_text="", prompt_tokens=0, completion_tokens=0)
-    if task_type == TaskType.ASMR_BACKEND_MUSIC:
-        return ASMRBackendMusicResult(result_text="", prompt_tokens=0, completion_tokens=0)
     raise ValueError(f"不支持的任务类型：{task_type}")
 
 
