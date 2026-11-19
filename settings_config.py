@@ -4,6 +4,7 @@ from settings.mongo import mongo_settings
 from settings.fish_audio import fish_audio_settings
 from settings.elevenlabs import elevenlabs_settings
 from settings.deepseek import deepseek_settings
+from settings.worker import worker_settings
 
 
 class Settings:
@@ -11,6 +12,7 @@ class Settings:
     def get_service_debug(self, service: LogServiceName) -> bool:
         service_debug_map = {
             "web": web_settings.web_debug,
+            "worker": worker_settings.worker_debug,
         }
         service_debug = service_debug_map[service]
         if service_debug is None:

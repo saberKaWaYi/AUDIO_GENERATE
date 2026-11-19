@@ -12,6 +12,7 @@ LOG_DIR = BASE_DIR / "logs"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 WEB_LOG = LOG_DIR / "web.log"
+WORKER_LOG = LOG_DIR / "worker.log"
 
 
 def _standard_formatters() -> dict:
@@ -58,8 +59,44 @@ def _logging_dict_web(debug: bool) -> dict:
     }
 
 
+def _logging_dict_worker(debug: bool) -> dict:
+    level = "DEBUG" if debug else "INFO"
+    return {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": _standard_formatters(),
+        "handlers": {
+            "worker_file": {
+                "class": "logging.FileHandler",
+                "filename": str(WORKER_LOG),
+                "formatter": "standard",
+                "level": level,
+                "encoding": "utf-8",
+            },
+            "console": _console_handler(),
+        },
+        "loggers": {
+            "worker": {
+                "handlers": ["worker_file", "console"],
+                "level": level,
+                "propagate": False,
+            },
+            "services": {
+                "handlers": ["worker_file", "console"],
+                "level": level,
+                "propagate": False,
+            },
+        },
+    }
+
+
 def setup_logging(service: LogServiceName, *, debug: bool | None = None) -> None:
-    if service != "web":
-        raise ValueError(f"Unknown log service: {service!r}")
     effective_debug = settings.get_service_debug(service) if debug is None else debug
-    logging.config.dictConfig(_logging_dict_web(effective_debug))
+    builders = {
+        "web": _logging_dict_web,
+        "worker": _logging_dict_worker,
+    }
+    builder = builders.get(service)
+    if builder is None:
+        raise ValueError(f"Unknown log service: {service!r}")
+    logging.config.dictConfig(builder(effective_debug))
