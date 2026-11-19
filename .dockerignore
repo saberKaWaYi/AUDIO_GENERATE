@@ -2,12 +2,12 @@
 .gitignore
 .env
 .env.*
-.workbuddy
+.workbuddy/
 venv/
 .venv/
 __pycache__
 *.py[cod]
 logs/
-.pytest_cache/
-.mypy_cache/
+*.log
 data
+data_temp

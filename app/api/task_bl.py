@@ -42,7 +42,7 @@ def _new_task(
         user_id=request.user_id,
         type=task_type,
         info=_new_info(request, task_type),
-        status=TaskStatus.PENDING,
+        status=TaskStatus.DEBUG,
         result=_new_result(task_type),
         create_time=now,
         update_time=now,
