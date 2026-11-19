@@ -71,10 +71,6 @@ def create_task(mongo, request: CreateTaskRequest) -> CreateTaskResponse:
     task = _new_task(task_id, request, request.type, now)
     mongo.insert_document(AUDIO_TASKS_COLLECTION, task.model_dump(mode="json"))
 
-    if request.background_music:
-        music_task = _new_task(task_id, request, TaskType.ASMR_BACKEND_MUSIC, now)
-        mongo.insert_document(AUDIO_TASKS_COLLECTION, music_task.model_dump(mode="json"))
-
     return CreateTaskResponse(task_id=task_id, status=task.status)
 
 

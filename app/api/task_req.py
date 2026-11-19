@@ -12,4 +12,3 @@ class CreateTaskRequest(BaseModel):
     theme: str = Field(..., min_length=1, description="详细创作主题")
     duration_minutes: int = Field(..., ge=1, description="目标时长（分钟）")
     language: TaskLanguage = Field(..., description="语言：zh / ja / en / ko")
-    background_music: bool = Field(..., description="是否启用全局背景音乐")
