@@ -8,6 +8,9 @@ class WebSettings(EnvSettings):
     web_debug: bool | None = Field(default=None, alias="WEB_DEBUG")
     web_name: str = Field(default="Audio Generate Web Service", alias="WEB_NAME")
     web_version: str = Field(default="1.0", alias="WEB_VERSION")
+    allowed_origins: str = Field(
+        default="http://localhost:8002", alias="ALLOWED_ORIGINS"
+    )
 
 
 web_settings = WebSettings()

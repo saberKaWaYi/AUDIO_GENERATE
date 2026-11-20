@@ -49,10 +49,16 @@ def deliver_email_code(email: str, code: str) -> None:
         raise RuntimeError("SMTP 邮箱配置未完整")
     ttl_minutes = email_settings.email_code_ttl_seconds // 60
     message = EmailMessage()
-    message["Subject"] = "AI AUDIO 登录验证码"
+    message["Subject"] = "Your AI AUDIO verification code"
     message["From"] = user
     message["To"] = email
-    message.set_content(f"您的登录验证码是 {code}，{ttl_minutes} 分钟内有效。")
+    message.set_content(
+        "Hello,\n\n"
+        f"Your verification code for AI AUDIO is {code}.\n\n"
+        f"This code will expire in {ttl_minutes} minutes. "
+        "If you did not request this code, you can safely ignore this email.\n\n"
+        "— The AI AUDIO Team"
+    )
     with smtplib.SMTP_SSL(host, email_settings.smtp_port, timeout=10) as smtp:
         smtp.login(user, password)
         smtp.send_message(message)

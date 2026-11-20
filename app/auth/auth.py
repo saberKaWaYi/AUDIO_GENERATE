@@ -23,7 +23,7 @@ def _set_session_cookie(response: Response, user_id: int) -> None:
         key=SESSION_COOKIE_NAME,
         value=token,
         httponly=True,
-        secure=False,
+        secure=auth_settings.session_cookie_secure,
         samesite="lax",
         max_age=auth_settings.session_ttl_seconds,
         path="/",

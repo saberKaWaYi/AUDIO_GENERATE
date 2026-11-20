@@ -26,6 +26,7 @@ class Settings:
     web_debug = web_settings.web_debug
     web_name = web_settings.web_name
     web_version = web_settings.web_version
+    allowed_origins = web_settings.allowed_origins
 
     mongodb_host = mongo_settings.mongodb_host
     mongodb_port = mongo_settings.mongodb_port
@@ -58,7 +59,7 @@ class Settings:
     google_client_id = auth_settings.google_client_id
     session_secret = auth_settings.session_secret
     session_ttl_seconds = auth_settings.session_ttl_seconds
-    allowed_origins = auth_settings.allowed_origins
+    session_cookie_secure = auth_settings.session_cookie_secure
 
     smtp_host = email_settings.smtp_host
     smtp_port = email_settings.smtp_port

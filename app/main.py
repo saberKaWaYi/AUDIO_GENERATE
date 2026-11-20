@@ -5,7 +5,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from settings.auth import auth_settings
 from settings.mongo import mongo_settings
 from settings.web import web_settings
 from logging_config import setup_logging
@@ -85,7 +84,7 @@ def create_app() -> FastAPI:
     )
     allowed_origins = [
         origin.strip()
-        for origin in auth_settings.allowed_origins.split(",")
+        for origin in web_settings.allowed_origins.split(",")
         if origin.strip()
     ]
     app.add_middleware(
