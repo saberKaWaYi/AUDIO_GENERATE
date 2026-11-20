@@ -80,7 +80,7 @@
       <section class="voice-intro">
         <div class="voice-kicker">VOICE STUDIO</div>
         <h1 data-i18n="voice.heroTitle">把一段声音，变成专属音色</h1>
-        <p data-i18n="voice.heroDesc">上传参考视频与一张封面照片，系统会提取人声克隆出可反复使用的音色。参考视频总时长需在 30 到 90 秒之间。</p>
+        <p data-i18n="voice.heroDesc">上传参考音频与一张封面照片，系统会提取人声克隆出可反复使用的音色。参考音频总时长需在 30 到 90 秒之间。</p>
       </section>
 
       <div class="voice-columns">
@@ -103,12 +103,12 @@
             </label>
           </div>
 
-          <div class="voice-step"><span class="voice-step-num">02</span><h3 data-i18n="voice.stepTwo">参考视频</h3></div>
+          <div class="voice-step"><span class="voice-step-num">02</span><h3 data-i18n="voice.stepTwo">参考音频</h3></div>
           <label class="voice-dropzone" id="voiceDropzone" for="voiceFiles">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
-            <strong data-i18n="voice.dropTitle">拖入 MP4，或点击选择</strong>
+            <strong data-i18n="voice.dropTitle">拖入 MP3，或点击选择</strong>
             <span data-i18n="voice.dropHint">可多选 · 总时长需在 30~90 秒之间</span>
-            <input id="voiceFiles" type="file" accept="video/mp4,.mp4" multiple>
+            <input id="voiceFiles" type="file" accept="audio/mpeg,.mp3" multiple>
           </label>
 
           <p id="fileCount" class="voice-fcount"></p>
@@ -140,7 +140,7 @@
     const MIN_SECONDS = 30;
     const MAX_SECONDS = 90;
     const TRACK_MAX = 120;
-    const VIDEO_SUFFIXES = [".mp4"];
+    const AUDIO_SUFFIXES = [".mp3"];
     const IMAGE_SUFFIXES = [".jpg", ".jpeg", ".png"];
 
     function hasSuffix(file, suffixes) {
@@ -164,7 +164,7 @@
     const libraryEl = document.getElementById("voiceLibrary");
 
     let durationEntries = [];
-    let rejectedVideoCount = 0;
+    let rejectedAudioCount = 0;
     let coverFile = null;
     let coverObjectUrl = null;
     let messageRenderer = null;
@@ -230,8 +230,8 @@
       pointer.style.left = Math.min(total / TRACK_MAX, 1) * 100 + "%";
 
       let valid = false;
-      if (rejectedVideoCount > 0) {
-        showMessage("voice.videoTypeRejected", true, { n: rejectedVideoCount });
+      if (rejectedAudioCount > 0) {
+        showMessage("voice.videoTypeRejected", true, { n: rejectedAudioCount });
       } else if (durationEntries.length === 0) {
         clearMessage();
       } else if (readFailed) {
@@ -247,13 +247,13 @@
       createBtn.disabled = !valid;
     }
 
-    function readVideoDuration(file) {
+    function readAudioDuration(file) {
       return new Promise((resolve) => {
         const url = URL.createObjectURL(file);
-        const video = document.createElement("video");
-        video.preload = "metadata";
-        video.onloadedmetadata = () => {
-          const duration = video.duration;
+        const audio = document.createElement("audio");
+        audio.preload = "metadata";
+        audio.onloadedmetadata = () => {
+          const duration = audio.duration;
           URL.revokeObjectURL(url);
           if (!Number.isFinite(duration) || duration <= 0) {
             resolve(null);
@@ -261,21 +261,21 @@
           }
           resolve(duration);
         };
-        video.onerror = () => {
+        audio.onerror = () => {
           URL.revokeObjectURL(url);
           resolve(null);
         };
-        video.src = url;
+        audio.src = url;
       });
     }
 
     async function processFiles(files) {
-      const accepted = files.filter((file) => hasSuffix(file, VIDEO_SUFFIXES));
-      rejectedVideoCount = files.length - accepted.length;
+      const accepted = files.filter((file) => hasSuffix(file, AUDIO_SUFFIXES));
+      rejectedAudioCount = files.length - accepted.length;
       durationEntries = accepted.map((file) => ({ name: file.name, seconds: null, file: file }));
       renderAnswer();
       for (let i = 0; i < accepted.length; i += 1) {
-        durationEntries[i].seconds = await readVideoDuration(accepted[i]);
+        durationEntries[i].seconds = await readAudioDuration(accepted[i]);
         renderAnswer();
       }
     }

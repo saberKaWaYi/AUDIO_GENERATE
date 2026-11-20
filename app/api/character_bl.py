@@ -18,8 +18,8 @@ from services.fish_audio_service import FishAudioError
 
 MIN_DURATION_SECONDS = 30.0
 MAX_DURATION_SECONDS = 90.0
-VIDEO_SUFFIXES = (".mp4",)
-VIDEO_CONTENT_TYPES = ("video/mp4", "application/octet-stream")
+AUDIO_SUFFIXES = (".mp3",)
+AUDIO_CONTENT_TYPES = ("audio/mpeg", "audio/mp3", "application/octet-stream")
 IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png")
 IMAGE_CONTENT_TYPES = ("image/jpeg", "image/png", "application/octet-stream")
 
@@ -37,14 +37,14 @@ def _validate_uploads(
     if not math.isfinite(duration_seconds):
         raise ValueError("总时长必须是有限数值")
     if not MIN_DURATION_SECONDS <= duration_seconds <= MAX_DURATION_SECONDS:
-        raise ValueError("参考视频总时长必须在 30 到 90 秒之间")
+        raise ValueError("参考音频总时长必须在 30 到 90 秒之间")
     for name, content, content_type in voices:
         if not content:
-            raise ValueError(f"参考视频内容为空：{name}")
-        if not _match_suffix(name, VIDEO_SUFFIXES):
-            raise ValueError(f"参考视频仅支持 MP4：{name}")
-        if content_type not in VIDEO_CONTENT_TYPES:
-            raise ValueError(f"参考视频类型不支持：{name}")
+            raise ValueError(f"参考音频内容为空：{name}")
+        if not _match_suffix(name, AUDIO_SUFFIXES):
+            raise ValueError(f"参考音频仅支持 MP3：{name}")
+        if content_type not in AUDIO_CONTENT_TYPES:
+            raise ValueError(f"参考音频类型不支持：{name}")
     if cover_image is not None:
         name, content, content_type = cover_image
         if not content:
