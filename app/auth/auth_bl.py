@@ -27,6 +27,8 @@ SESSION_COOKIE_NAME = "session"
 PROVIDER_GOOGLE = "google"
 PROVIDER_EMAIL = "email"
 
+EMAIL_CODE_SEND_INTERVAL_SECONDS = 60
+
 
 def verify_google_credential(credential: str) -> dict:
     client_id = auth_settings.google_client_id.strip()
@@ -214,8 +216,21 @@ def reject_gmail_email(email: str) -> None:
         raise ValueError("请走谷歌邮箱登录")
 
 
+def ensure_send_interval(mongo, email: str) -> None:
+    cutoff = (
+        datetime.utcnow() - timedelta(seconds=EMAIL_CODE_SEND_INTERVAL_SECONDS)
+    ).isoformat()
+    recent = mongo.count_documents(
+        AUDIO_EMAIL_CODES_COLLECTION,
+        {"email": email, "create_time": {"$gte": cutoff}},
+    )
+    if recent > 0:
+        raise ValueError("发送过于频繁，请稍后再试")
+
+
 def send_email_login_code(mongo, email: str) -> None:
     reject_gmail_email(email)
+    ensure_send_interval(mongo, email)
     code = generate_email_code()
     save_email_code(mongo, email, code)
     deliver_email_code(email, code)

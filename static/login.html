@@ -39,6 +39,24 @@
       msg.textContent = text;
     }
 
+    let countdownTimer = null;
+
+    function startSendCountdown() {
+      let left = 60;
+      sendCodeBtn.textContent = `${left}s 后重发`;
+      countdownTimer = setInterval(() => {
+        left -= 1;
+        if (left <= 0) {
+          clearInterval(countdownTimer);
+          countdownTimer = null;
+          sendCodeBtn.disabled = false;
+          sendCodeBtn.textContent = "发送验证码";
+          return;
+        }
+        sendCodeBtn.textContent = `${left}s 后重发`;
+      }, 1000);
+    }
+
     function isGmailAddress(email) {
       return email.toLowerCase().endsWith("@gmail.com");
     }
@@ -153,6 +171,7 @@
         return;
       }
       sendCodeBtn.disabled = true;
+      let sent = false;
       try {
         const res = await fetch("/api/auth/email/send-code", {
           method: "POST",
@@ -161,7 +180,9 @@
           body: JSON.stringify({ email: email }),
         });
         if (res.ok) {
+          sent = true;
           showMessage("验证码已发送，请查收邮件");
+          startSendCountdown();
         } else {
           const data = await res.json();
           showMessage(data.detail || "发送失败");
@@ -169,7 +190,9 @@
       } catch (e) {
         showMessage("发送请求失败，请稍后重试");
       } finally {
-        sendCodeBtn.disabled = false;
+        if (!sent) {
+          sendCodeBtn.disabled = false;
+        }
       }
     }
 
