@@ -45,6 +45,7 @@ class AudioCharacter(BaseModel):
     create_time: datetime
     update_time: datetime
     is_deleted: bool
+    is_public: bool = False
 
 
 AUDIO_CHARACTER_INDEXES: list[dict] = [

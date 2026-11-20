@@ -22,6 +22,7 @@ class CharacterResponse(BaseModel):
     updated_at: str = Field(..., description="上游更新时间")
     create_time: datetime = Field(..., description="入库时间")
     update_time: datetime = Field(..., description="更新时间")
+    is_public: bool = Field(False, description="是否公开展示")
 
 
 class InsertCharacterResponse(BaseModel):

@@ -130,7 +130,7 @@
         <div class="form-row">
           <div class="form-field">
             <label for="duration" data-i18n="form.duration">目标时长（分钟）</label>
-            <input id="duration" type="number" min="1" step="1" value="5" required>
+            <input id="duration" type="number" min="1" max="60" step="1" value="5" required>
           </div>
           <div class="form-field">
             <label for="language" data-i18n="form.language">语言</label>
@@ -292,7 +292,7 @@
         showMessageKey("form.enterTheme", null, true);
         return;
       }
-      if (!Number.isInteger(duration) || duration < 1) {
+      if (!Number.isInteger(duration) || duration < 1 || duration > 60) {
         showMessageKey("form.invalidDuration", null, true);
         return;
       }

@@ -79,6 +79,7 @@ def query_task(mongo, task_id: str, user_id: int) -> TaskQueryResponse | None:
             result=doc["result"],
             create_time=doc["create_time"],
             update_time=doc["update_time"],
+            is_public=doc["is_public"],
         )
         for doc in docs
     ]
@@ -89,4 +90,5 @@ def query_task(mongo, task_id: str, user_id: int) -> TaskQueryResponse | None:
         subtasks=subtasks,
         create_time=docs[0]["create_time"],
         update_time=docs[0]["update_time"],
+        is_public=docs[0]["is_public"],
     )

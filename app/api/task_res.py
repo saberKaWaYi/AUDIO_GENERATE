@@ -20,6 +20,7 @@ class TaskSubtaskResponse(BaseModel):
     result: TaskResult = Field(..., description="处理结果；未处理为空")
     create_time: datetime = Field(..., description="创建时间")
     update_time: datetime = Field(..., description="更新时间")
+    is_public: bool = Field(False, description="是否公开展示")
 
 
 class TaskQueryResponse(BaseModel):
@@ -30,3 +31,4 @@ class TaskQueryResponse(BaseModel):
     subtasks: list[TaskSubtaskResponse] = Field(..., description="该任务下的子任务")
     create_time: datetime = Field(..., description="创建时间")
     update_time: datetime = Field(..., description="更新时间")
+    is_public: bool = Field(False, description="是否公开展示")
