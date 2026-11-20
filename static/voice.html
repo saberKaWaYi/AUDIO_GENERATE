@@ -281,11 +281,14 @@
     async function processFiles(files) {
       resultMessage = null;
       const accepted = files.filter((file) => hasSuffix(file, AUDIO_SUFFIXES));
-      rejectedAudioCount = files.length - accepted.length;
-      durationEntries = accepted.map((file) => ({ name: file.name, seconds: null, file: file }));
+      rejectedAudioCount += files.length - accepted.length;
+      const startIndex = durationEntries.length;
+      for (const file of accepted) {
+        durationEntries.push({ name: file.name, seconds: null, file: file });
+      }
       renderAnswer();
       for (let i = 0; i < accepted.length; i += 1) {
-        durationEntries[i].seconds = await readAudioDuration(accepted[i]);
+        durationEntries[startIndex + i].seconds = await readAudioDuration(accepted[i]);
         renderAnswer();
       }
     }
