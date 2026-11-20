@@ -3,8 +3,8 @@ import argparse
 import uvicorn
 
 
-def run_web(host: str = "0.0.0.0", port: int = 8002, reload: bool = True):
-    uvicorn.run("app.main:app", host=host, port=port, reload=reload)
+def run_web(host: str = "0.0.0.0", port: int = 8002, reload: bool = True, workers: int = 1):
+    uvicorn.run("app.main:app", host=host, port=port, reload=reload, workers=workers)
 
 
 def run_worker():
@@ -19,11 +19,12 @@ def main():
     parser.add_argument("--host", default="0.0.0.0", help="Web服务主机地址")
     parser.add_argument("--port", type=int, default=8002, help="Web服务端口")
     parser.add_argument("--no-reload", action="store_true", help="禁用热重载")
+    parser.add_argument("--workers", type=int, default=1, help="Web服务进程数")
 
     args = parser.parse_args()
 
     if args.command == "web":
-        run_web(host=args.host, port=args.port, reload=not args.no_reload)
+        run_web(host=args.host, port=args.port, reload=not args.no_reload, workers=args.workers)
     elif args.command == "worker":
         run_worker()
 
