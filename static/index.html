@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ASMR 制作 - AI AUDIO</title>
+  <title data-i18n="app.title">ASMR 制作 - AI AUDIO</title>
   <link rel="stylesheet" href="/style.css">
+  <script src="/i18n.js"></script>
 </head>
 <body class="app-body">
   <aside id="sidebar" class="sidebar">
@@ -36,22 +37,22 @@
     <nav class="sidebar-nav">
       <a class="nav-item active" href="/index.html">
         <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 8v4M8 5v10M12 7v6M16 9v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></span>
-        <span class="nav-label">ASMR 制作</span>
+        <span class="nav-label" data-i18n="nav.asrm">ASMR 制作</span>
       </a>
       <div class="nav-item disabled">
         <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M10 6.5v7M8 8h3.2a1.4 1.4 0 0 1 0 2.8H8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg></span>
-        <span class="nav-label">购买积分</span>
-        <span class="nav-tag">即将上线</span>
+        <span class="nav-label" data-i18n="nav.credits">购买积分</span>
+        <span class="nav-tag" data-i18n="nav.soon">即将上线</span>
       </div>
       <div class="nav-item disabled">
         <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><rect x="2.5" y="5" width="15" height="10" rx="2" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M2.5 8.5h15" stroke="currentColor" stroke-width="1.6" fill="none"/></svg></span>
-        <span class="nav-label">支付</span>
-        <span class="nav-tag">即将上线</span>
+        <span class="nav-label" data-i18n="nav.payment">支付</span>
+        <span class="nav-tag" data-i18n="nav.soon">即将上线</span>
       </div>
       <div class="nav-item disabled">
         <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 2.8l2.2 4.5 5 .7-3.6 3.5.85 5L10 14l-4.45 2.5.85-5L2.8 8l5-.7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/></svg></span>
-        <span class="nav-label">积分</span>
-        <span class="nav-tag">即将上线</span>
+        <span class="nav-label" data-i18n="nav.points">积分</span>
+        <span class="nav-tag" data-i18n="nav.soon">即将上线</span>
       </div>
     </nav>
     <div class="sidebar-foot">
@@ -61,24 +62,25 @@
 
   <div class="app-main">
     <header class="topbar">
-      <div class="topbar-title">ASMR 制作</div>
+      <div class="topbar-title" data-i18n="nav.asrm">ASMR 制作</div>
       <div class="user-area">
+        <div id="langSwitcher" class="lang-switcher"></div>
         <img id="avatar" class="avatar" alt="" hidden>
         <span id="userName"></span>
-        <button id="logoutBtn">退出登录</button>
+        <button id="logoutBtn" data-i18n="topbar.logout">退出登录</button>
       </div>
     </header>
 
     <main class="main">
       <section class="hero">
         <div class="hero-content">
-          <span class="hero-kicker">AI AUDIO STUDIO</span>
-          <h1>让想象，成为可听见的声音</h1>
-          <p>挑选声线角色，写下你的灵感，AI 为你生成专属 ASMR 音频作品。从一段文字，到沉浸式声境。</p>
+          <span class="hero-kicker" data-i18n="hero.kicker">AI AUDIO STUDIO</span>
+          <h1 data-i18n="hero.title">让想象，成为可听见的声音</h1>
+          <p data-i18n="hero.desc">挑选声线角色，写下你的灵感，AI 为你生成专属 ASMR 音频作品。从一段文字，到沉浸式声境。</p>
           <div class="hero-features">
-            <span class="hero-feature">多角色声线</span>
-            <span class="hero-feature">四种语言</span>
-            <span class="hero-feature">高清音质输出</span>
+            <span class="hero-feature" data-i18n="hero.f1">多角色声线</span>
+            <span class="hero-feature" data-i18n="hero.f2">四种语言</span>
+            <span class="hero-feature" data-i18n="hero.f3">高清音质输出</span>
           </div>
         </div>
         <div class="hero-art" aria-hidden="true">
@@ -102,57 +104,57 @@
       </section>
 
       <div class="page-head">
-        <h2>创作配置</h2>
-        <p class="hint">填写作品信息，选择合适角色，提交后可在下方查询进度。</p>
+        <h2 data-i18n="page.configTitle">创作配置</h2>
+        <p class="hint" data-i18n="page.configHint">填写作品信息，选择合适角色，提交后可在下方查询进度。</p>
       </div>
 
       <form id="taskForm" class="task-form" novalidate>
         <div class="form-field">
-          <label for="title">作品标题</label>
-          <input id="title" type="text" placeholder="例如：雨夜治愈轻声" required>
+          <label for="title" data-i18n="form.title">作品标题</label>
+          <input id="title" type="text" data-i18n-placeholder="form.titlePlaceholder" placeholder="例如：雨夜治愈轻声" required>
         </div>
 
         <div class="form-field">
-          <span class="field-label">参与角色</span>
+          <span class="field-label" data-i18n="form.characters">参与角色</span>
           <div id="characterList" class="character-list">
-            <span class="hint">正在加载角色...</span>
+            <span class="hint" data-i18n="form.loadingCharacters">正在加载角色...</span>
           </div>
         </div>
 
         <div class="form-field">
-          <label for="theme">创作主题</label>
-          <textarea id="theme" rows="5" placeholder="详细的创作主题与情节描述" required></textarea>
+          <label for="theme" data-i18n="form.theme">创作主题</label>
+          <textarea id="theme" rows="5" data-i18n-placeholder="form.themePlaceholder" placeholder="详细的创作主题与情节描述" required></textarea>
         </div>
 
         <div class="form-row">
           <div class="form-field">
-            <label for="duration">目标时长（分钟）</label>
+            <label for="duration" data-i18n="form.duration">目标时长（分钟）</label>
             <input id="duration" type="number" min="1" step="1" value="5" required>
           </div>
           <div class="form-field">
-            <label for="language">语言</label>
+            <label for="language" data-i18n="form.language">语言</label>
             <select id="language" required>
-              <option value="zh">中文 zh</option>
-              <option value="ja">日语 ja</option>
-              <option value="en">英语 en</option>
-              <option value="ko">韩语 ko</option>
+              <option value="zh" data-i18n="form.lang.zh">中文 zh</option>
+              <option value="ja" data-i18n="form.lang.ja">日语 ja</option>
+              <option value="en" data-i18n="form.lang.en">英语 en</option>
+              <option value="ko" data-i18n="form.lang.ko">韩语 ko</option>
             </select>
           </div>
         </div>
 
         <div class="form-foot">
-          <span class="type-badge">任务类型：ASMR_TEXT</span>
-          <button id="submitBtn" class="primary-btn" type="submit">下发任务</button>
+          <span class="type-badge" data-i18n="form.typeBadge">任务类型：ASMR_TEXT</span>
+          <button id="submitBtn" class="primary-btn" type="submit" data-i18n="form.submit">下发任务</button>
         </div>
       </form>
 
       <p id="formMsg" class="msg"></p>
 
       <section id="resultPanel" class="result-panel" hidden>
-        <h3>任务已创建</h3>
-        <p class="result-line">任务 ID：<code id="resultTaskId"></code></p>
-        <p class="result-line">当前状态：<span id="resultStatus" class="status-tag"></span></p>
-        <button id="queryBtn" class="secondary-btn" type="button">查询任务状态</button>
+        <h3 data-i18n="result.created">任务已创建</h3>
+        <p class="result-line"><span data-i18n="result.taskId">任务 ID：</span><code id="resultTaskId"></code></p>
+        <p class="result-line"><span data-i18n="result.status">当前状态：</span><span id="resultStatus" class="status-tag"></span></p>
+        <button id="queryBtn" class="secondary-btn" type="button" data-i18n="result.queryBtn">查询任务状态</button>
         <div id="queryResult" class="query-result"></div>
       </section>
     </main>
@@ -188,7 +190,7 @@
         if (data.items.length === 0) {
           const empty = document.createElement("span");
           empty.className = "hint";
-          empty.textContent = "暂无可用角色，请先导入角色。";
+          empty.textContent = I18n.t("form.noCharacters");
           characterList.appendChild(empty);
           return;
         }
@@ -208,14 +210,14 @@
         if (data.total > data.items.length) {
           const more = document.createElement("p");
           more.className = "hint";
-          more.textContent = "角色较多，当前只显示前 " + data.items.length + " 个。";
+          more.textContent = I18n.t("form.moreCharacters", { n: data.items.length });
           characterList.appendChild(more);
         }
       } catch (e) {
         characterList.textContent = "";
         const empty = document.createElement("span");
         empty.className = "hint";
-        empty.textContent = "角色加载失败：" + e.message;
+        empty.textContent = I18n.t("form.loadCharactersFailed") + e.message;
         characterList.appendChild(empty);
       }
     }
@@ -235,19 +237,19 @@
       const language = languageInput.value;
 
       if (!title) {
-        showMessage("请输入作品标题", true);
+        showMessage(I18n.t("form.enterTitle"), true);
         return;
       }
       if (referenceIds.length === 0) {
-        showMessage("请至少选择一个角色", true);
+        showMessage(I18n.t("form.selectCharacter"), true);
         return;
       }
       if (!theme) {
-        showMessage("请输入创作主题", true);
+        showMessage(I18n.t("form.enterTheme"), true);
         return;
       }
       if (!Number.isInteger(duration) || duration < 1) {
-        showMessage("时长必须是大于等于 1 的整数", true);
+        showMessage(I18n.t("form.invalidDuration"), true);
         return;
       }
 
@@ -271,9 +273,9 @@
         resultStatus.className = "status-tag status-" + result.status;
         queryResult.textContent = "";
         resultPanel.hidden = false;
-        showMessage("下发成功", false);
+        showMessage(I18n.t("form.submitSuccess"), false);
       } catch (e) {
-        showMessage("下发失败：" + e.message, true);
+        showMessage(I18n.t("form.submitFailed") + e.message, true);
       } finally {
         submitBtn.disabled = false;
       }
@@ -301,7 +303,10 @@
 
         const tokens = document.createElement("p");
         tokens.className = "hint";
-        tokens.textContent = "prompt tokens: " + sub.result.prompt_tokens + " · completion tokens: " + sub.result.completion_tokens;
+        tokens.textContent = I18n.t("subtask.tokens", {
+          p: sub.result.prompt_tokens,
+          c: sub.result.completion_tokens,
+        });
         card.appendChild(tokens);
         queryResult.appendChild(card);
       }
@@ -318,13 +323,23 @@
         resultStatus.className = "status-tag status-" + data.status;
         renderSubtasks(data.subtasks);
       } catch (e) {
-        showMessage("查询失败：" + e.message, true);
+        showMessage(I18n.t("result.queryFailed") + e.message, true);
       } finally {
         queryBtn.disabled = false;
       }
     }
 
+    window.addEventListener("aiaudio:langchange", () => {
+      if (createdTaskId) {
+        App.api("/api/audio/tasks/" + encodeURIComponent(createdTaskId))
+          .then((data) => renderSubtasks(data.subtasks))
+          .catch(() => {});
+      }
+    });
+
     async function initPage() {
+      I18n.init();
+      I18n.buildSwitcher(document.getElementById("langSwitcher"));
       const ok = await App.init();
       if (!ok) {
         return;

@@ -3,24 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>登录 - AI AUDIO</title>
+  <title data-i18n="login.title">登录 - AI AUDIO</title>
   <link rel="stylesheet" href="/style.css">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="/i18n.js"></script>
 </head>
 <body>
   <div class="login-wrap">
     <div class="login-card">
+      <div id="langSwitcher" class="lang-switcher"></div>
       <h1>AI AUDIO</h1>
-      <p class="sub">请选择登录方式</p>
+      <p class="sub" data-i18n="login.subtitle">请选择登录方式</p>
       <div id="googleBtn"></div>
       <div id="emailSection" class="email-section" hidden>
-        <div class="divider"><span>或使用邮箱登录</span></div>
-        <input id="emailInput" type="email" placeholder="邮箱地址" autocomplete="email">
+        <div class="divider"><span data-i18n="login.orEmail">或使用邮箱登录</span></div>
+        <input id="emailInput" type="email" data-i18n-placeholder="login.emailPlaceholder" placeholder="邮箱地址" autocomplete="email">
         <div class="code-row">
-          <input id="codeInput" type="text" placeholder="验证码" inputmode="numeric" maxlength="6">
-          <button id="sendCodeBtn" type="button">发送验证码</button>
+          <input id="codeInput" type="text" data-i18n-placeholder="login.codePlaceholder" placeholder="验证码" inputmode="numeric" maxlength="6">
+          <button id="sendCodeBtn" type="button" data-i18n="login.sendCode">发送验证码</button>
         </div>
-        <button id="emailLoginBtn" class="primary-btn" type="button">邮箱登录</button>
+        <button id="emailLoginBtn" class="primary-btn" type="button" data-i18n="login.emailLogin">邮箱登录</button>
       </div>
       <p class="msg" id="msg"></p>
     </div>
@@ -41,19 +43,23 @@
 
     let countdownTimer = null;
 
+    function resendLabel(left) {
+      return I18n.t("login.resendIn", { n: left });
+    }
+
     function startSendCountdown() {
       let left = 60;
-      sendCodeBtn.textContent = `${left}s 后重发`;
+      sendCodeBtn.textContent = resendLabel(left);
       countdownTimer = setInterval(() => {
         left -= 1;
         if (left <= 0) {
           clearInterval(countdownTimer);
           countdownTimer = null;
           sendCodeBtn.disabled = false;
-          sendCodeBtn.textContent = "发送验证码";
+          sendCodeBtn.textContent = I18n.t("login.sendCode");
           return;
         }
-        sendCodeBtn.textContent = `${left}s 后重发`;
+        sendCodeBtn.textContent = resendLabel(left);
       }, 1000);
     }
 
@@ -73,11 +79,11 @@
       const container = document.getElementById("googleBtn");
       const gButton = container.querySelector("[role='button']");
       if (!gButton) {
-        showMessage("Gmail 邮箱请点击页面上方的 Google 按钮登录");
+        showMessage(I18n.t("login.gmailUseGoogle"));
         highlightGoogleButton();
         return;
       }
-      showMessage("正在打开 Google 登录，请在弹窗中完成登录...");
+      showMessage(I18n.t("login.openingGoogle"));
       gButton.click();
     }
 
@@ -99,7 +105,7 @@
           return;
         }
       } catch (e) {
-        showMessage("无法连接服务，请稍后重试");
+        showMessage(I18n.t("login.serviceUnavailable"));
         return;
       }
 
@@ -107,12 +113,12 @@
       try {
         const res = await fetch("/api/auth/config", { credentials: "same-origin" });
         if (!res.ok) {
-          showMessage("登录配置读取失败");
+          showMessage(I18n.t("login.configFailed"));
           return;
         }
         config = await res.json();
       } catch (e) {
-        showMessage("登录配置读取失败");
+        showMessage(I18n.t("login.configFailed"));
         return;
       }
 
@@ -122,26 +128,28 @@
 
       if (!config.google_client_id) {
         if (!config.email_enabled) {
-          showMessage("服务端尚未配置任何登录方式");
+          showMessage(I18n.t("login.noMethod"));
         }
       } else if (typeof google === "undefined" || !google.accounts) {
-        showMessage("Google 登录组件加载失败，请刷新重试");
+        showMessage(I18n.t("login.googleFailed"));
       } else {
         google.accounts.id.initialize({
           client_id: config.google_client_id,
           callback: handleCredential,
+          locale: I18n.current,
         });
         google.accounts.id.renderButton(document.getElementById("googleBtn"), {
           theme: "outline",
           size: "large",
           width: 320,
           text: "signin_with",
+          locale: I18n.current,
         });
       }
     }
 
     async function handleCredential(response) {
-      showMessage("正在登录...");
+      showMessage(I18n.t("login.signingIn"));
       try {
         const res = await fetch("/api/auth/google", {
           method: "POST",
@@ -154,16 +162,16 @@
           return;
         }
         const data = await res.json();
-        showMessage(data.detail || "登录失败");
+        showMessage(data.detail || I18n.t("login.signInFailed"));
       } catch (e) {
-        showMessage("登录请求失败，请稍后重试");
+        showMessage(I18n.t("login.requestFailed"));
       }
     }
 
     async function handleSendCode() {
       const email = emailInput.value.trim();
       if (!email) {
-        showMessage("请输入邮箱地址");
+        showMessage(I18n.t("login.enterEmail"));
         return;
       }
       if (isGmailAddress(email)) {
@@ -181,14 +189,14 @@
         });
         if (res.ok) {
           sent = true;
-          showMessage("验证码已发送，请查收邮件");
+          showMessage(I18n.t("login.codeSent"));
           startSendCountdown();
         } else {
           const data = await res.json();
-          showMessage(data.detail || "发送失败");
+          showMessage(data.detail || I18n.t("login.sendFailed"));
         }
       } catch (e) {
-        showMessage("发送请求失败，请稍后重试");
+        showMessage(I18n.t("login.sendRequestFailed"));
       } finally {
         if (!sent) {
           sendCodeBtn.disabled = false;
@@ -200,14 +208,14 @@
       const email = emailInput.value.trim();
       const code = codeInput.value.trim();
       if (!email || !code) {
-        showMessage("请输入邮箱和验证码");
+        showMessage(I18n.t("login.enterEmailAndCode"));
         return;
       }
       if (isGmailAddress(email)) {
         redirectToGoogle();
         return;
       }
-      showMessage("正在登录...");
+      showMessage(I18n.t("login.signingIn"));
       try {
         const res = await fetch("/api/auth/email/login", {
           method: "POST",
@@ -220,17 +228,36 @@
           return;
         }
         const data = await res.json();
-        showMessage(data.detail || "登录失败");
+        showMessage(data.detail || I18n.t("login.signInFailed"));
       } catch (e) {
-        showMessage("登录请求失败，请稍后重试");
+        showMessage(I18n.t("login.requestFailed"));
       }
     }
+
+    window.addEventListener("aiaudio:langchange", () => {
+      if (countdownTimer !== null) {
+        sendCodeBtn.textContent = resendLabel(Number(sendCodeBtn.textContent.replace(/\D/g, "")));
+      }
+      if (typeof google !== "undefined" && google.accounts && google.accounts.id) {
+        google.accounts.id.renderButton(document.getElementById("googleBtn"), {
+          theme: "outline",
+          size: "large",
+          width: 320,
+          text: "signin_with",
+          locale: I18n.current,
+        });
+      }
+    });
 
     emailInput.addEventListener("input", handleEmailInput);
     sendCodeBtn.addEventListener("click", handleSendCode);
     emailLoginBtn.addEventListener("click", handleEmailLogin);
 
-    window.addEventListener("load", init);
+    window.addEventListener("load", () => {
+      I18n.init();
+      I18n.buildSwitcher(document.getElementById("langSwitcher"));
+      init();
+    });
   </script>
 </body>
 </html>

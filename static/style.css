@@ -21,6 +21,24 @@ body {
 
 a { color: var(--accent); }
 
+.lang-switcher { display: flex; justify-content: flex-end; }
+
+.lang-select {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.lang-select:hover { border-color: #c7d2fe; color: var(--accent); }
+.lang-select:focus { outline: none; border-color: #818cf8; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.14); }
+
 .login-wrap {
   min-height: 100vh;
   display: flex;
@@ -39,6 +57,8 @@ a { color: var(--accent); }
   max-width: 400px;
   text-align: center;
 }
+
+.login-card .lang-switcher { justify-content: center; margin-bottom: 18px; }
 
 .login-card h1 {
   margin: 0 0 8px;
@@ -321,8 +341,8 @@ a { color: var(--accent); }
 
 .main {
   width: 100%;
-  max-width: 1180px;
-  margin: 0;
+  max-width: 1760px;
+  margin: 0 auto;
   padding: 30px 36px 56px;
 }
 
@@ -352,7 +372,7 @@ a { color: var(--accent); }
 .hero::before { width: 260px; height: 260px; right: -70px; top: -130px; }
 .hero::after { width: 180px; height: 180px; right: 120px; bottom: -120px; }
 
-.hero-content { position: relative; z-index: 1; max-width: 720px; }
+.hero-content { position: relative; z-index: 1; flex: 1; min-width: 0; }
 
 .hero-kicker {
   display: inline-block;
@@ -372,6 +392,7 @@ a { color: var(--accent); }
 
 .hero p {
   margin: 0;
+  max-width: 760px;
   font-size: 14px;
   line-height: 1.7;
   color: #e0e7ff;

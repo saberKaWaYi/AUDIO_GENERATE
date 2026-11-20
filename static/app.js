@@ -27,7 +27,7 @@ const App = {
 
   displayName() {
     const user = this.currentUser;
-    return user.name || user.email || ("用户 " + user.user_id);
+    return user.name || user.email || (I18n.t("app.userFallback") + user.user_id);
   },
 
   renderUserArea() {
