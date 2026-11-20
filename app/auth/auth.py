@@ -81,6 +81,8 @@ async def login_google(payload: GoogleLoginRequest, request: Request, response: 
 async def send_email_code(payload: SendCodeRequest, request: Request):
     try:
         auth_bl.send_email_login_code(request.app.state.mongo, payload.email)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
     except smtplib.SMTPException as e:

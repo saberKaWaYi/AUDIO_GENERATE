@@ -209,13 +209,20 @@ def login_with_google(mongo, credential: str) -> AudioUser:
     )
 
 
+def reject_gmail_email(email: str) -> None:
+    if email.strip().lower().endswith("@gmail.com"):
+        raise ValueError("请走谷歌邮箱登录")
+
+
 def send_email_login_code(mongo, email: str) -> None:
+    reject_gmail_email(email)
     code = generate_email_code()
     save_email_code(mongo, email, code)
     deliver_email_code(email, code)
 
 
 def login_with_email(mongo, email: str, code: str) -> AudioUser:
+    reject_gmail_email(email)
     verify_email_code(mongo, email, code)
     return find_or_create_user(
         mongo,

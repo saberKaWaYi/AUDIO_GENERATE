@@ -33,9 +33,33 @@
     const codeInput = document.getElementById("codeInput");
     const sendCodeBtn = document.getElementById("sendCodeBtn");
     const emailLoginBtn = document.getElementById("emailLoginBtn");
+    let lastGmailMatch = false;
 
     function showMessage(text) {
       msg.textContent = text;
+    }
+
+    function isGmailAddress(email) {
+      return email.toLowerCase().endsWith("@gmail.com");
+    }
+
+    function redirectToGoogle() {
+      if (typeof google === "undefined" || !google.accounts || !google.accounts.id) {
+        showMessage("Gmail 邮箱请使用页面上方的 Google 按钮登录");
+        return;
+      }
+      showMessage("正在切换到 Google 登录...");
+      google.accounts.id.prompt();
+    }
+
+    function handleEmailInput() {
+      const isGmail = isGmailAddress(emailInput.value.trim());
+      if (isGmail && !lastGmailMatch) {
+        lastGmailMatch = true;
+        redirectToGoogle();
+      } else if (!isGmail) {
+        lastGmailMatch = false;
+      }
     }
 
     async function init() {
@@ -113,6 +137,10 @@
         showMessage("请输入邮箱地址");
         return;
       }
+      if (isGmailAddress(email)) {
+        redirectToGoogle();
+        return;
+      }
       sendCodeBtn.disabled = true;
       try {
         const res = await fetch("/api/auth/email/send-code", {
@@ -141,6 +169,10 @@
         showMessage("请输入邮箱和验证码");
         return;
       }
+      if (isGmailAddress(email)) {
+        redirectToGoogle();
+        return;
+      }
       showMessage("正在登录...");
       try {
         const res = await fetch("/api/auth/email/login", {
@@ -160,6 +192,7 @@
       }
     }
 
+    emailInput.addEventListener("input", handleEmailInput);
     sendCodeBtn.addEventListener("click", handleSendCode);
     emailLoginBtn.addEventListener("click", handleEmailLogin);
 
