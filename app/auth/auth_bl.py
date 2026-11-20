@@ -167,7 +167,7 @@ def sign_session(user_id: int) -> str:
         raise RuntimeError("SESSION_SECRET 未配置")
     now = datetime.now(timezone.utc)
     payload = {
-        "sub": user_id,
+        "sub": str(user_id),
         "iat": now,
         "exp": now + timedelta(seconds=auth_settings.session_ttl_seconds),
     }
@@ -179,9 +179,10 @@ def decode_session(token: str) -> int:
     if not secret:
         raise RuntimeError("SESSION_SECRET 未配置")
     payload = jwt.decode(token, secret, algorithms=["HS256"])
-    user_id = payload["sub"]
-    if not isinstance(user_id, int) or isinstance(user_id, bool):
+    sub = payload["sub"]
+    if not isinstance(sub, str):
         raise ValueError("会话中的用户 ID 类型异常")
+    user_id = int(sub)
     return user_id
 
 
