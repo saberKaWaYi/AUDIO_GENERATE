@@ -1,0 +1,84 @@
+const App = {
+  currentUser: null,
+
+  async api(path, options = {}) {
+    const res = await fetch(path, {
+      credentials: "same-origin",
+      ...options,
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const error = new Error(data.detail);
+      error.status = res.status;
+      throw error;
+    }
+    return data;
+  },
+
+  async requireAuth() {
+    try {
+      this.currentUser = await this.api("/api/auth/me");
+    } catch (e) {
+      window.location.replace("/login.html");
+      return false;
+    }
+    return true;
+  },
+
+  displayName() {
+    const user = this.currentUser;
+    return user.name || user.email || ("用户 " + user.user_id);
+  },
+
+  renderUserArea() {
+    const nameEl = document.getElementById("userName");
+    if (nameEl) {
+      nameEl.textContent = this.displayName();
+    }
+    const avatar = document.getElementById("avatar");
+    if (avatar && this.currentUser.picture) {
+      avatar.src = this.currentUser.picture;
+      avatar.hidden = false;
+    }
+    const sidebarName = document.getElementById("sidebarUserName");
+    if (sidebarName) {
+      sidebarName.textContent = this.displayName();
+    }
+  },
+
+  bindLogout() {
+    const btn = document.getElementById("logoutBtn");
+    if (btn) {
+      btn.addEventListener("click", async () => {
+        try {
+          await this.api("/api/auth/logout", { method: "POST" });
+        } finally {
+          window.location.replace("/login.html");
+        }
+      });
+    }
+  },
+
+  initSidebar() {
+    const toggle = document.getElementById("sidebarToggle");
+    const sidebar = document.getElementById("sidebar");
+    if (toggle && sidebar) {
+      toggle.addEventListener("click", () => {
+        sidebar.classList.toggle("collapsed");
+      });
+    }
+  },
+
+  async init() {
+    const ok = await this.requireAuth();
+    if (!ok) {
+      return false;
+    }
+    this.renderUserArea();
+    this.bindLogout();
+    this.initSidebar();
+    return true;
+  },
+};
+
+window.App = App;
