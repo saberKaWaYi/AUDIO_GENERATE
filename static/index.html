@@ -3,49 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>工作台 - AI AUDIO</title>
+  <title>ASMR 制作 - AI AUDIO</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body class="app-body">
   <aside id="sidebar" class="sidebar">
     <div class="sidebar-head">
       <a class="logo" href="/index.html" aria-label="AI AUDIO 首页">
-        <svg class="logo-mark" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <svg class="logo-mark" viewBox="0 0 44 44" aria-hidden="true">
           <defs>
             <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#3b82f6"/>
-              <stop offset="100%" stop-color="#1d4ed8"/>
+              <stop offset="0%" stop-color="#818cf8"/>
+              <stop offset="55%" stop-color="#6366f1"/>
+              <stop offset="100%" stop-color="#a855f7"/>
             </linearGradient>
           </defs>
-          <rect x="2" y="2" width="36" height="36" rx="10" fill="url(#logoGrad)"/>
+          <rect x="2" y="2" width="40" height="40" rx="12" fill="url(#logoGrad)"/>
+          <rect x="6.5" y="6.5" width="31" height="31" rx="9" fill="none" stroke="#ffffff" stroke-opacity="0.22"/>
           <g fill="#ffffff">
-            <rect x="10" y="16" width="3" height="8" rx="1.5"/>
-            <rect x="16" y="11" width="3" height="18" rx="1.5"/>
-            <rect x="22" y="14" width="3" height="12" rx="1.5"/>
-            <rect x="28" y="17" width="3" height="6" rx="1.5"/>
+            <rect x="12" y="18" width="3.4" height="8" rx="1.7"/>
+            <rect x="17.3" y="13" width="3.4" height="18" rx="1.7"/>
+            <rect x="22.6" y="16" width="3.4" height="12" rx="1.7"/>
+            <rect x="27.9" y="19" width="3.4" height="6" rx="1.7"/>
           </g>
         </svg>
         <span class="logo-text">AI AUDIO</span>
       </a>
-      <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="收起或展开侧栏" title="收起或展开">&#9776;</button>
+      <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="收起或展开侧栏" title="收起或展开">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
+      </button>
     </div>
     <nav class="sidebar-nav">
       <a class="nav-item active" href="/index.html">
-        <span class="nav-icon" aria-hidden="true">&#9835;</span>
-        <span class="nav-label">ASMR 任务</span>
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 8v4M8 5v10M12 7v6M16 9v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></span>
+        <span class="nav-label">ASMR 制作</span>
       </a>
       <div class="nav-item disabled">
-        <span class="nav-icon" aria-hidden="true">&#9673;</span>
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M10 6.5v7M8 8h3.2a1.4 1.4 0 0 1 0 2.8H8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg></span>
         <span class="nav-label">购买积分</span>
         <span class="nav-tag">即将上线</span>
       </div>
       <div class="nav-item disabled">
-        <span class="nav-icon" aria-hidden="true">&#9678;</span>
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><rect x="2.5" y="5" width="15" height="10" rx="2" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M2.5 8.5h15" stroke="currentColor" stroke-width="1.6" fill="none"/></svg></span>
         <span class="nav-label">支付</span>
         <span class="nav-tag">即将上线</span>
       </div>
       <div class="nav-item disabled">
-        <span class="nav-icon" aria-hidden="true">&#9733;</span>
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 2.8l2.2 4.5 5 .7-3.6 3.5.85 5L10 14l-4.45 2.5.85-5L2.8 8l5-.7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/></svg></span>
         <span class="nav-label">积分</span>
         <span class="nav-tag">即将上线</span>
       </div>
@@ -57,7 +61,7 @@
 
   <div class="app-main">
     <header class="topbar">
-      <div class="topbar-title">ASMR 任务下发</div>
+      <div class="topbar-title">ASMR 制作</div>
       <div class="user-area">
         <img id="avatar" class="avatar" alt="" hidden>
         <span id="userName"></span>
@@ -66,9 +70,40 @@
     </header>
 
     <main class="main">
+      <section class="hero">
+        <div class="hero-content">
+          <span class="hero-kicker">AI AUDIO STUDIO</span>
+          <h1>让想象，成为可听见的声音</h1>
+          <p>挑选声线角色，写下你的灵感，AI 为你生成专属 ASMR 音频作品。从一段文字，到沉浸式声境。</p>
+          <div class="hero-features">
+            <span class="hero-feature">多角色声线</span>
+            <span class="hero-feature">四种语言</span>
+            <span class="hero-feature">高清音质输出</span>
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <svg viewBox="0 0 160 160">
+            <defs>
+              <linearGradient id="heroRing" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+                <stop offset="100%" stop-color="#ffffff" stop-opacity="0.25"/>
+              </linearGradient>
+            </defs>
+            <circle cx="80" cy="80" r="58" fill="none" stroke="url(#heroRing)" stroke-width="1.5" opacity="0.5"/>
+            <circle cx="80" cy="80" r="44" fill="none" stroke="url(#heroRing)" stroke-width="1.5" opacity="0.7"/>
+            <circle cx="80" cy="80" r="30" fill="#ffffff" fill-opacity="0.1" stroke="url(#heroRing)" stroke-width="1.5"/>
+            <g fill="#ffffff">
+              <rect x="70" y="66" width="4" height="28" rx="2"/>
+              <rect x="78" y="58" width="4" height="44" rx="2"/>
+              <rect x="86" y="64" width="4" height="32" rx="2"/>
+            </g>
+          </svg>
+        </div>
+      </section>
+
       <div class="page-head">
-        <h2>ASMR 任务下发</h2>
-        <p class="hint">填写创作信息，选择合适角色，提交后可在下方查询进度。</p>
+        <h2>创作配置</h2>
+        <p class="hint">填写作品信息，选择合适角色，提交后可在下方查询进度。</p>
       </div>
 
       <form id="taskForm" class="task-form" novalidate>
