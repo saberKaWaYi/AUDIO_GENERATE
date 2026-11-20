@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="/style.css">
   <script src="/i18n.js"></script>
 </head>
-<body class="app-body theme-dark">
+<body class="app-body">
   <aside id="sidebar" class="sidebar">
     <div class="sidebar-head">
       <a class="logo" href="/index.html" aria-label="AI AUDIO 首页">
@@ -36,13 +36,13 @@
       </button>
     </div>
     <nav class="sidebar-nav">
-      <a class="nav-item" href="/index.html">
-        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 8v4M8 5v10M12 7v6M16 9v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></span>
-        <span class="nav-label" data-i18n="nav.asrm">ASMR 制作</span>
-      </a>
       <a class="nav-item active" href="/voice.html">
         <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 3a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 9v1a5 5 0 0 0 10 0V9M10 15v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg></span>
         <span class="nav-label" data-i18n="nav.voice">人物音色制作</span>
+      </a>
+      <a class="nav-item" href="/index.html">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 8v4M8 5v10M12 7v6M16 9v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></span>
+        <span class="nav-label" data-i18n="nav.asrm">ASMR 制作</span>
       </a>
       <div class="nav-item disabled">
         <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M10 6.5v7M8 8h3.2a1.4 1.4 0 0 1 0 2.8H8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg></span>
@@ -168,19 +168,18 @@
     let coverFile = null;
     let coverObjectUrl = null;
     let messageRenderer = null;
+    let resultMessage = null;
     let libraryRenderer = null;
     let voices = [];
 
     function t(key, vars) {
-      const value = I18n.t(key);
-      if (vars) {
-        return value.replace(/\{(\w+)\}/g, (match, name) => String(vars[name]));
-      }
-      return value;
+      return I18n.t(key, vars);
     }
 
     function renderMessage() {
-      if (messageRenderer) {
+      if (resultMessage) {
+        resultMessage();
+      } else if (messageRenderer) {
         messageRenderer();
       }
     }
@@ -194,7 +193,17 @@
       renderMessage();
     }
 
+    function showResultMessage(key, isError, vars) {
+      resultMessage = () => {
+        voiceMsg.textContent = t(key, vars);
+        voiceMsg.classList.toggle("error", Boolean(isError));
+        voiceMsg.classList.toggle("ok", !isError);
+      };
+      renderMessage();
+    }
+
     function clearMessage() {
+      resultMessage = null;
       messageRenderer = null;
       voiceMsg.textContent = "";
       voiceMsg.classList.remove("error", "ok");
@@ -270,6 +279,7 @@
     }
 
     async function processFiles(files) {
+      resultMessage = null;
       const accepted = files.filter((file) => hasSuffix(file, AUDIO_SUFFIXES));
       rejectedAudioCount = files.length - accepted.length;
       durationEntries = accepted.map((file) => ({ name: file.name, seconds: null, file: file }));
@@ -291,6 +301,7 @@
     }
 
     function setCover(file) {
+      resultMessage = null;
       if (!file) {
         clearCover();
         return false;
@@ -391,6 +402,7 @@
     }
 
     async function submitCreate() {
+      resultMessage = null;
       const title = nameInput.value.trim();
       if (!title) {
         showMessage("voice.reqName", true);
@@ -444,10 +456,10 @@
         if (!res.ok) {
           throw new Error(data.detail || String(res.status));
         }
-        showMessage("voice.createSuccess", false, { id: data.reference_id });
+        showResultMessage("voice.createSuccess", false, { id: data.reference_id });
         await loadLibrary();
       } catch (error) {
-        showMessage("voice.createFailed", true, { msg: error.message });
+        showResultMessage("voice.createFailed", true, { msg: error.message });
       } finally {
         createBtn.textContent = t("voice.createBtn");
         renderAnswer();
