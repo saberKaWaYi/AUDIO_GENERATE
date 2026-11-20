@@ -43,13 +43,24 @@
       return email.toLowerCase().endsWith("@gmail.com");
     }
 
+    function highlightGoogleButton() {
+      const btn = document.getElementById("googleBtn");
+      btn.scrollIntoView({ behavior: "smooth", block: "center" });
+      btn.style.outline = "3px solid #2563eb";
+      btn.style.outlineOffset = "6px";
+      btn.style.borderRadius = "8px";
+    }
+
     function redirectToGoogle() {
-      if (typeof google === "undefined" || !google.accounts || !google.accounts.id) {
-        showMessage("Gmail 邮箱请使用页面上方的 Google 按钮登录");
+      const container = document.getElementById("googleBtn");
+      const gButton = container.querySelector("[role='button']");
+      if (!gButton) {
+        showMessage("Gmail 邮箱请点击页面上方的 Google 按钮登录");
+        highlightGoogleButton();
         return;
       }
-      showMessage("正在切换到 Google 登录...");
-      google.accounts.id.prompt();
+      showMessage("正在打开 Google 登录，请在弹窗中完成登录...");
+      gButton.click();
     }
 
     function handleEmailInput() {
