@@ -12,3 +12,4 @@ class UserInfoResponse(BaseModel):
 class AuthConfigResponse(BaseModel):
 
     google_client_id: str
+    email_enabled: bool

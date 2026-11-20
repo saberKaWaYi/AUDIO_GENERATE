@@ -18,6 +18,8 @@ from models.schemas_character import AUDIO_CHARACTERS_COLLECTION, AUDIO_CHARACTE
 from models.schemas_task import AUDIO_TASKS_COLLECTION, AUDIO_TASK_INDEXES
 from models.schemas_user import (
     AUDIO_COUNTERS_COLLECTION,
+    AUDIO_EMAIL_CODES_COLLECTION,
+    AUDIO_EMAIL_CODE_INDEXES,
     AUDIO_USER_IDENTITIES_COLLECTION,
     AUDIO_USER_IDENTITY_INDEXES,
     AUDIO_USERS_COLLECTION,
@@ -64,6 +66,10 @@ async def lifespan(app: FastAPI):
     if mongo.find_one(AUDIO_COUNTERS_COLLECTION, {"key": USER_ID_COUNTER_KEY}) is None:
         counter = AudioCounter(key=USER_ID_COUNTER_KEY, value=0)
         mongo.insert_document(AUDIO_COUNTERS_COLLECTION, counter.model_dump(mode="json"))
+
+    mongo.create_collection(AUDIO_EMAIL_CODES_COLLECTION)
+    for index in AUDIO_EMAIL_CODE_INDEXES:
+        mongo.create_index(AUDIO_EMAIL_CODES_COLLECTION, index["field"], index["unique"])
 
     yield
 

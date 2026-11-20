@@ -1,4 +1,7 @@
+import secrets
+import smtplib
 from datetime import datetime, timedelta, timezone
+from email.message import EmailMessage
 from uuid import uuid4
 
 import jwt
@@ -6,19 +9,23 @@ from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 
 from settings.auth import auth_settings
+from settings.email import email_settings
 from models.schemas_user import (
     AUDIO_COUNTERS_COLLECTION,
+    AUDIO_EMAIL_CODES_COLLECTION,
     AUDIO_USER_IDENTITIES_COLLECTION,
     AUDIO_USERS_COLLECTION,
     USER_ID_COUNTER_KEY,
     AudioCounter,
     AudioUser,
+    EmailCode,
     UserIdentity,
 )
 
 SESSION_COOKIE_NAME = "session"
 
 PROVIDER_GOOGLE = "google"
+PROVIDER_EMAIL = "email"
 
 
 def verify_google_credential(credential: str) -> dict:
@@ -27,6 +34,61 @@ def verify_google_credential(credential: str) -> dict:
         raise RuntimeError("GOOGLE_CLIENT_ID 未配置")
     return id_token.verify_oauth2_token(
         credential, google_requests.Request(), audience=client_id
+    )
+
+
+def generate_email_code() -> str:
+    return f"{secrets.randbelow(1000000):06d}"
+
+
+def deliver_email_code(email: str, code: str) -> None:
+    host = email_settings.smtp_host.strip()
+    user = email_settings.smtp_user.strip()
+    password = email_settings.smtp_password.strip()
+    if not host or not user or not password:
+        raise RuntimeError("SMTP 邮箱配置未完整")
+    ttl_minutes = email_settings.email_code_ttl_seconds // 60
+    message = EmailMessage()
+    message["Subject"] = "AI AUDIO 登录验证码"
+    message["From"] = user
+    message["To"] = email
+    message.set_content(f"您的登录验证码是 {code}，{ttl_minutes} 分钟内有效。")
+    with smtplib.SMTP_SSL(host, email_settings.smtp_port, timeout=10) as smtp:
+        smtp.login(user, password)
+        smtp.send_message(message)
+
+
+def save_email_code(mongo, email: str, code: str) -> None:
+    now = datetime.utcnow()
+    record = EmailCode(
+        email=email,
+        code=code,
+        expire_time=now + timedelta(seconds=email_settings.email_code_ttl_seconds),
+        used=False,
+        create_time=now,
+    )
+    mongo.update_documents(
+        AUDIO_EMAIL_CODES_COLLECTION,
+        {"email": email, "used": False},
+        {"$set": {"used": True}},
+    )
+    mongo.insert_document(AUDIO_EMAIL_CODES_COLLECTION, record.model_dump(mode="json"))
+
+
+def verify_email_code(mongo, email: str, code: str) -> None:
+    doc = mongo.find_one(
+        AUDIO_EMAIL_CODES_COLLECTION,
+        {"email": email, "code": code, "used": False},
+    )
+    if doc is None:
+        raise ValueError("验证码错误或已失效")
+    record = EmailCode.model_validate(doc)
+    if record.expire_time < datetime.utcnow():
+        raise ValueError("验证码已过期")
+    mongo.update_documents(
+        AUDIO_EMAIL_CODES_COLLECTION,
+        {"email": email, "code": code, "used": False},
+        {"$set": {"used": True}},
     )
 
 

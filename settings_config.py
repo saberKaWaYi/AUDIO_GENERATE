@@ -6,6 +6,7 @@ from settings.elevenlabs import elevenlabs_settings
 from settings.deepseek import deepseek_settings
 from settings.worker import worker_settings
 from settings.auth import auth_settings
+from settings.email import email_settings
 
 
 class Settings:
@@ -58,6 +59,12 @@ class Settings:
     session_secret = auth_settings.session_secret
     session_ttl_seconds = auth_settings.session_ttl_seconds
     allowed_origins = auth_settings.allowed_origins
+
+    smtp_host = email_settings.smtp_host
+    smtp_port = email_settings.smtp_port
+    smtp_user = email_settings.smtp_user
+    smtp_password = email_settings.smtp_password
+    email_code_ttl_seconds = email_settings.email_code_ttl_seconds
 
 
 settings = Settings()

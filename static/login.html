@@ -3,22 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>登录 - Audio Generate</title>
+  <title>登录 - AI AUDIO</title>
   <link rel="stylesheet" href="/style.css">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
   <div class="login-wrap">
     <div class="login-card">
-      <h1>Audio Generate</h1>
-      <p class="sub">请使用 Google 账号登录</p>
+      <h1>AI AUDIO</h1>
+      <p class="sub">请选择登录方式</p>
       <div id="googleBtn"></div>
+      <div id="emailSection" class="email-section" hidden>
+        <div class="divider"><span>或使用邮箱登录</span></div>
+        <input id="emailInput" type="email" placeholder="邮箱地址" autocomplete="email">
+        <div class="code-row">
+          <input id="codeInput" type="text" placeholder="验证码" inputmode="numeric" maxlength="6">
+          <button id="sendCodeBtn" type="button">发送验证码</button>
+        </div>
+        <button id="emailLoginBtn" class="primary-btn" type="button">邮箱登录</button>
+      </div>
       <p class="msg" id="msg"></p>
     </div>
   </div>
 
   <script>
     const msg = document.getElementById("msg");
+    const emailSection = document.getElementById("emailSection");
+    const emailInput = document.getElementById("emailInput");
+    const codeInput = document.getElementById("codeInput");
+    const sendCodeBtn = document.getElementById("sendCodeBtn");
+    const emailLoginBtn = document.getElementById("emailLoginBtn");
 
     function showMessage(text) {
       msg.textContent = text;
@@ -49,26 +63,28 @@
         return;
       }
 
+      if (config.email_enabled) {
+        emailSection.hidden = false;
+      }
+
       if (!config.google_client_id) {
-        showMessage("服务端尚未配置 GOOGLE_CLIENT_ID");
-        return;
-      }
-
-      if (typeof google === "undefined" || !google.accounts) {
+        if (!config.email_enabled) {
+          showMessage("服务端尚未配置任何登录方式");
+        }
+      } else if (typeof google === "undefined" || !google.accounts) {
         showMessage("Google 登录组件加载失败，请刷新重试");
-        return;
+      } else {
+        google.accounts.id.initialize({
+          client_id: config.google_client_id,
+          callback: handleCredential,
+        });
+        google.accounts.id.renderButton(document.getElementById("googleBtn"), {
+          theme: "outline",
+          size: "large",
+          width: 320,
+          text: "signin_with",
+        });
       }
-
-      google.accounts.id.initialize({
-        client_id: config.google_client_id,
-        callback: handleCredential,
-      });
-      google.accounts.id.renderButton(document.getElementById("googleBtn"), {
-        theme: "outline",
-        size: "large",
-        width: 320,
-        text: "signin_with",
-      });
     }
 
     async function handleCredential(response) {
@@ -90,6 +106,62 @@
         showMessage("登录请求失败，请稍后重试");
       }
     }
+
+    async function handleSendCode() {
+      const email = emailInput.value.trim();
+      if (!email) {
+        showMessage("请输入邮箱地址");
+        return;
+      }
+      sendCodeBtn.disabled = true;
+      try {
+        const res = await fetch("/api/auth/email/send-code", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email }),
+        });
+        if (res.ok) {
+          showMessage("验证码已发送，请查收邮件");
+        } else {
+          const data = await res.json();
+          showMessage(data.detail || "发送失败");
+        }
+      } catch (e) {
+        showMessage("发送请求失败，请稍后重试");
+      } finally {
+        sendCodeBtn.disabled = false;
+      }
+    }
+
+    async function handleEmailLogin() {
+      const email = emailInput.value.trim();
+      const code = codeInput.value.trim();
+      if (!email || !code) {
+        showMessage("请输入邮箱和验证码");
+        return;
+      }
+      showMessage("正在登录...");
+      try {
+        const res = await fetch("/api/auth/email/login", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email, code: code }),
+        });
+        if (res.ok) {
+          window.location.replace("/index.html");
+          return;
+        }
+        const data = await res.json();
+        showMessage(data.detail || "登录失败");
+      } catch (e) {
+        showMessage("登录请求失败，请稍后重试");
+      }
+    }
+
+    sendCodeBtn.addEventListener("click", handleSendCode);
+    emailLoginBtn.addEventListener("click", handleEmailLogin);
 
     window.addEventListener("load", init);
   </script>
