@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Request
 
-from app.auth.auth_service import SESSION_COOKIE_NAME, decode_session, get_user
+from app.auth.auth_bl import SESSION_COOKIE_NAME, decode_session, get_user
 
 
 def get_current_user(request: Request):

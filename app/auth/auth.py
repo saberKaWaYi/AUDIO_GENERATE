@@ -7,7 +7,7 @@ from google.auth.exceptions import GoogleAuthError
 from app.auth import auth_bl
 from app.auth.auth_req import EmailLoginRequest, GoogleLoginRequest, SendCodeRequest
 from app.auth.auth_res import AuthConfigResponse, UserInfoResponse
-from app.auth.auth_service import SESSION_COOKIE_NAME, sign_session
+from app.auth.auth_bl import SESSION_COOKIE_NAME, sign_session
 from app.auth.deps import get_current_user
 from settings.auth import auth_settings
 from settings.email import email_settings
