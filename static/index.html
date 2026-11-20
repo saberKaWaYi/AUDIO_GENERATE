@@ -178,48 +178,91 @@
 
     let createdTaskId = null;
 
-    function showMessage(text, isError) {
-      formMsg.textContent = text;
-      formMsg.classList.toggle("error", Boolean(isError));
+    let messageRenderer = null;
+
+    function renderMessage() {
+      if (messageRenderer) {
+        messageRenderer();
+      }
+    }
+
+    function showMessageKey(key, vars, isError, suffix = "") {
+      messageRenderer = () => {
+        const base = vars ? I18n.t(key, vars) : I18n.t(key);
+        formMsg.textContent = base + suffix;
+        formMsg.classList.toggle("error", Boolean(isError));
+      };
+      renderMessage();
+    }
+
+    function clearMessage() {
+      messageRenderer = null;
+      formMsg.textContent = "";
+      formMsg.classList.remove("error");
+    }
+
+    let charactersData = null;
+    let charactersError = null;
+
+    function renderCharacterList() {
+      const checked = new Set(
+        Array.from(characterList.querySelectorAll(".character-checkbox:checked")).map(
+          (el) => el.value
+        )
+      );
+      characterList.textContent = "";
+      if (charactersError !== null) {
+        const empty = document.createElement("span");
+        empty.className = "hint";
+        empty.textContent = I18n.t("form.loadCharactersFailed") + charactersError;
+        characterList.appendChild(empty);
+        return;
+      }
+      if (charactersData === null) {
+        const loading = document.createElement("span");
+        loading.className = "hint";
+        loading.textContent = I18n.t("form.loadingCharacters");
+        characterList.appendChild(loading);
+        return;
+      }
+      if (charactersData.items.length === 0) {
+        const empty = document.createElement("span");
+        empty.className = "hint";
+        empty.textContent = I18n.t("form.noCharacters");
+        characterList.appendChild(empty);
+        return;
+      }
+      for (const item of charactersData.items) {
+        const label = document.createElement("label");
+        label.className = "character-option";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = item.reference_id;
+        checkbox.className = "character-checkbox";
+        checkbox.checked = checked.has(item.reference_id);
+        const text = document.createElement("span");
+        text.textContent = item.title + "（" + item.reference_id + "）";
+        label.appendChild(checkbox);
+        label.appendChild(text);
+        characterList.appendChild(label);
+      }
+      if (charactersData.total > charactersData.items.length) {
+        const more = document.createElement("p");
+        more.className = "hint";
+        more.textContent = I18n.t("form.moreCharacters", { n: charactersData.items.length });
+        characterList.appendChild(more);
+      }
     }
 
     async function loadCharacters() {
       try {
-        const data = await App.api("/api/audio/characters?page=1&page_size=50");
-        characterList.textContent = "";
-        if (data.items.length === 0) {
-          const empty = document.createElement("span");
-          empty.className = "hint";
-          empty.textContent = I18n.t("form.noCharacters");
-          characterList.appendChild(empty);
-          return;
-        }
-        for (const item of data.items) {
-          const label = document.createElement("label");
-          label.className = "character-option";
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.value = item.reference_id;
-          checkbox.className = "character-checkbox";
-          const text = document.createElement("span");
-          text.textContent = item.title + "（" + item.reference_id + "）";
-          label.appendChild(checkbox);
-          label.appendChild(text);
-          characterList.appendChild(label);
-        }
-        if (data.total > data.items.length) {
-          const more = document.createElement("p");
-          more.className = "hint";
-          more.textContent = I18n.t("form.moreCharacters", { n: data.items.length });
-          characterList.appendChild(more);
-        }
+        charactersData = await App.api("/api/audio/characters?page=1&page_size=50");
+        charactersError = null;
       } catch (e) {
-        characterList.textContent = "";
-        const empty = document.createElement("span");
-        empty.className = "hint";
-        empty.textContent = I18n.t("form.loadCharactersFailed") + e.message;
-        characterList.appendChild(empty);
+        charactersData = null;
+        charactersError = e.message;
       }
+      renderCharacterList();
     }
 
     function selectedReferenceIds() {
@@ -229,7 +272,7 @@
 
     async function submitTask(event) {
       event.preventDefault();
-      showMessage("", false);
+      clearMessage();
       const title = titleInput.value.trim();
       const theme = themeInput.value.trim();
       const referenceIds = selectedReferenceIds();
@@ -237,19 +280,19 @@
       const language = languageInput.value;
 
       if (!title) {
-        showMessage(I18n.t("form.enterTitle"), true);
+        showMessageKey("form.enterTitle", null, true);
         return;
       }
       if (referenceIds.length === 0) {
-        showMessage(I18n.t("form.selectCharacter"), true);
+        showMessageKey("form.selectCharacter", null, true);
         return;
       }
       if (!theme) {
-        showMessage(I18n.t("form.enterTheme"), true);
+        showMessageKey("form.enterTheme", null, true);
         return;
       }
       if (!Number.isInteger(duration) || duration < 1) {
-        showMessage(I18n.t("form.invalidDuration"), true);
+        showMessageKey("form.invalidDuration", null, true);
         return;
       }
 
@@ -273,9 +316,9 @@
         resultStatus.className = "status-tag status-" + result.status;
         queryResult.textContent = "";
         resultPanel.hidden = false;
-        showMessage(I18n.t("form.submitSuccess"), false);
+        showMessageKey("form.submitSuccess", null, false);
       } catch (e) {
-        showMessage(I18n.t("form.submitFailed") + e.message, true);
+        showMessageKey("form.submitFailed", null, true, e.message);
       } finally {
         submitBtn.disabled = false;
       }
@@ -323,13 +366,16 @@
         resultStatus.className = "status-tag status-" + data.status;
         renderSubtasks(data.subtasks);
       } catch (e) {
-        showMessage(I18n.t("result.queryFailed") + e.message, true);
+        showMessageKey("result.queryFailed", null, true, e.message);
       } finally {
         queryBtn.disabled = false;
       }
     }
 
     window.addEventListener("aiaudio:langchange", () => {
+      renderMessage();
+      renderCharacterList();
+      App.renderUserArea();
       if (createdTaskId) {
         App.api("/api/audio/tasks/" + encodeURIComponent(createdTaskId))
           .then((data) => renderSubtasks(data.subtasks))

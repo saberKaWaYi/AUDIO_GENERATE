@@ -37,8 +37,26 @@
     const emailLoginBtn = document.getElementById("emailLoginBtn");
     let lastGmailMatch = false;
 
-    function showMessage(text) {
-      msg.textContent = text;
+    let messageRenderer = null;
+
+    function renderMessage() {
+      if (messageRenderer) {
+        messageRenderer();
+      }
+    }
+
+    function showKey(key, vars) {
+      messageRenderer = () => {
+        msg.textContent = vars ? I18n.t(key, vars) : I18n.t(key);
+      };
+      renderMessage();
+    }
+
+    function showText(text) {
+      messageRenderer = () => {
+        msg.textContent = text;
+      };
+      renderMessage();
     }
 
     let countdownTimer = null;
@@ -79,11 +97,11 @@
       const container = document.getElementById("googleBtn");
       const gButton = container.querySelector("[role='button']");
       if (!gButton) {
-        showMessage(I18n.t("login.gmailUseGoogle"));
+        showKey("login.gmailUseGoogle");
         highlightGoogleButton();
         return;
       }
-      showMessage(I18n.t("login.openingGoogle"));
+      showKey("login.openingGoogle");
       gButton.click();
     }
 
@@ -105,7 +123,7 @@
           return;
         }
       } catch (e) {
-        showMessage(I18n.t("login.serviceUnavailable"));
+        showKey("login.serviceUnavailable");
         return;
       }
 
@@ -113,12 +131,12 @@
       try {
         const res = await fetch("/api/auth/config", { credentials: "same-origin" });
         if (!res.ok) {
-          showMessage(I18n.t("login.configFailed"));
+          showKey("login.configFailed");
           return;
         }
         config = await res.json();
       } catch (e) {
-        showMessage(I18n.t("login.configFailed"));
+        showKey("login.configFailed");
         return;
       }
 
@@ -128,10 +146,10 @@
 
       if (!config.google_client_id) {
         if (!config.email_enabled) {
-          showMessage(I18n.t("login.noMethod"));
+          showKey("login.noMethod");
         }
       } else if (typeof google === "undefined" || !google.accounts) {
-        showMessage(I18n.t("login.googleFailed"));
+        showKey("login.googleFailed");
       } else {
         google.accounts.id.initialize({
           client_id: config.google_client_id,
@@ -149,7 +167,7 @@
     }
 
     async function handleCredential(response) {
-      showMessage(I18n.t("login.signingIn"));
+      showKey("login.signingIn");
       try {
         const res = await fetch("/api/auth/google", {
           method: "POST",
@@ -162,16 +180,20 @@
           return;
         }
         const data = await res.json();
-        showMessage(data.detail || I18n.t("login.signInFailed"));
+        if (data.detail) {
+          showText(data.detail);
+        } else {
+          showKey("login.signInFailed");
+        }
       } catch (e) {
-        showMessage(I18n.t("login.requestFailed"));
+        showKey("login.requestFailed");
       }
     }
 
     async function handleSendCode() {
       const email = emailInput.value.trim();
       if (!email) {
-        showMessage(I18n.t("login.enterEmail"));
+        showKey("login.enterEmail");
         return;
       }
       if (isGmailAddress(email)) {
@@ -189,14 +211,18 @@
         });
         if (res.ok) {
           sent = true;
-          showMessage(I18n.t("login.codeSent"));
+          showKey("login.codeSent");
           startSendCountdown();
         } else {
           const data = await res.json();
-          showMessage(data.detail || I18n.t("login.sendFailed"));
+          if (data.detail) {
+            showText(data.detail);
+          } else {
+            showKey("login.sendFailed");
+          }
         }
       } catch (e) {
-        showMessage(I18n.t("login.sendRequestFailed"));
+        showKey("login.sendRequestFailed");
       } finally {
         if (!sent) {
           sendCodeBtn.disabled = false;
@@ -208,14 +234,14 @@
       const email = emailInput.value.trim();
       const code = codeInput.value.trim();
       if (!email || !code) {
-        showMessage(I18n.t("login.enterEmailAndCode"));
+        showKey("login.enterEmailAndCode");
         return;
       }
       if (isGmailAddress(email)) {
         redirectToGoogle();
         return;
       }
-      showMessage(I18n.t("login.signingIn"));
+      showKey("login.signingIn");
       try {
         const res = await fetch("/api/auth/email/login", {
           method: "POST",
@@ -228,13 +254,18 @@
           return;
         }
         const data = await res.json();
-        showMessage(data.detail || I18n.t("login.signInFailed"));
+        if (data.detail) {
+          showText(data.detail);
+        } else {
+          showKey("login.signInFailed");
+        }
       } catch (e) {
-        showMessage(I18n.t("login.requestFailed"));
+        showKey("login.requestFailed");
       }
     }
 
     window.addEventListener("aiaudio:langchange", () => {
+      renderMessage();
       if (countdownTimer !== null) {
         sendCodeBtn.textContent = resendLabel(Number(sendCodeBtn.textContent.replace(/\D/g, "")));
       }
