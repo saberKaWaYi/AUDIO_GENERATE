@@ -62,6 +62,55 @@ class FishAudioService:
             raise FishAudioError("Fish Audio TTS 返回体不是音频")
         return response.content
 
+    def create_model(
+        self,
+        title: str,
+        voices: list[tuple[str, bytes, str]],
+        cover_image: tuple[str, bytes, str] | None = None,
+        description: str | None = None,
+        visibility: str = "private",
+    ) -> dict:
+        api_key = fish_audio_settings.fish_audio_api_key.strip()
+        if not api_key:
+            raise FishAudioConfigError("FISH_AUDIO_API_KEY 未配置")
+
+        url = f"{fish_audio_settings.fish_audio_base_url.rstrip('/')}/model"
+        data = {
+            "type": "tts",
+            "title": title,
+            "train_mode": "fast",
+            "visibility": visibility,
+        }
+        if description is not None:
+            data["description"] = description
+
+        files = [("voices", (name, content, content_type)) for name, content, content_type in voices]
+        if cover_image is not None:
+            name, content, content_type = cover_image
+            files.append(("cover_image", (name, content, content_type)))
+
+        try:
+            response = httpx.post(
+                url,
+                headers={"Authorization": f"Bearer {api_key}"},
+                data=data,
+                files=files,
+                timeout=fish_audio_settings.fish_audio_timeout,
+            )
+        except httpx.HTTPError as e:
+            logger.error("Fish Audio create model request failed, title=%s", title)
+            raise FishAudioError("Fish Audio 创建音色请求失败") from e
+
+        if response.status_code in (401, 403):
+            raise FishAudioConfigError("Fish Audio 密钥无效")
+        if not response.is_success:
+            raise FishAudioError(f"Fish Audio 创建音色返回 {response.status_code}")
+
+        try:
+            return response.json()
+        except ValueError as e:
+            raise FishAudioError("Fish Audio 创建音色返回体不是合法 JSON") from e
+
     def get_model(self, reference_id: str) -> dict:
         api_key = fish_audio_settings.fish_audio_api_key.strip()
         if not api_key:

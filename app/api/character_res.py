@@ -33,6 +33,17 @@ class InsertCharacterResponse(BaseModel):
     update_time: datetime = Field(..., description="更新时间")
 
 
+class CreateCharacterResponse(BaseModel):
+
+    reference_id: str = Field(..., description="角色 ID")
+    title: str = Field(..., description="角色名称")
+    state: str = Field(..., description="模型状态")
+    visibility: str = Field(..., description="可见性")
+    cover_image: str = Field(..., description="封面图地址")
+    created: bool = Field(..., description="是否新建")
+    update_time: datetime = Field(..., description="更新时间")
+
+
 class CharacterListResponse(BaseModel):
 
     total: int = Field(..., description="总数")

@@ -1,3 +1,4 @@
+import math
 import re
 from datetime import datetime
 
@@ -6,6 +7,7 @@ from app.api.character_res import (
     CharacterResponse,
     CharacterListResponse,
     InsertCharacterResponse,
+    CreateCharacterResponse,
 )
 from models.schemas_character import (
     AUDIO_CHARACTERS_COLLECTION,
@@ -13,6 +15,70 @@ from models.schemas_character import (
     FishModelEntity,
 )
 from services.fish_audio_service import FishAudioError
+
+MIN_DURATION_SECONDS = 30.0
+MAX_DURATION_SECONDS = 90.0
+VIDEO_SUFFIXES = (".mp4",)
+VIDEO_CONTENT_TYPES = ("video/mp4", "application/octet-stream")
+IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png")
+IMAGE_CONTENT_TYPES = ("image/jpeg", "image/png", "application/octet-stream")
+
+
+def _match_suffix(name: str, suffixes: tuple[str, ...]) -> bool:
+    lowered = name.lower()
+    return any(lowered.endswith(suffix) for suffix in suffixes)
+
+
+def _validate_uploads(
+    voices: list[tuple[str, bytes, str]],
+    cover_image: tuple[str, bytes, str] | None,
+    duration_seconds: float,
+) -> None:
+    if not math.isfinite(duration_seconds):
+        raise ValueError("总时长必须是有限数值")
+    if not MIN_DURATION_SECONDS <= duration_seconds <= MAX_DURATION_SECONDS:
+        raise ValueError("参考视频总时长必须在 30 到 90 秒之间")
+    for name, content, content_type in voices:
+        if not content:
+            raise ValueError(f"参考视频内容为空：{name}")
+        if not _match_suffix(name, VIDEO_SUFFIXES):
+            raise ValueError(f"参考视频仅支持 MP4：{name}")
+        if content_type not in VIDEO_CONTENT_TYPES:
+            raise ValueError(f"参考视频类型不支持：{name}")
+    if cover_image is not None:
+        name, content, content_type = cover_image
+        if not content:
+            raise ValueError(f"封面照片内容为空：{name}")
+        if not _match_suffix(name, IMAGE_SUFFIXES):
+            raise ValueError(f"封面照片仅支持 JPG/PNG：{name}")
+        if content_type not in IMAGE_CONTENT_TYPES:
+            raise ValueError(f"封面照片类型不支持：{name}")
+
+
+def _upsert_character(mongo, user_id: int, entity: FishModelEntity) -> tuple[bool, datetime]:
+    now = datetime.utcnow()
+    character = AudioCharacter(
+        user_id=user_id,
+        **entity.model_dump(),
+        create_time=now,
+        update_time=now,
+        is_deleted=False,
+    )
+    document = character.model_dump(mode="json")
+    query = {"user_id": user_id, "reference_id": entity.reference_id, "is_deleted": False}
+
+    created = mongo.find_one(AUDIO_CHARACTERS_COLLECTION, query) is None
+    if created:
+        mongo.insert_document(AUDIO_CHARACTERS_COLLECTION, document)
+    else:
+        fields = {
+            key: value
+            for key, value in document.items()
+            if key not in ("user_id", "reference_id", "create_time")
+        }
+        mongo.update_document(AUDIO_CHARACTERS_COLLECTION, query, {"$set": fields})
+
+    return created, now
 
 
 def insert_character(mongo, fish, user_id: int, payload: InsertCharacterRequest) -> InsertCharacterResponse:
@@ -26,31 +92,54 @@ def insert_character(mongo, fish, user_id: int, payload: InsertCharacterRequest)
     if entity.reference_id != reference_id:
         raise FishAudioError("上游角色 ID 与请求不一致")
 
-    now = datetime.utcnow()
-    character = AudioCharacter(
-        user_id=user_id,
-        **entity.model_dump(),
-        create_time=now,
-        update_time=now,
-        is_deleted=False,
-    )
-    document = character.model_dump(mode="json")
-    query = {"user_id": user_id, "reference_id": reference_id, "is_deleted": False}
-
-    created = mongo.find_one(AUDIO_CHARACTERS_COLLECTION, query) is None
-    if created:
-        mongo.insert_document(AUDIO_CHARACTERS_COLLECTION, document)
-    else:
-        fields = {
-            key: value
-            for key, value in document.items()
-            if key not in ("user_id", "reference_id", "create_time")
-        }
-        mongo.update_document(AUDIO_CHARACTERS_COLLECTION, query, {"$set": fields})
+    created, now = _upsert_character(mongo, user_id, entity)
 
     return InsertCharacterResponse(
         reference_id=reference_id,
         title=entity.title,
+        created=created,
+        update_time=now,
+    )
+
+
+def create_character(
+    mongo,
+    fish,
+    user_id: int,
+    title: str,
+    voices: list[tuple[str, bytes, str]],
+    cover_image: tuple[str, bytes, str] | None,
+    description: str | None,
+    duration_seconds: float,
+) -> CreateCharacterResponse:
+    title = title.strip()
+    if not title:
+        raise ValueError("title 不能为空")
+    if not voices:
+        raise ValueError("至少需要 1 个参考音频")
+    if len(voices) > 20:
+        raise ValueError("参考音频最多 20 个")
+    _validate_uploads(voices, cover_image, duration_seconds)
+
+    entity = FishModelEntity.model_validate(
+        fish.create_model(
+            title=title,
+            voices=voices,
+            cover_image=cover_image,
+            description=description,
+        )
+    )
+    if not entity.title.strip():
+        raise FishAudioError("上游角色 title 为空")
+
+    created, now = _upsert_character(mongo, user_id, entity)
+
+    return CreateCharacterResponse(
+        reference_id=entity.reference_id,
+        title=entity.title,
+        state=entity.state,
+        visibility=entity.visibility,
+        cover_image=entity.cover_image,
         created=created,
         update_time=now,
     )
