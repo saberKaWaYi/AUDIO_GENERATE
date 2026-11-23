@@ -557,11 +557,12 @@ a { color: var(--accent); }
   background: #fcfcfe;
 }
 
-.character-option {
+.form-field .character-option {
   display: flex;
   align-items: center;
   gap: 9px;
   padding: 8px 4px;
+  margin-bottom: 0;
   font-size: 14px;
   color: var(--ink-2);
   cursor: pointer;
