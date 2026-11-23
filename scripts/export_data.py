@@ -9,6 +9,8 @@ COLLECTIONS = (
     "audio_users",
     "audio_user_identities",
     "audio_counters",
+    "audio_characters",
+    "audio_tasks",
 )
 
 OUTPUT_PATH = Path(__file__).resolve().parent.parent / "seed" / "account_data.json"
