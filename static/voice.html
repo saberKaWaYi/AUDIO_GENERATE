@@ -327,6 +327,15 @@
       setCover(event.target.files[0]);
     }
 
+    const FISH_COVER_BASE = "https://public-platform.r2.fish.audio/";
+
+    function coverImageUrl(value) {
+      if (/^https?:\/\//i.test(value)) {
+        return value;
+      }
+      return FISH_COVER_BASE + value.replace(/^\/+/, "");
+    }
+
     function renderLibrary() {
       libraryEl.textContent = "";
       if (libraryRenderer) {
@@ -363,7 +372,7 @@
             cover.className = "voice-item-cover";
             if (item.cover_image) {
               const img = document.createElement("img");
-              img.src = item.cover_image;
+              img.src = coverImageUrl(item.cover_image);
               img.alt = "";
               cover.appendChild(img);
             } else {
