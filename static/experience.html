@@ -87,7 +87,13 @@
           <div class="voice-step"><span class="voice-step-num">01</span><h3 data-i18n="experience.stepOne">体验配置</h3></div>
           <div class="form-field">
             <label for="voiceSelect" data-i18n="experience.voiceLabel">选择音色</label>
-            <select id="voiceSelect" disabled><option value="" data-i18n="experience.loadingVoices">加载中…</option></select>
+            <div id="voicePicker" class="voice-picker">
+              <button id="voiceSelect" class="voice-picker-trigger" type="button" disabled>
+                <span id="voiceSelected" data-i18n="experience.loadingVoices">加载中…</span>
+                <span class="voice-picker-arrow" aria-hidden="true"></span>
+              </button>
+              <div id="voiceOptions" class="voice-picker-menu" hidden></div>
+            </div>
           </div>
           <div class="form-field">
             <label for="ttsText" data-i18n="experience.textLabel">文本内容</label>
@@ -119,7 +125,10 @@
 
   <script src="/app.js"></script>
   <script>
+    const voicePicker = document.getElementById("voicePicker");
     const voiceSelect = document.getElementById("voiceSelect");
+    const voiceSelected = document.getElementById("voiceSelected");
+    const voiceOptions = document.getElementById("voiceOptions");
     const ttsText = document.getElementById("ttsText");
     const publicCheck = document.getElementById("publicCheck");
     const generateBtn = document.getElementById("generateBtn");
@@ -132,10 +141,21 @@
     const downloadLink = document.getElementById("downloadLink");
 
     let voices = [];
+    let selectedReferenceId = "";
     let objectUrl = null;
     let messageRenderer = null;
     let generating = false;
     let replacingAudio = false;
+
+    voiceSelect.addEventListener("click", () => {
+      voiceOptions.hidden = !voiceOptions.hidden;
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!voicePicker.contains(event.target)) {
+        voiceOptions.hidden = true;
+      }
+    });
 
     function renderMessage() {
       if (messageRenderer) {
@@ -159,26 +179,36 @@
     }
 
     function renderVoiceOptions() {
-      const previous = voiceSelect.value;
-      voiceSelect.textContent = "";
+      voiceOptions.textContent = "";
       if (voices.length === 0) {
-        const option = document.createElement("option");
-        option.value = "";
-        option.textContent = I18n.t("experience.noVoices");
-        voiceSelect.appendChild(option);
+        selectedReferenceId = "";
+        voiceSelected.textContent = I18n.t("experience.noVoices");
         voiceSelect.disabled = true;
         generateBtn.disabled = true;
         return;
       }
       voiceSelect.disabled = false;
-      for (const item of voices) {
-        const option = document.createElement("option");
-        option.value = item.reference_id;
-        option.textContent = item.title;
-        voiceSelect.appendChild(option);
+      const selected = voices.find((item) => item.reference_id === selectedReferenceId);
+      if (selected) {
+        voiceSelected.textContent = selected.title;
+      } else {
+        selectedReferenceId = "";
+        voiceSelected.textContent = I18n.t("experience.selectVoice");
       }
-      if (voices.some((item) => item.reference_id === previous)) {
-        voiceSelect.value = previous;
+      for (const item of voices) {
+        const option = document.createElement("button");
+        option.type = "button";
+        option.className = "voice-picker-option";
+        const label = document.createElement("span");
+        label.textContent = item.title;
+        option.appendChild(App.voiceThumb(item.cover_image, item.title));
+        option.appendChild(label);
+        option.addEventListener("click", () => {
+          selectedReferenceId = item.reference_id;
+          voiceSelected.textContent = item.title;
+          voiceOptions.hidden = true;
+        });
+        voiceOptions.appendChild(option);
       }
       generateBtn.disabled = generating;
     }
@@ -196,12 +226,12 @@
     }
 
     function selectedVoiceTitle() {
-      const item = voices.find((voice) => voice.reference_id === voiceSelect.value);
+      const item = voices.find((voice) => voice.reference_id === selectedReferenceId);
       return item.title;
     }
 
     function buildDownloadUrl() {
-      const referenceId = voiceSelect.value;
+      const referenceId = selectedReferenceId;
       if (!referenceId) {
         showMessage("experience.selectVoice", true);
         return null;
@@ -249,16 +279,26 @@
 
         const actions = document.createElement("div");
         actions.className = "exp-work-actions";
-        const toggle = document.createElement("label");
+        const toggle = document.createElement("button");
+        toggle.type = "button";
         toggle.className = "exp-work-public";
-        const check = document.createElement("input");
-        check.type = "checkbox";
-        check.checked = item.is_public;
-        check.addEventListener("change", () => togglePublic(item.work_id, check));
-        const label = document.createElement("span");
-        label.textContent = I18n.t("experience.publicLabel");
-        toggle.appendChild(check);
-        toggle.appendChild(label);
+        let isPublic = item.is_public;
+        const renderPublic = () => {
+          toggle.textContent = isPublic ? I18n.t("experience.publicOn") : I18n.t("experience.publicOff");
+          toggle.classList.toggle("on", isPublic);
+        };
+        renderPublic();
+        toggle.addEventListener("click", async () => {
+          const next = !isPublic;
+          try {
+            await App.api("/api/audio/works/" + encodeURIComponent(item.work_id) + "/public?is_public=" + (next ? "true" : "false"), { method: "PATCH" });
+            isPublic = next;
+            renderPublic();
+            showMessage(next ? "experience.setPublicOk" : "experience.setPrivateOk", false);
+          } catch (error) {
+            showMessage("experience.setPublicFailed", true, { msg: error.message });
+          }
+        });
         const download = document.createElement("a");
         download.className = "exp-download";
         download.href = "/api/audio/works/" + encodeURIComponent(item.work_id) + "/audio";
@@ -267,20 +307,10 @@
         actions.appendChild(toggle);
         actions.appendChild(download);
 
+        row.appendChild(App.voiceThumb(item.cover_image, item.title));
         row.appendChild(info);
         row.appendChild(actions);
         worksList.appendChild(row);
-      }
-    }
-
-    async function togglePublic(workId, check) {
-      const next = check.checked;
-      try {
-        await App.api("/api/audio/works/" + encodeURIComponent(workId) + "/public?is_public=" + (next ? "true" : "false"), { method: "PATCH" });
-        showMessage(next ? "experience.setPublicOk" : "experience.setPrivateOk", false);
-      } catch (error) {
-        check.checked = !next;
-        showMessage("experience.setPublicFailed", true, { msg: error.message });
       }
     }
 

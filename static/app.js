@@ -1,6 +1,27 @@
 const App = {
   currentUser: null,
 
+  coverImageUrl(value) {
+    if (/^https?:\/\//i.test(value)) {
+      return value;
+    }
+    return "https://public-platform.r2.fish.audio/" + value.replace(/^\/+/, "");
+  },
+
+  voiceThumb(value, title) {
+    const thumb = document.createElement("span");
+    thumb.className = "voice-thumb";
+    if (value) {
+      const img = document.createElement("img");
+      img.src = this.coverImageUrl(value);
+      img.alt = "";
+      thumb.appendChild(img);
+    } else {
+      thumb.textContent = title.slice(0, 1);
+    }
+    return thumb;
+  },
+
   async api(path, options = {}) {
     const res = await fetch(path, {
       credentials: "same-origin",

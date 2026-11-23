@@ -145,6 +145,7 @@
         download.textContent = I18n.t("experience.workDownload");
         actions.appendChild(download);
 
+        row.appendChild(App.voiceThumb(item.cover_image, item.title));
         row.appendChild(info);
         row.appendChild(actions);
         galleryList.appendChild(row);

@@ -201,7 +201,7 @@ def _work_file_path(user_id: int, work_id: str) -> Path:
     return Path(worker_settings.audio_data_dir) / WORK_SUBDIR / str(user_id) / f"{work_id}.mp3"
 
 
-def _store_work(mongo, user_id: int, reference_id: str, title: str, text: str, audio: bytes, is_public: bool) -> AudioWork:
+def _store_work(mongo, user_id: int, reference_id: str, cover_image: str, title: str, text: str, audio: bytes, is_public: bool) -> AudioWork:
     now = datetime.utcnow()
     work_id = uuid4().hex
     file_path = _work_file_path(user_id, work_id)
@@ -213,6 +213,7 @@ def _store_work(mongo, user_id: int, reference_id: str, title: str, text: str, a
         work_type=WORK_TYPE_TTS,
         title=title,
         reference_id=reference_id,
+        cover_image=cover_image,
         text=text,
         file_name=file_path.name,
         relative_path=str(Path(WORK_SUBDIR) / str(user_id) / file_path.name),
@@ -249,7 +250,7 @@ def synthesize_tts(mongo, fish, user_id: int, reference_id: str, text: str, is_p
     except FishAudioNotFoundError as e:
         raise FishAudioNotFoundError("音色不可用") from e
 
-    _store_work(mongo, user_id, reference_id, character["title"], text, audio, is_public)
+    _store_work(mongo, user_id, reference_id, character["cover_image"], character["title"], text, audio, is_public)
     return audio
 
 

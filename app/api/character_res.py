@@ -63,6 +63,7 @@ class WorkResponse(BaseModel):
     work_id: str = Field(..., description="作品 ID")
     work_type: str = Field(..., description="音频类型")
     title: str = Field(..., description="音色名称")
+    cover_image: str = Field(..., description="音色封面")
     text: str = Field(..., description="生成文本")
     file_size: int = Field(..., description="文件字节数")
     is_public: bool = Field(..., description="是否公开")

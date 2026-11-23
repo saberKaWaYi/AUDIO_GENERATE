@@ -16,6 +16,7 @@ def _to_response(doc: dict) -> dict:
         "work_id": doc["work_id"],
         "work_type": doc["work_type"],
         "title": doc["title"],
+        "cover_image": doc["cover_image"],
         "text": doc["text"],
         "file_size": doc["file_size"],
         "is_public": doc["is_public"],

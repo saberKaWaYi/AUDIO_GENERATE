@@ -13,6 +13,7 @@ class AudioWork(BaseModel):
     work_type: str = Field(min_length=1)
     title: str = Field(min_length=1)
     reference_id: str
+    cover_image: str
     text: str
     file_name: str
     relative_path: str
