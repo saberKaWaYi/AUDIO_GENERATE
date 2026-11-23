@@ -80,7 +80,7 @@
       <section class="voice-intro">
         <div class="voice-kicker">VOICE STUDIO</div>
         <h1 data-i18n="voice.heroTitle">把一段声音，变成专属音色</h1>
-        <p data-i18n="voice.heroDesc">上传参考音频与一张封面照片，系统会提取人声克隆出可反复使用的音色。参考音频总时长需在 30 到 90 秒之间。</p>
+        <p data-i18n="voice.heroDesc">上传参考音频与一张封面照片，系统会提取人声克隆出可反复使用的音色。参考音频总时长需在 30 到 180 秒之间。</p>
       </section>
 
       <div class="voice-columns">
@@ -107,7 +107,7 @@
           <label class="voice-dropzone" id="voiceDropzone" for="voiceFiles">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
             <strong data-i18n="voice.dropTitle">拖入 MP3，或点击选择</strong>
-            <span data-i18n="voice.dropHint">可多选 · 总时长需在 30~90 秒之间</span>
+            <span data-i18n="voice.dropHint">可多选 · 总时长需在 30~180 秒之间</span>
             <input id="voiceFiles" type="file" accept="audio/mpeg,.mp3" multiple>
           </label>
 
@@ -120,7 +120,7 @@
               <div><strong id="totalDuration">0.00</strong> <em data-i18n="voice.secUnit">秒</em></div>
             </div>
             <div class="voice-track"><div class="voice-zone"></div><div class="voice-pointer" id="voicePointer"></div></div>
-            <div class="voice-scale"><span>30s</span><span data-i18n="voice.scaleMid">合格区间</span><span>90s</span></div>
+            <div class="voice-scale"><span>30s</span><span data-i18n="voice.scaleMid">合格区间</span><span>180s</span></div>
           </div>
 
           <p id="voiceMsg" class="msg"></p>
@@ -138,7 +138,7 @@
   <script src="/app.js"></script>
   <script>
     const MIN_SECONDS = 30;
-    const MAX_SECONDS = 90;
+    const MAX_SECONDS = 180;
     const TRACK_MAX = 120;
     const AUDIO_SUFFIXES = [".mp3"];
     const IMAGE_SUFFIXES = [".jpg", ".jpeg", ".png"];

@@ -17,7 +17,7 @@ from models.schemas_character import (
 from services.fish_audio_service import FishAudioError
 
 MIN_DURATION_SECONDS = 30.0
-MAX_DURATION_SECONDS = 90.0
+MAX_DURATION_SECONDS = 180.0
 AUDIO_SUFFIXES = (".mp3",)
 AUDIO_CONTENT_TYPES = ("audio/mpeg", "audio/mp3", "application/octet-stream")
 IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png")
@@ -37,7 +37,7 @@ def _validate_uploads(
     if not math.isfinite(duration_seconds):
         raise ValueError("总时长必须是有限数值")
     if not MIN_DURATION_SECONDS <= duration_seconds <= MAX_DURATION_SECONDS:
-        raise ValueError("参考音频总时长必须在 30 到 90 秒之间")
+        raise ValueError("参考音频总时长必须在 30 到 180 秒之间")
     for name, content, content_type in voices:
         if not content:
             raise ValueError(f"参考音频内容为空：{name}")
