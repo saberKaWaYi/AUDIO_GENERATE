@@ -391,9 +391,16 @@
             const ref = document.createElement("div");
             ref.className = "voice-item-ref";
             ref.textContent = item.reference_id;
+            const delBtn = document.createElement("button");
+            delBtn.type = "button";
+            delBtn.className = "voice-item-delete";
+            delBtn.textContent = t("voice.deleteBtn");
+            delBtn.setAttribute("aria-label", t("voice.deleteBtn"));
+            delBtn.addEventListener("click", () => onDeleteCharacter(item.reference_id, item.title));
             body.appendChild(title);
             body.appendChild(meta);
             body.appendChild(ref);
+            body.appendChild(delBtn);
             card.appendChild(cover);
             card.appendChild(body);
             libraryEl.appendChild(card);
@@ -410,6 +417,27 @@
           libraryEl.appendChild(note);
         };
         renderLibrary();
+      }
+    }
+
+    async function onDeleteCharacter(referenceId, title) {
+      if (!window.confirm(t("voice.deleteConfirm", { name: title }))) {
+        return;
+      }
+      resultMessage = null;
+      try {
+        const res = await fetch("/api/audio/characters/" + encodeURIComponent(referenceId), {
+          method: "DELETE",
+          credentials: "same-origin",
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || t("voice.deleteFailed"));
+        }
+        showResultMessage("voice.deleteSuccess", false);
+        await loadLibrary();
+      } catch (error) {
+        showResultMessage("voice.deleteFailed", true, { msg: error.message });
       }
     }
 

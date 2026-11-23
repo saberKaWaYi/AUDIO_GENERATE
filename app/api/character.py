@@ -3,12 +3,14 @@ from pydantic import ValidationError
 
 from app.api.character_bl import (
     create_character as create_character_bl,
+    delete_character as delete_character_bl,
     insert_character as insert_character_bl,
     list_characters as list_characters_bl,
 )
 from app.api.character_req import InsertCharacterRequest
 from app.api.character_res import (
     CreateCharacterResponse,
+    DeleteCharacterResponse,
     InsertCharacterResponse,
     CharacterListResponse,
 )
@@ -133,3 +135,29 @@ async def list_characters(
     except Exception as e:
         logger.error("list characters failed: %s", e)
         raise HTTPException(status_code=500, detail="角色查询失败")
+
+
+@router.delete(
+    "/audio/characters/{reference_id}",
+    response_model=DeleteCharacterResponse,
+    summary="Soft-delete a character",
+)
+async def delete_character(
+    reference_id: str,
+    request: Request,
+    user=Depends(get_current_user),
+):
+    try:
+        deleted = delete_character_bl(request.app.state.mongo, user.user_id, reference_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail="音色不存在或已删除")
+        return DeleteCharacterResponse(reference_id=reference_id, deleted=True)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError:
+        raise HTTPException(status_code=503, detail="数据库未就绪")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("delete character failed: %s", e)
+        raise HTTPException(status_code=500, detail="角色删除失败")

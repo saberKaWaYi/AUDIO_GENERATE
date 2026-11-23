@@ -44,6 +44,12 @@ class CreateCharacterResponse(BaseModel):
     update_time: datetime = Field(..., description="更新时间")
 
 
+class DeleteCharacterResponse(BaseModel):
+
+    reference_id: str = Field(..., description="角色 ID")
+    deleted: bool = Field(..., description="是否已删除")
+
+
 class CharacterListResponse(BaseModel):
 
     total: int = Field(..., description="总数")

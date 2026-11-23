@@ -145,6 +145,14 @@ def create_character(
     )
 
 
+def delete_character(mongo, user_id: int, reference_id: str) -> bool:
+    reference_id = reference_id.strip()
+    if not reference_id:
+        raise ValueError("reference_id 不能为空")
+    query = {"user_id": user_id, "reference_id": reference_id, "is_deleted": False}
+    return mongo.update_document(AUDIO_CHARACTERS_COLLECTION, query, {"$set": {"is_deleted": True}}) > 0
+
+
 def list_characters(
     mongo,
     user_id: int,
