@@ -56,3 +56,19 @@ class CharacterListResponse(BaseModel):
     page: int = Field(..., description="页码")
     page_size: int = Field(..., description="每页条数")
     items: list[CharacterResponse] = Field(..., description="当前页角色")
+
+
+class WorkResponse(BaseModel):
+
+    work_id: str = Field(..., description="作品 ID")
+    work_type: str = Field(..., description="音频类型")
+    title: str = Field(..., description="音色名称")
+    text: str = Field(..., description="生成文本")
+    file_size: int = Field(..., description="文件字节数")
+    is_public: bool = Field(..., description="是否公开")
+    create_time: datetime = Field(..., description="入库时间")
+
+
+class WorkListResponse(BaseModel):
+
+    items: list[WorkResponse] = Field(..., description="作品列表")

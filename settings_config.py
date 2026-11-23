@@ -54,7 +54,7 @@ class Settings:
 
     worker_debug = worker_settings.worker_debug
     worker_poll_interval = worker_settings.worker_poll_interval
-    music_data_dir = worker_settings.music_data_dir
+    audio_data_dir = worker_settings.audio_data_dir
 
     google_client_id = auth_settings.google_client_id
     session_secret = auth_settings.session_secret

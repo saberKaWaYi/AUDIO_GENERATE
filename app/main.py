@@ -15,6 +15,7 @@ from services.mongo_service import MongoService
 from services.fish_audio_service import FishAudioService
 from models.schemas_character import AUDIO_CHARACTERS_COLLECTION, AUDIO_CHARACTER_INDEXES
 from models.schemas_task import AUDIO_TASKS_COLLECTION, AUDIO_TASK_INDEXES
+from models.schemas_work import AUDIO_WORKS_COLLECTION, AUDIO_WORK_INDEXES
 from models.schemas_user import (
     AUDIO_COUNTERS_COLLECTION,
     AUDIO_EMAIL_CODES_COLLECTION,
@@ -26,7 +27,7 @@ from models.schemas_user import (
     USER_ID_COUNTER_KEY,
     AudioCounter,
 )
-from app.api import character, task
+from app.api import character, task, work
 from app.auth import auth
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
@@ -52,6 +53,10 @@ async def lifespan(app: FastAPI):
     mongo.create_collection(AUDIO_TASKS_COLLECTION)
     for index in AUDIO_TASK_INDEXES:
         mongo.create_index(AUDIO_TASKS_COLLECTION, index["field"], index["unique"])
+
+    mongo.create_collection(AUDIO_WORKS_COLLECTION)
+    for index in AUDIO_WORK_INDEXES:
+        mongo.create_index(AUDIO_WORKS_COLLECTION, index["field"], index["unique"])
 
     mongo.create_collection(AUDIO_USERS_COLLECTION)
     for index in AUDIO_USER_INDEXES:
@@ -101,4 +106,5 @@ app = create_app()
 app.include_router(auth.router, prefix="/api", tags=["auth"])
 app.include_router(character.router, prefix="/api", tags=["character"])
 app.include_router(task.router, prefix="/api", tags=["task"])
+app.include_router(work.router, prefix="/api", tags=["work"])
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")

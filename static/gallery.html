@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="gallery.title">人物音色体验 - AI AUDIO</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/i18n.js"></script>
+</head>
+<body class="app-body">
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-head">
+      <a class="logo" href="/index.html" aria-label="AI AUDIO 首页">
+        <svg class="logo-mark" viewBox="0 0 44 44" aria-hidden="true">
+          <defs>
+            <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#818cf8"/>
+              <stop offset="55%" stop-color="#6366f1"/>
+              <stop offset="100%" stop-color="#a855f7"/>
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="40" height="40" rx="12" fill="url(#logoGrad)"/>
+          <rect x="6.5" y="6.5" width="31" height="31" rx="9" fill="none" stroke="#ffffff" stroke-opacity="0.22"/>
+          <g fill="#ffffff">
+            <rect x="12" y="18" width="3.4" height="8" rx="1.7"/>
+            <rect x="17.3" y="13" width="3.4" height="18" rx="1.7"/>
+            <rect x="22.6" y="16" width="3.4" height="12" rx="1.7"/>
+            <rect x="27.9" y="19" width="3.4" height="6" rx="1.7"/>
+          </g>
+        </svg>
+        <span class="logo-text">AI AUDIO</span>
+      </a>
+      <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="收起或展开侧栏" title="收起或展开">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <div class="nav-group-title" data-i18n="nav.experienceCenter">音频体验中心</div>
+        <a class="nav-item nav-sub active" href="/gallery.html">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M8.5 7.2l4.2 2.8-4.2 2.8z" fill="currentColor"/></svg></span>
+          <span class="nav-label" data-i18n="nav.publicExperience">人物音色体验</span>
+        </a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-title" data-i18n="nav.creationCenter">音频创作中心</div>
+        <a class="nav-item nav-sub" href="/voice.html">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 3a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 9v1a5 5 0 0 0 10 0V9M10 15v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg></span>
+          <span class="nav-label" data-i18n="nav.voice">人物音色制作</span>
+        </a>
+        <a class="nav-item nav-sub" href="/experience.html">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M8.5 7.2l4.2 2.8-4.2 2.8z" fill="currentColor"/></svg></span>
+          <span class="nav-label" data-i18n="nav.experience">人物音色体验</span>
+        </a>
+        <a class="nav-item nav-sub" href="/index.html">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 8v4M8 5v10M12 7v6M16 9v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></span>
+          <span class="nav-label" data-i18n="nav.asrm">ASMR 制作</span>
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-foot">
+      <span id="sidebarUserName" class="sidebar-user"></span>
+    </div>
+  </aside>
+
+  <div class="app-main">
+    <header class="topbar">
+      <div class="topbar-title" data-i18n="gallery.pageTitle">人物音色体验</div>
+      <div class="user-area">
+        <div id="langSwitcher" class="lang-switcher"></div>
+        <img id="avatar" class="avatar" alt="" hidden>
+        <span id="userName"></span>
+        <button id="logoutBtn" data-i18n="topbar.logout">退出登录</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="voice-intro">
+        <div class="voice-kicker">VOICE GALLERY</div>
+        <h1 data-i18n="gallery.heroTitle">听听大家的声音</h1>
+        <p data-i18n="gallery.heroDesc">这里展示所有公开的音频作品，点击即可试听或下载。</p>
+      </section>
+
+      <section class="voice-panel exp-works-panel">
+        <div class="voice-lib-head"><h3 data-i18n="gallery.listTitle">公开作品</h3></div>
+        <p id="galleryEmpty" class="voice-library-note" data-i18n="gallery.empty">还没有公开的作品</p>
+        <p id="galleryMsg" class="msg"></p>
+        <div id="galleryList" class="exp-works"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    const galleryList = document.getElementById("galleryList");
+    const galleryEmpty = document.getElementById("galleryEmpty");
+    const galleryMsg = document.getElementById("galleryMsg");
+    let messageRenderer = null;
+
+    function renderMessage() {
+      if (messageRenderer) {
+        messageRenderer();
+      }
+    }
+
+    function showMessage(key, isError, vars) {
+      messageRenderer = () => {
+        galleryMsg.textContent = I18n.t(key, vars);
+        galleryMsg.classList.toggle("error", Boolean(isError));
+        galleryMsg.classList.toggle("ok", !isError);
+      };
+      renderMessage();
+    }
+
+    function renderWorks(items) {
+      galleryList.textContent = "";
+      galleryEmpty.hidden = items.length > 0;
+      for (const item of items) {
+        const row = document.createElement("div");
+        row.className = "exp-work";
+
+        const info = document.createElement("div");
+        info.className = "exp-work-info";
+        const title = document.createElement("div");
+        title.className = "exp-work-title";
+        title.textContent = item.title;
+        const text = document.createElement("div");
+        text.className = "exp-work-text";
+        text.textContent = item.text;
+        info.appendChild(title);
+        info.appendChild(text);
+        const player = document.createElement("audio");
+        player.controls = true;
+        player.preload = "none";
+        player.src = "/api/audio/works/" + encodeURIComponent(item.work_id) + "/audio?public_only=true";
+        info.appendChild(player);
+
+        const actions = document.createElement("div");
+        actions.className = "exp-work-actions";
+        const download = document.createElement("a");
+        download.className = "exp-download";
+        download.href = "/api/audio/works/" + encodeURIComponent(item.work_id) + "/audio?public_only=true";
+        download.download = item.title + ".mp3";
+        download.textContent = I18n.t("experience.workDownload");
+        actions.appendChild(download);
+
+        row.appendChild(info);
+        row.appendChild(actions);
+        galleryList.appendChild(row);
+      }
+    }
+
+    async function loadWorks() {
+      try {
+        const data = await App.api("/api/audio/works/public");
+        renderWorks(data.items);
+      } catch (error) {
+        galleryList.textContent = "";
+        galleryEmpty.textContent = I18n.t("gallery.loadFailed", { msg: error.message });
+        galleryEmpty.hidden = false;
+      }
+    }
+
+    window.addEventListener("aiaudio:langchange", () => {
+      renderMessage();
+      App.renderUserArea();
+      loadWorks();
+    });
+
+    async function initPage() {
+      I18n.init();
+      I18n.buildSwitcher(document.getElementById("langSwitcher"));
+      const ok = await App.init();
+      if (!ok) {
+        return;
+      }
+      await loadWorks();
+    }
+
+    window.addEventListener("load", initPage);
+  </script>
+</body>
+</html>

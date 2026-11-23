@@ -146,6 +146,7 @@ async def download_tts(
     request: Request,
     reference_id: str = Query(..., description="音色 ID"),
     text: str = Query(..., description="要合成的文本"),
+    is_public: bool = Query(False, description="生成后是否公开到体验中心"),
     user=Depends(get_current_user),
 ):
     try:
@@ -155,6 +156,7 @@ async def download_tts(
             user.user_id,
             reference_id,
             text,
+            is_public,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
