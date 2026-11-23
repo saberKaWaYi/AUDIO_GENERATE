@@ -14,10 +14,11 @@ from models.schemas_character import (
     AudioCharacter,
     FishModelEntity,
 )
-from services.fish_audio_service import FishAudioError
+from services.fish_audio_service import FishAudioError, FishAudioNotFoundError
 
 MIN_DURATION_SECONDS = 30.0
 MAX_DURATION_SECONDS = 180.0
+MAX_TTS_TEXT_LENGTH = 500
 AUDIO_SUFFIXES = (".mp3",)
 AUDIO_CONTENT_TYPES = ("audio/mpeg", "audio/mp3", "application/octet-stream")
 IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png")
@@ -189,3 +190,26 @@ def list_characters(
         page_size=page_size,
         items=[CharacterResponse(**doc) for doc in docs],
     )
+
+
+def synthesize_tts(mongo, fish, user_id: int, reference_id: str, text: str) -> bytes:
+    reference_id = reference_id.strip()
+    text = text.strip()
+    if not reference_id:
+        raise ValueError("音色不能为空")
+    if not text:
+        raise ValueError("文本内容不能为空")
+    if len(text) > MAX_TTS_TEXT_LENGTH:
+        raise ValueError(f"文本不能超过 {MAX_TTS_TEXT_LENGTH} 字")
+
+    character = mongo.find_one(
+        AUDIO_CHARACTERS_COLLECTION,
+        {"user_id": user_id, "reference_id": reference_id, "is_deleted": False},
+    )
+    if character is None:
+        raise FishAudioNotFoundError("音色不存在或已删除")
+
+    try:
+        return fish.synthesize(text, reference_id)
+    except FishAudioNotFoundError as e:
+        raise FishAudioNotFoundError("音色不可用") from e

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="experience.title">人物音色体验 - AI AUDIO</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/i18n.js"></script>
+</head>
+<body class="app-body">
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-head">
+      <a class="logo" href="/index.html" aria-label="AI AUDIO 首页">
+        <svg class="logo-mark" viewBox="0 0 44 44" aria-hidden="true">
+          <defs>
+            <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#818cf8"/>
+              <stop offset="55%" stop-color="#6366f1"/>
+              <stop offset="100%" stop-color="#a855f7"/>
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="40" height="40" rx="12" fill="url(#logoGrad)"/>
+          <rect x="6.5" y="6.5" width="31" height="31" rx="9" fill="none" stroke="#ffffff" stroke-opacity="0.22"/>
+          <g fill="#ffffff">
+            <rect x="12" y="18" width="3.4" height="8" rx="1.7"/>
+            <rect x="17.3" y="13" width="3.4" height="18" rx="1.7"/>
+            <rect x="22.6" y="16" width="3.4" height="12" rx="1.7"/>
+            <rect x="27.9" y="19" width="3.4" height="6" rx="1.7"/>
+          </g>
+        </svg>
+        <span class="logo-text">AI AUDIO</span>
+      </a>
+      <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="收起或展开侧栏" title="收起或展开">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" href="/voice.html">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 3a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 9v1a5 5 0 0 0 10 0V9M10 15v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg></span>
+        <span class="nav-label" data-i18n="nav.voice">人物音色制作</span>
+      </a>
+      <a class="nav-item active" href="/experience.html">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M8.5 7.2l4.2 2.8-4.2 2.8z" fill="currentColor"/></svg></span>
+        <span class="nav-label" data-i18n="nav.experience">人物音色体验</span>
+      </a>
+      <a class="nav-item" href="/index.html">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 8v4M8 5v10M12 7v6M16 9v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></span>
+        <span class="nav-label" data-i18n="nav.asrm">ASMR 制作</span>
+      </a>
+      <div class="nav-item disabled">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M10 6.5v7M8 8h3.2a1.4 1.4 0 0 1 0 2.8H8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg></span>
+        <span class="nav-label" data-i18n="nav.credits">购买积分</span>
+        <span class="nav-tag" data-i18n="nav.soon">即将上线</span>
+      </div>
+      <div class="nav-item disabled">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><rect x="2.5" y="5" width="15" height="10" rx="2" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M2.5 8.5h15" stroke="currentColor" stroke-width="1.6" fill="none"/></svg></span>
+        <span class="nav-label" data-i18n="nav.payment">支付</span>
+        <span class="nav-tag" data-i18n="nav.soon">即将上线</span>
+      </div>
+      <div class="nav-item disabled">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 2.8l2.2 4.5 5 .7-3.6 3.5.85 5L10 14l-4.45 2.5.85-5L2.8 8l5-.7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/></svg></span>
+        <span class="nav-label" data-i18n="nav.points">积分</span>
+        <span class="nav-tag" data-i18n="nav.soon">即将上线</span>
+      </div>
+    </nav>
+    <div class="sidebar-foot">
+      <span id="sidebarUserName" class="sidebar-user"></span>
+    </div>
+  </aside>
+
+  <div class="app-main">
+    <header class="topbar">
+      <div class="topbar-title" data-i18n="nav.experience">人物音色体验</div>
+      <div class="user-area">
+        <div id="langSwitcher" class="lang-switcher"></div>
+        <img id="avatar" class="avatar" alt="" hidden>
+        <span id="userName"></span>
+        <button id="logoutBtn" data-i18n="topbar.logout">退出登录</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="voice-intro">
+        <div class="voice-kicker">VOICE PLAYGROUND</div>
+        <h1 data-i18n="experience.heroTitle">用一段文字，试试你的音色</h1>
+        <p data-i18n="experience.heroDesc">选择已创建的音色，输入文本即可合成试听并下载 MP3。</p>
+      </section>
+
+      <div class="voice-columns">
+        <section class="voice-panel">
+          <div class="voice-step"><span class="voice-step-num">01</span><h3 data-i18n="experience.stepOne">体验配置</h3></div>
+          <div class="form-field">
+            <label for="voiceSelect" data-i18n="experience.voiceLabel">选择音色</label>
+            <select id="voiceSelect" disabled><option value="" data-i18n="experience.loadingVoices">加载中…</option></select>
+          </div>
+          <div class="form-field">
+            <label for="ttsText" data-i18n="experience.textLabel">文本内容</label>
+            <textarea id="ttsText" rows="8" maxlength="500" data-i18n-placeholder="experience.textPlaceholder" placeholder="输入想让音色朗读的内容，最多 500 字"></textarea>
+          </div>
+          <p id="expMsg" class="msg"></p>
+          <button id="generateBtn" class="voice-create" type="button" disabled data-i18n="experience.generateBtn">生成音频</button>
+        </section>
+
+        <section class="voice-panel">
+          <div class="voice-lib-head"><h3 data-i18n="experience.resultTitle">生成结果</h3></div>
+          <p id="resultEmpty" class="voice-library-note" data-i18n="experience.resultEmpty">还没有生成音频</p>
+          <div id="resultPanel" class="exp-result" hidden>
+            <audio id="audioPlayer" controls></audio>
+            <a id="downloadLink" class="exp-download" download data-i18n="experience.downloadBtn">下载 MP3</a>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    const voiceSelect = document.getElementById("voiceSelect");
+    const ttsText = document.getElementById("ttsText");
+    const generateBtn = document.getElementById("generateBtn");
+    const expMsg = document.getElementById("expMsg");
+    const resultPanel = document.getElementById("resultPanel");
+    const resultEmpty = document.getElementById("resultEmpty");
+    const audioPlayer = document.getElementById("audioPlayer");
+    const downloadLink = document.getElementById("downloadLink");
+
+    let voices = [];
+    let objectUrl = null;
+    let messageRenderer = null;
+    let generating = false;
+    let replacingAudio = false;
+
+    function renderMessage() {
+      if (messageRenderer) {
+        messageRenderer();
+      }
+    }
+
+    function showMessage(key, isError, vars) {
+      messageRenderer = () => {
+        expMsg.textContent = I18n.t(key, vars);
+        expMsg.classList.toggle("error", Boolean(isError));
+        expMsg.classList.toggle("ok", !isError);
+      };
+      renderMessage();
+    }
+
+    function clearMessage() {
+      messageRenderer = null;
+      expMsg.textContent = "";
+      expMsg.classList.remove("error", "ok");
+    }
+
+    function renderVoiceOptions() {
+      const previous = voiceSelect.value;
+      voiceSelect.textContent = "";
+      if (voices.length === 0) {
+        const option = document.createElement("option");
+        option.value = "";
+        option.textContent = I18n.t("experience.noVoices");
+        voiceSelect.appendChild(option);
+        voiceSelect.disabled = true;
+        generateBtn.disabled = true;
+        return;
+      }
+      voiceSelect.disabled = false;
+      for (const item of voices) {
+        const option = document.createElement("option");
+        option.value = item.reference_id;
+        option.textContent = item.title;
+        voiceSelect.appendChild(option);
+      }
+      if (voices.some((item) => item.reference_id === previous)) {
+        voiceSelect.value = previous;
+      }
+      generateBtn.disabled = generating;
+    }
+
+    async function loadVoices() {
+      try {
+        const data = await App.api("/api/audio/characters?page=1&page_size=50");
+        voices = data.items;
+        renderVoiceOptions();
+      } catch (error) {
+        voices = [];
+        renderVoiceOptions();
+        showMessage("experience.loadFailed", true, { msg: error.message });
+      }
+    }
+
+    function selectedVoiceTitle() {
+      const item = voices.find((voice) => voice.reference_id === voiceSelect.value);
+      return item.title;
+    }
+
+    function buildDownloadUrl() {
+      const referenceId = voiceSelect.value;
+      if (!referenceId) {
+        showMessage("experience.selectVoice", true);
+        return null;
+      }
+      const text = ttsText.value.trim();
+      if (!text) {
+        showMessage("experience.enterText", true);
+        return null;
+      }
+      if (text.length > 500) {
+        showMessage("experience.textTooLong", true);
+        return null;
+      }
+      return "/api/audio/tts/download?reference_id=" + encodeURIComponent(referenceId) + "&text=" + encodeURIComponent(text);
+    }
+
+    function clearAudio() {
+      replacingAudio = true;
+      audioPlayer.removeAttribute("src");
+      audioPlayer.load();
+      downloadLink.removeAttribute("href");
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+        objectUrl = null;
+      }
+    }
+
+    async function generate() {
+      clearMessage();
+      const url = buildDownloadUrl();
+      if (url === null) {
+        return;
+      }
+      const name = selectedVoiceTitle();
+      clearAudio();
+      generating = true;
+      generateBtn.disabled = true;
+      generateBtn.textContent = I18n.t("experience.generating");
+      try {
+        const res = await fetch(url, { credentials: "same-origin" });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.detail);
+        }
+        const blob = await res.blob();
+        objectUrl = URL.createObjectURL(blob);
+        replacingAudio = false;
+        audioPlayer.src = objectUrl;
+        downloadLink.href = objectUrl;
+        downloadLink.download = name + ".mp3";
+        resultPanel.hidden = false;
+        resultEmpty.hidden = true;
+        showMessage("experience.success", false);
+      } catch (error) {
+        replacingAudio = false;
+        showMessage("experience.generateFailed", true, { msg: error.message });
+      } finally {
+        generating = false;
+        generateBtn.disabled = voices.length === 0;
+        generateBtn.textContent = I18n.t("experience.generateBtn");
+      }
+    }
+
+    window.addEventListener("aiaudio:langchange", () => {
+      renderVoiceOptions();
+      renderMessage();
+      App.renderUserArea();
+      if (!generating) {
+        generateBtn.textContent = I18n.t("experience.generateBtn");
+      }
+    });
+
+    audioPlayer.addEventListener("error", () => {
+      if (audioPlayer.src && !replacingAudio) {
+        showMessage("experience.playFailed", true);
+      }
+    });
+
+    window.addEventListener("beforeunload", () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    });
+
+    async function initPage() {
+      I18n.init();
+      I18n.buildSwitcher(document.getElementById("langSwitcher"));
+      const ok = await App.init();
+      if (!ok) {
+        return;
+      }
+      generateBtn.addEventListener("click", generate);
+      await loadVoices();
+    }
+
+    window.addEventListener("load", initPage);
+  </script>
+</body>
+</html>

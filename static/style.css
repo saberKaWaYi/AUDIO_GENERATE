@@ -852,6 +852,23 @@ a { color: var(--accent); }
 .voice-create:hover { filter: brightness(1.08); transform: translateY(-1px); }
 .voice-create:disabled { opacity: 0.45; cursor: default; transform: none; }
 
+.exp-result { display: flex; flex-direction: column; gap: 14px; }
+.exp-result audio { width: 100%; }
+.exp-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--accent);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.exp-download:hover { background: var(--accent-soft); }
+
 .voice-lib-head { margin-bottom: 18px; }
 .voice-lib-head h3 { margin: 0; font-size: 15px; font-weight: 700; color: var(--ink); }
 

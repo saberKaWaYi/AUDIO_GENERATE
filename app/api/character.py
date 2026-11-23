@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, Response, UploadFile
 from pydantic import ValidationError
 
 from app.api.character_bl import (
@@ -6,6 +6,7 @@ from app.api.character_bl import (
     delete_character as delete_character_bl,
     insert_character as insert_character_bl,
     list_characters as list_characters_bl,
+    synthesize_tts as synthesize_tts_bl,
 )
 from app.api.character_req import InsertCharacterRequest
 from app.api.character_res import (
@@ -135,6 +136,47 @@ async def list_characters(
     except Exception as e:
         logger.error("list characters failed: %s", e)
         raise HTTPException(status_code=500, detail="角色查询失败")
+
+
+@router.get(
+    "/audio/tts/download",
+    summary="Synthesize text with a character voice and download MP3",
+)
+async def download_tts(
+    request: Request,
+    reference_id: str = Query(..., description="音色 ID"),
+    text: str = Query(..., description="要合成的文本"),
+    user=Depends(get_current_user),
+):
+    try:
+        audio = synthesize_tts_bl(
+            request.app.state.mongo,
+            request.app.state.fish,
+            user.user_id,
+            reference_id,
+            text,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except FishAudioNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except FishAudioConfigError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except FishAudioError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except RuntimeError:
+        raise HTTPException(status_code=503, detail="数据库未就绪")
+    except Exception as e:
+        logger.error("synthesize tts failed: %s", e)
+        raise HTTPException(status_code=500, detail="音频生成失败")
+    return Response(
+        content=audio,
+        media_type="audio/mpeg",
+        headers={
+            "Content-Disposition": 'attachment; filename="tts.mp3"',
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @router.delete(
