@@ -247,6 +247,7 @@
         const text = document.createElement("span");
         text.textContent = item.title;
         label.appendChild(checkbox);
+        label.appendChild(App.voiceThumb(item.cover_image, item.title));
         label.appendChild(text);
         characterList.appendChild(label);
       }

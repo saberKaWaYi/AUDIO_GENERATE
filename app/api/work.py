@@ -35,12 +35,12 @@ async def list_my_works(
 ):
     try:
         docs = list_works(request.app.state.mongo, {"user_id": user.user_id, "is_deleted": False})
+        return WorkListResponse(items=[_to_response(doc) for doc in docs])
     except RuntimeError:
         raise HTTPException(status_code=503, detail="数据库未就绪")
     except Exception as e:
         logger.error("list my works failed: %s", e)
         raise HTTPException(status_code=500, detail="作品查询失败")
-    return WorkListResponse(items=[_to_response(doc) for doc in docs])
 
 
 @router.get(
@@ -57,12 +57,12 @@ async def list_public_works(
             request.app.state.mongo,
             {"work_type": "tts", "is_public": True, "is_deleted": False},
         )
+        return WorkListResponse(items=[_to_response(doc) for doc in docs])
     except RuntimeError:
         raise HTTPException(status_code=503, detail="数据库未就绪")
     except Exception as e:
         logger.error("list public works failed: %s", e)
         raise HTTPException(status_code=500, detail="公开作品查询失败")
-    return WorkListResponse(items=[_to_response(doc) for doc in docs])
 
 
 @router.patch(

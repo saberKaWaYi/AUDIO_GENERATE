@@ -577,6 +577,8 @@ a { color: var(--accent); }
   accent-color: var(--accent);
 }
 
+.character-option .voice-thumb { width: 32px; height: 32px; border-radius: 6px; font-size: 13px; }
+
 .form-foot {
   display: flex;
   align-items: center;
