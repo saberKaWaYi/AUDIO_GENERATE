@@ -721,6 +721,8 @@ a { color: var(--accent); }
 
 .voice-step h3 { margin: 0; font-size: 15px; font-weight: 700; color: var(--ink); }
 
+.voice-field-hint { margin: 8px 0 0; font-size: 11px; line-height: 1.6; color: var(--muted); }
+
 .voice-cover {
   display: flex;
   align-items: center;

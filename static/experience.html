@@ -48,21 +48,6 @@
         <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 8v4M8 5v10M12 7v6M16 9v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></span>
         <span class="nav-label" data-i18n="nav.asrm">ASMR 制作</span>
       </a>
-      <div class="nav-item disabled">
-        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M10 6.5v7M8 8h3.2a1.4 1.4 0 0 1 0 2.8H8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg></span>
-        <span class="nav-label" data-i18n="nav.credits">购买积分</span>
-        <span class="nav-tag" data-i18n="nav.soon">即将上线</span>
-      </div>
-      <div class="nav-item disabled">
-        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><rect x="2.5" y="5" width="15" height="10" rx="2" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M2.5 8.5h15" stroke="currentColor" stroke-width="1.6" fill="none"/></svg></span>
-        <span class="nav-label" data-i18n="nav.payment">支付</span>
-        <span class="nav-tag" data-i18n="nav.soon">即将上线</span>
-      </div>
-      <div class="nav-item disabled">
-        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 2.8l2.2 4.5 5 .7-3.6 3.5.85 5L10 14l-4.45 2.5.85-5L2.8 8l5-.7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/></svg></span>
-        <span class="nav-label" data-i18n="nav.points">积分</span>
-        <span class="nav-tag" data-i18n="nav.soon">即将上线</span>
-      </div>
     </nav>
     <div class="sidebar-foot">
       <span id="sidebarUserName" class="sidebar-user"></span>
@@ -97,6 +82,7 @@
           <div class="form-field">
             <label for="ttsText" data-i18n="experience.textLabel">文本内容</label>
             <textarea id="ttsText" rows="8" maxlength="500" data-i18n-placeholder="experience.textPlaceholder" placeholder="输入想让音色朗读的内容，最多 500 字"></textarea>
+            <p class="voice-field-hint" data-i18n="experience.textHint">文本里可以加 [ ] 控制标签：句首放 [whisper] / [excited] 控制情绪，句中放 [laugh] / [sigh] / [pause] 加声音或停顿，别堆太多。</p>
           </div>
           <p id="expMsg" class="msg"></p>
           <button id="generateBtn" class="voice-create" type="button" disabled data-i18n="experience.generateBtn">生成音频</button>
