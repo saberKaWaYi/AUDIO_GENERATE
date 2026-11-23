@@ -304,8 +304,25 @@
         download.href = "/api/audio/works/" + encodeURIComponent(item.work_id) + "/audio";
         download.download = item.title + ".mp3";
         download.textContent = I18n.t("experience.workDownload");
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "exp-work-delete";
+        del.textContent = I18n.t("experience.workDelete");
+        del.addEventListener("click", async () => {
+          if (!window.confirm(I18n.t("experience.deleteConfirm", { name: item.title }))) {
+            return;
+          }
+          try {
+            await App.api("/api/audio/works/" + encodeURIComponent(item.work_id), { method: "DELETE" });
+            await loadWorks();
+            showMessage("experience.deleteOk", false);
+          } catch (error) {
+            showMessage("experience.deleteFailed", true, { msg: error.message });
+          }
+        });
         actions.appendChild(toggle);
         actions.appendChild(download);
+        actions.appendChild(del);
 
         row.appendChild(App.voiceThumb(item.cover_image, item.title));
         row.appendChild(info);

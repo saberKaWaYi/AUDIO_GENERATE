@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
-from app.api.character_bl import get_work_audio, list_works, set_work_public
+from app.api.character_bl import delete_work, get_work_audio, list_works, set_work_public
 from app.api.character_res import WorkListResponse
 from app.auth.deps import get_current_user
 
@@ -85,6 +85,27 @@ async def toggle_work_public(
     if not updated:
         raise HTTPException(status_code=404, detail="作品不存在")
     return {"work_id": work_id, "is_public": is_public}
+
+
+@router.delete(
+    "/audio/works/{work_id}",
+    summary="Delete a generated audio work",
+)
+async def delete_work_route(
+    work_id: str,
+    request: Request,
+    user=Depends(get_current_user),
+):
+    try:
+        deleted = delete_work(request.app.state.mongo, user.user_id, work_id)
+    except RuntimeError:
+        raise HTTPException(status_code=503, detail="数据库未就绪")
+    except Exception as e:
+        logger.error("delete work failed: %s", e)
+        raise HTTPException(status_code=500, detail="作品删除失败")
+    if not deleted:
+        raise HTTPException(status_code=404, detail="作品不存在")
+    return {"work_id": work_id, "deleted": True}
 
 
 @router.get(

@@ -270,6 +270,21 @@ def set_work_public(mongo, user_id: int, work_id: str, is_public: bool) -> bool:
     ) > 0
 
 
+def delete_work(mongo, user_id: int, work_id: str) -> bool:
+    query = {"work_id": work_id, "user_id": user_id, "is_deleted": False}
+    doc = mongo.find_one(AUDIO_WORKS_COLLECTION, query)
+    if doc is None:
+        return False
+    file_path = Path(worker_settings.audio_data_dir) / doc["relative_path"]
+    file_path.unlink(missing_ok=True)
+    mongo.update_document(
+        AUDIO_WORKS_COLLECTION,
+        query,
+        {"$set": {"is_deleted": True, "update_time": datetime.utcnow()}},
+    )
+    return True
+
+
 def get_work_audio(mongo, work_id: str, user_id: int, public_only: bool) -> tuple[str, bytes] | None:
     query = {"work_id": work_id, "is_deleted": False}
     if public_only:

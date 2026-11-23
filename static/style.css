@@ -960,6 +960,19 @@ a { color: var(--accent); }
 }
 .exp-work-public.on { border-color: #c7d2fe; background: var(--accent-soft); color: var(--accent); }
 .exp-work .exp-download { padding: 7px 12px; font-size: 12px; }
+.exp-work-delete {
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--muted);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.exp-work-delete:hover { border-color: #fca5a5; color: #dc2626; background: #fef2f2; }
+.exp-work-delete:focus-visible { outline: none; border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14); }
 .voice-thumb {
   width: 40px;
   height: 40px;
