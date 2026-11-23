@@ -27,6 +27,7 @@ services:
       - "api.fish.audio:104.18.0.100"
     volumes:
       - ./seed:/app/seed
+      - ./data:/app/data
     expose:
       - "8002"
     ports:
@@ -73,6 +74,8 @@ services:
     depends_on:
       web:
         condition: service_healthy
+    volumes:
+      - ./data:/app/data
     environment:
       - DEBUG=${DEBUG:-false}
       - WORKER_DEBUG=${WORKER_DEBUG:-}
