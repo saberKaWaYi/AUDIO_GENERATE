@@ -810,8 +810,8 @@ a { color: var(--accent); }
 
 .voice-zone {
   position: absolute;
-  left: 25%;
-  width: 50%;
+  left: 0;
+  width: 100%;
   top: 0;
   bottom: 0;
   border-radius: 99px;
@@ -885,7 +885,6 @@ a { color: var(--accent); }
 .voice-item-body { min-width: 0; }
 .voice-item-title { font-size: 13px; font-weight: 700; color: var(--ink); }
 .voice-item-meta { margin-top: 4px; font-size: 11px; color: var(--muted); }
-.voice-item-ref { margin-top: 7px; font-size: 10px; color: var(--accent); word-break: break-all; font-variant-numeric: tabular-nums; }
 .voice-item-delete {
   margin-top: 10px;
   border: 1px solid var(--line);

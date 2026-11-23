@@ -139,7 +139,7 @@
   <script>
     const MIN_SECONDS = 30;
     const MAX_SECONDS = 180;
-    const TRACK_MAX = 120;
+    const TRACK_SPAN = MAX_SECONDS - MIN_SECONDS;
     const AUDIO_SUFFIXES = [".mp3"];
     const IMAGE_SUFFIXES = [".jpg", ".jpeg", ".png"];
 
@@ -236,7 +236,7 @@
       }
 
       totalDurationEl.textContent = total.toFixed(2);
-      pointer.style.left = Math.min(total / TRACK_MAX, 1) * 100 + "%";
+      pointer.style.left = Math.min(Math.max(total - MIN_SECONDS, 0) / TRACK_SPAN, 1) * 100 + "%";
 
       let valid = false;
       if (rejectedAudioCount > 0) {
@@ -388,9 +388,6 @@
             const meta = document.createElement("div");
             meta.className = "voice-item-meta";
             meta.textContent = item.state + " · " + t(item.visibility === "public" ? "voice.public" : "voice.private");
-            const ref = document.createElement("div");
-            ref.className = "voice-item-ref";
-            ref.textContent = item.reference_id;
             const delBtn = document.createElement("button");
             delBtn.type = "button";
             delBtn.className = "voice-item-delete";
@@ -399,7 +396,6 @@
             delBtn.addEventListener("click", () => onDeleteCharacter(item.reference_id, item.title));
             body.appendChild(title);
             body.appendChild(meta);
-            body.appendChild(ref);
             body.appendChild(delBtn);
             card.appendChild(cover);
             card.appendChild(body);
@@ -496,7 +492,7 @@
         if (!res.ok) {
           throw new Error(data.detail || String(res.status));
         }
-        showResultMessage("voice.createSuccess", false, { id: data.reference_id });
+        showResultMessage("voice.createSuccess", false, { name: title });
         await loadLibrary();
       } catch (error) {
         showResultMessage("voice.createFailed", true, { msg: error.message });
