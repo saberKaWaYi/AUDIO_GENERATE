@@ -1086,6 +1086,8 @@ a { color: var(--accent); }
 .detail-meta-key { flex: 0 0 120px; color: var(--muted); white-space: nowrap; }
 .detail-meta-value { color: var(--ink); word-break: break-all; }
 .detail-theme { margin-top: 20px; }
+.detail-merged { margin-top: 20px; }
+.merged-actions { justify-content: flex-start; }
 .detail-theme-label { font-size: 13px; font-weight: 600; color: var(--muted); }
 .detail-theme-text { margin-top: 8px; padding: 14px; border-radius: 8px; background: var(--bg); color: var(--ink); font-size: 13px; line-height: 1.7; white-space: pre-wrap; }
 .detail-theme-text.markdown-body { white-space: normal; }

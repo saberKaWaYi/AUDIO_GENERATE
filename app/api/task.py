@@ -1,5 +1,10 @@
+import asyncio
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
+from tools.audio_merge_tool import AudioMergeError
+
+from app.api.task_bl import build_merged_audio as build_merged_audio_bl
 from app.api.task_bl import create_task as create_task_bl
 from app.api.task_bl import delete_task as delete_task_bl
 from app.api.task_bl import get_task_audio as get_task_audio_bl
@@ -105,6 +110,41 @@ async def download_subtask_audio(
         raise HTTPException(status_code=500, detail="音频读取失败")
     if result is None:
         raise HTTPException(status_code=404, detail="子任务音频不存在")
+    file_name, audio = result
+    return Response(
+        content=audio,
+        media_type="audio/mpeg",
+        headers={
+            "Content-Disposition": f'attachment; filename="{file_name}"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+@router.get(
+    "/audio/tasks/{task_id}/merged-audio",
+    summary="Build and download the merged ASMR audio on the timeline",
+)
+async def download_merged_audio(
+    task_id: str,
+    request: Request,
+    user=Depends(get_current_user),
+):
+    try:
+        result = await asyncio.to_thread(
+            build_merged_audio_bl, request.app.state.mongo, user.user_id, task_id
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except AudioMergeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except RuntimeError:
+        raise HTTPException(status_code=503, detail="数据库未就绪")
+    except Exception as e:
+        logger.error("build merged audio failed: %s", e)
+        raise HTTPException(status_code=500, detail="音频拼接失败")
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"任务不存在：{task_id}")
     file_name, audio = result
     return Response(
         content=audio,

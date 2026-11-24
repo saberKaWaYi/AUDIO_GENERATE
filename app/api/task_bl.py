@@ -16,6 +16,7 @@ from models.schemas_task import (
     TaskStatus,
     TaskType,
 )
+from tools.audio_merge_tool import merge_segments
 from settings.worker import worker_settings
 
 
@@ -288,3 +289,41 @@ def get_task_audio(mongo, user_id: int, subtask_id: str) -> tuple[str, bytes] | 
     relative_path = doc["result"]["result_text"]
     file_path = Path(worker_settings.audio_data_dir) / relative_path
     return file_path.name, file_path.read_bytes()
+
+
+def build_merged_audio(mongo, user_id: int, task_id: str) -> tuple[str, bytes] | None:
+    parent = mongo.find_one(
+        AUDIO_TASKS_COLLECTION,
+        {
+            "task_id": task_id,
+            "user_id": user_id,
+            "type": TaskType.ASMR_TEXT.value,
+            "is_deleted": False,
+        },
+        fields=("info.duration_minutes",),
+    )
+    if parent is None:
+        return None
+    docs = mongo.find_documents(
+        AUDIO_TASKS_COLLECTION,
+        {
+            "task_id": task_id,
+            "user_id": user_id,
+            "type": TaskType.ASMR_TEXT_GENERATE.value,
+            "status": TaskStatus.SUCCESS.value,
+            "is_deleted": False,
+        },
+        sort=[("info.start_time", 1)],
+        fields=("info.start_time", "result.result_text"),
+    )
+    if not docs:
+        raise ValueError("没有可拼接的音频片段")
+    segments = []
+    for doc in docs:
+        start_time = doc["info"]["start_time"]
+        relative_path = doc["result"]["result_text"]
+        file_path = Path(worker_settings.audio_data_dir) / relative_path
+        segments.append((start_time, str(file_path)))
+    total_seconds = parent["info"]["duration_minutes"] * 60
+    audio = merge_segments(segments, total_seconds)
+    return f"{task_id}.mp3", audio

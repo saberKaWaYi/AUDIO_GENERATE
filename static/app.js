@@ -218,6 +218,50 @@ const App = {
     return wrap;
   },
 
+  mergedAudioActions(taskId, onError) {
+    const wrap = document.createElement("div");
+    wrap.className = "generate-actions merged-actions";
+    const audioUrl = "/api/audio/tasks/" + encodeURIComponent(taskId) + "/merged-audio";
+    const play = document.createElement("button");
+    play.type = "button";
+    play.className = "subtask-play";
+    play.textContent = I18n.t("taskdetail.play");
+    const download = document.createElement("a");
+    download.className = "subtask-download";
+    download.href = audioUrl;
+    download.textContent = I18n.t("taskdetail.download");
+    let player = null;
+    play.addEventListener("click", async () => {
+      if (player && !player.paused) {
+        player.pause();
+        play.textContent = I18n.t("taskdetail.play");
+        return;
+      }
+      if (!player) {
+        player = document.createElement("audio");
+        player.className = "generate-player";
+        player.controls = true;
+        player.src = audioUrl;
+        player.addEventListener("ended", () => {
+          play.textContent = I18n.t("taskdetail.play");
+        });
+        wrap.appendChild(player);
+      }
+      play.textContent = I18n.t("taskdetail.pause");
+      try {
+        await player.play();
+      } catch (e) {
+        play.textContent = I18n.t("taskdetail.play");
+        if (onError) {
+          onError(e);
+        }
+      }
+    });
+    wrap.appendChild(play);
+    wrap.appendChild(download);
+    return wrap;
+  },
+
   async api(path, options = {}) {
     const res = await fetch(path, {
       credentials: "same-origin",
