@@ -2,7 +2,6 @@ from pathlib import Path
 
 from services.fish_audio_service import FishAudioNotFoundError
 from settings.worker import worker_settings
-from tools.agent_tools import _load_character
 
 WORK_SUBDIR = "works"
 ASMR_SUBDIR = "ASMR"
@@ -37,7 +36,6 @@ def run_generate(subtask: dict) -> GenerateOutcome:
     if not text:
         raise ValueError("片段文本不能为空")
 
-    _load_character(subtask["user_id"], reference_id)
     try:
         audio = _get_fish().synthesize(text, reference_id)
     except FishAudioNotFoundError as exc:
