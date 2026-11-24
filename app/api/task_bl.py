@@ -50,6 +50,30 @@ def _new_task(
     )
 
 
+def list_tasks(mongo, user_id: int) -> list[dict]:
+    return mongo.find_documents(
+        AUDIO_TASKS_COLLECTION,
+        {"user_id": user_id, "is_deleted": False},
+        sort=[("create_time", -1)],
+    )
+
+
+def set_task_public(mongo, user_id: int, task_id: str, is_public: bool) -> bool:
+    return mongo.update_document(
+        AUDIO_TASKS_COLLECTION,
+        {"task_id": task_id, "user_id": user_id, "is_deleted": False},
+        {"$set": {"is_public": is_public, "update_time": datetime.utcnow()}},
+    ) > 0
+
+
+def delete_task(mongo, user_id: int, task_id: str) -> bool:
+    return mongo.update_document(
+        AUDIO_TASKS_COLLECTION,
+        {"task_id": task_id, "user_id": user_id, "is_deleted": False},
+        {"$set": {"is_deleted": True, "update_time": datetime.utcnow()}},
+    ) > 0
+
+
 def create_task(mongo, user_id: int, request: CreateTaskRequest) -> CreateTaskResponse:
     if not request.title.strip():
         raise ValueError("作品标题不能为空")

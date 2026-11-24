@@ -161,6 +161,15 @@
         <button id="queryBtn" class="secondary-btn" type="button" data-i18n="result.queryBtn">查询任务状态</button>
         <div id="queryResult" class="query-result"></div>
       </section>
+
+      <section class="task-list-section">
+        <div class="page-head">
+          <h2 data-i18n="tasklist.title">我的任务</h2>
+          <button id="taskListRefresh" class="secondary-btn" type="button" data-i18n="tasklist.refresh">刷新</button>
+        </div>
+        <div id="taskList" class="task-list"></div>
+        <p id="taskListEmpty" class="hint" hidden data-i18n="tasklist.empty">暂无任务</p>
+      </section>
     </main>
   </div>
 
@@ -179,6 +188,9 @@
     const resultStatus = document.getElementById("resultStatus");
     const queryBtn = document.getElementById("queryBtn");
     const queryResult = document.getElementById("queryResult");
+    const taskList = document.getElementById("taskList");
+    const taskListEmpty = document.getElementById("taskListEmpty");
+    const taskListRefresh = document.getElementById("taskListRefresh");
 
     let createdTaskId = null;
 
@@ -322,6 +334,7 @@
         queryResult.textContent = "";
         resultPanel.hidden = false;
         showMessageKey("form.submitSuccess", null, false);
+        await loadTasks();
       } catch (e) {
         showMessageKey("form.submitFailed", null, true, e.message);
       } finally {
@@ -377,10 +390,105 @@
       }
     }
 
+    async function loadTasks() {
+      try {
+        const data = await App.api("/api/audio/tasks");
+        renderTasks(data.items);
+      } catch (e) {
+        taskList.textContent = "";
+        taskListEmpty.hidden = false;
+        taskListEmpty.textContent = I18n.t("tasklist.loadFailed") + e.message;
+      }
+    }
+
+    function renderTasks(items) {
+      taskList.textContent = "";
+      taskListEmpty.hidden = items.length > 0;
+      if (items.length === 0) {
+        taskListEmpty.textContent = I18n.t("tasklist.empty");
+      }
+      for (const item of items) {
+        const row = document.createElement("div");
+        row.className = "task-list-item";
+
+        const info = document.createElement("div");
+        info.className = "task-list-info";
+        const title = document.createElement("div");
+        title.className = "task-list-title";
+        title.textContent = item.title;
+        const meta = document.createElement("div");
+        meta.className = "task-list-meta";
+        meta.textContent = item.type + " · ";
+        const status = document.createElement("span");
+        status.className = "status-tag status-" + item.status;
+        status.textContent = item.status;
+        meta.appendChild(status);
+        info.appendChild(title);
+        info.appendChild(meta);
+
+        const actions = document.createElement("div");
+        actions.className = "task-list-actions";
+
+        const toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "exp-work-public";
+        let isPublic = item.is_public;
+        const renderPublic = () => {
+          toggle.textContent = isPublic ? I18n.t("tasklist.publicOn") : I18n.t("tasklist.publicOff");
+          toggle.classList.toggle("on", isPublic);
+        };
+        renderPublic();
+        toggle.addEventListener("click", async () => {
+          const next = !isPublic;
+          try {
+            await App.api("/api/audio/tasks/" + encodeURIComponent(item.task_id) + "/public?is_public=" + (next ? "true" : "false"), { method: "PATCH" });
+            isPublic = next;
+            renderPublic();
+            showMessageKey(next ? "tasklist.setPublicOk" : "tasklist.setPrivateOk", null, false);
+          } catch (e) {
+            showMessageKey("tasklist.setPublicFailed", null, true, e.message);
+          }
+        });
+
+        const detail = document.createElement("button");
+        detail.type = "button";
+        detail.className = "task-list-detail";
+        detail.textContent = I18n.t("tasklist.detail");
+        detail.addEventListener("click", () => {
+          window.location.href = "/task.html?task_id=" + encodeURIComponent(item.task_id);
+        });
+
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "exp-work-delete";
+        del.textContent = I18n.t("tasklist.delete");
+        del.addEventListener("click", async () => {
+          if (!window.confirm(I18n.t("tasklist.deleteConfirm", { name: item.title }))) {
+            return;
+          }
+          try {
+            await App.api("/api/audio/tasks/" + encodeURIComponent(item.task_id), { method: "DELETE" });
+            await loadTasks();
+            showMessageKey("tasklist.deleteOk", null, false);
+          } catch (e) {
+            showMessageKey("tasklist.deleteFailed", null, true, e.message);
+          }
+        });
+
+        actions.appendChild(toggle);
+        actions.appendChild(detail);
+        actions.appendChild(del);
+        row.appendChild(info);
+        row.appendChild(actions);
+        taskList.appendChild(row);
+      }
+    }
+
     window.addEventListener("aiaudio:langchange", () => {
       renderMessage();
       renderCharacterList();
       App.renderUserArea();
+      loadTasks();
       if (createdTaskId) {
         App.api("/api/audio/tasks/" + encodeURIComponent(createdTaskId))
           .then((data) => renderSubtasks(data.subtasks))
@@ -397,7 +505,9 @@
       }
       form.addEventListener("submit", submitTask);
       queryBtn.addEventListener("click", queryTask);
+      taskListRefresh.addEventListener("click", loadTasks);
       loadCharacters();
+      loadTasks();
     }
 
     window.addEventListener("load", initPage);

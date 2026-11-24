@@ -11,6 +11,21 @@ class CreateTaskResponse(BaseModel):
     status: TaskStatus = Field(..., description="任务状态")
 
 
+class TaskListItem(BaseModel):
+
+    task_id: str = Field(..., description="任务标识")
+    title: str = Field(..., description="作品标题")
+    type: TaskType = Field(..., description="任务类型")
+    status: TaskStatus = Field(..., description="任务状态")
+    is_public: bool = Field(..., description="是否公开")
+    create_time: datetime = Field(..., description="创建时间")
+
+
+class TaskListResponse(BaseModel):
+
+    items: list[TaskListItem] = Field(..., description="任务列表")
+
+
 class TaskSubtaskResponse(BaseModel):
 
     subtask_id: str = Field(..., description="子任务标识")

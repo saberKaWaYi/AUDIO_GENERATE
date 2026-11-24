@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="taskdetail.title">任务详情 - AI AUDIO</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/i18n.js"></script>
+</head>
+<body class="app-body">
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-head">
+      <a class="logo" href="/index.html" aria-label="AI AUDIO 首页">
+        <svg class="logo-mark" viewBox="0 0 44 44" aria-hidden="true">
+          <defs>
+            <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#818cf8"/>
+              <stop offset="55%" stop-color="#6366f1"/>
+              <stop offset="100%" stop-color="#a855f7"/>
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="40" height="40" rx="12" fill="url(#logoGrad)"/>
+          <rect x="6.5" y="6.5" width="31" height="31" rx="9" fill="none" stroke="#ffffff" stroke-opacity="0.22"/>
+          <g fill="#ffffff">
+            <rect x="12" y="18" width="3.4" height="8" rx="1.7"/>
+            <rect x="17.3" y="13" width="3.4" height="18" rx="1.7"/>
+            <rect x="22.6" y="16" width="3.4" height="12" rx="1.7"/>
+            <rect x="27.9" y="19" width="3.4" height="6" rx="1.7"/>
+          </g>
+        </svg>
+        <span class="logo-text">AI AUDIO</span>
+      </a>
+      <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="收起或展开侧栏" title="收起或展开">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <div class="nav-group-title" data-i18n="nav.experienceCenter">音频体验中心</div>
+        <a class="nav-item nav-sub" href="/gallery.html">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M8.5 7.2l4.2 2.8-4.2 2.8z" fill="currentColor"/></svg></span>
+          <span class="nav-label" data-i18n="nav.publicExperience">人物音色体验</span>
+        </a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-title" data-i18n="nav.creationCenter">音频创作中心</div>
+        <a class="nav-item nav-sub" href="/voice.html">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 3a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 9v1a5 5 0 0 0 10 0V9M10 15v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg></span>
+          <span class="nav-label" data-i18n="nav.voice">人物音色制作</span>
+        </a>
+        <a class="nav-item nav-sub" href="/experience.html">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M8.5 7.2l4.2 2.8-4.2 2.8z" fill="currentColor"/></svg></span>
+          <span class="nav-label" data-i18n="nav.experience">人物音色体验</span>
+        </a>
+        <a class="nav-item nav-sub active" href="/index.html">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 8v4M8 5v10M12 7v6M16 9v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></span>
+          <span class="nav-label" data-i18n="nav.asrm">ASMR 制作</span>
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-foot">
+      <span id="sidebarUserName" class="sidebar-user"></span>
+    </div>
+  </aside>
+
+  <div class="app-main">
+    <header class="topbar">
+      <div class="topbar-title" data-i18n="taskdetail.pageTitle">任务详情</div>
+      <div class="user-area">
+        <div id="langSwitcher" class="lang-switcher"></div>
+        <img id="avatar" class="avatar" alt="" hidden>
+        <span id="userName"></span>
+        <button id="logoutBtn" data-i18n="topbar.logout">退出登录</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <button id="backBtn" class="secondary-btn task-back" type="button" data-i18n="taskdetail.back">返回任务列表</button>
+      <p id="detailMsg" class="msg"></p>
+
+      <section id="detailPanel" class="detail-panel" hidden>
+        <div class="detail-head">
+          <h2 id="detailTitle" class="detail-title"></h2>
+          <span id="detailStatus" class="status-tag"></span>
+        </div>
+        <div id="detailMeta" class="detail-meta"></div>
+        <div id="detailTheme" class="detail-theme"></div>
+
+        <div class="page-head detail-sub-head">
+          <h3 data-i18n="taskdetail.subtasks">子任务结果</h3>
+          <button id="detailRefresh" class="secondary-btn" type="button" data-i18n="taskdetail.refresh">刷新</button>
+        </div>
+        <div id="detailSubtasks" class="detail-subtasks"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    const backBtn = document.getElementById("backBtn");
+    const detailMsg = document.getElementById("detailMsg");
+    const detailPanel = document.getElementById("detailPanel");
+    const detailTitle = document.getElementById("detailTitle");
+    const detailStatus = document.getElementById("detailStatus");
+    const detailMeta = document.getElementById("detailMeta");
+    const detailTheme = document.getElementById("detailTheme");
+    const detailRefresh = document.getElementById("detailRefresh");
+    const detailSubtasks = document.getElementById("detailSubtasks");
+
+    const taskId = new URLSearchParams(window.location.search).get("task_id");
+
+    let charactersMap = null;
+
+    function showMessage(key, isError, vars) {
+      detailMsg.textContent = vars ? I18n.t(key, vars) : I18n.t(key);
+      detailMsg.classList.toggle("error", Boolean(isError));
+    }
+
+    function metaRow(label, value) {
+      const row = document.createElement("div");
+      row.className = "detail-meta-row";
+      const key = document.createElement("span");
+      key.className = "detail-meta-key";
+      key.textContent = label;
+      const val = document.createElement("span");
+      val.className = "detail-meta-value";
+      val.textContent = value;
+      row.appendChild(key);
+      row.appendChild(val);
+      return row;
+    }
+
+    function formatTime(totalSeconds) {
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return minutes + ":" + String(seconds).padStart(2, "0");
+    }
+
+    function characterName(referenceId) {
+      if (charactersMap && charactersMap.has(referenceId)) {
+        return charactersMap.get(referenceId);
+      }
+      return referenceId;
+    }
+
+    function renderAsmrTextResult(container, sub) {
+      const raw = sub.result.result_text;
+      if (!raw) {
+        return;
+      }
+      if (sub.status !== "success") {
+        const pre = document.createElement("pre");
+        pre.className = "subtask-text";
+        pre.textContent = raw;
+        container.appendChild(pre);
+        return;
+      }
+
+      const payload = JSON.parse(raw);
+      for (const segment of payload.segments) {
+        const row = document.createElement("div");
+        row.className = "detail-segment";
+        const time = document.createElement("span");
+        time.className = "detail-segment-time";
+        time.textContent = formatTime(segment.start_time) + " - " + formatTime(segment.end_time);
+        const name = document.createElement("span");
+        name.className = "detail-segment-name";
+        name.textContent = characterName(segment.reference_id);
+        const text = document.createElement("div");
+        text.className = "detail-segment-text";
+        text.textContent = segment.text;
+        row.appendChild(time);
+        row.appendChild(name);
+        row.appendChild(text);
+        container.appendChild(row);
+      }
+    }
+
+    const RESULT_RENDERERS = {
+      ASMR_TEXT: renderAsmrTextResult,
+    };
+
+    function renderSubtasks(subtasks) {
+      detailSubtasks.textContent = "";
+      for (const sub of subtasks) {
+        const card = document.createElement("div");
+        card.className = "subtask-card";
+
+        const head = document.createElement("p");
+        head.className = "subtask-head";
+        const status = document.createElement("span");
+        status.className = "status-tag status-" + sub.status;
+        status.textContent = sub.status;
+        head.appendChild(document.createTextNode(sub.type + " · "));
+        head.appendChild(status);
+        card.appendChild(head);
+
+        const renderer = RESULT_RENDERERS[sub.type];
+        if (renderer) {
+          renderer(card, sub);
+        } else {
+          const pre = document.createElement("pre");
+          pre.className = "subtask-text";
+          pre.textContent = sub.result.result_text;
+          card.appendChild(pre);
+        }
+
+        const tokens = document.createElement("p");
+        tokens.className = "hint";
+        tokens.textContent = I18n.t("subtask.tokens", {
+          p: sub.result.prompt_tokens,
+          c: sub.result.completion_tokens,
+        });
+        card.appendChild(tokens);
+        detailSubtasks.appendChild(card);
+      }
+    }
+
+    async function loadTask() {
+      if (!taskId) {
+        showMessage("taskdetail.missingId", true);
+        return;
+      }
+      try {
+        const data = await App.api("/api/audio/tasks/" + encodeURIComponent(taskId));
+        const sub = data.subtasks[0];
+        detailTitle.textContent = sub.info.title;
+        detailStatus.textContent = data.status;
+        detailStatus.className = "status-tag status-" + data.status;
+
+        detailMeta.textContent = "";
+        detailMeta.appendChild(metaRow(I18n.t("taskdetail.taskId"), data.task_id));
+        detailMeta.appendChild(metaRow(I18n.t("taskdetail.type"), sub.type));
+        detailMeta.appendChild(metaRow(I18n.t("taskdetail.language"), sub.info.language));
+        detailMeta.appendChild(metaRow(I18n.t("taskdetail.duration"), String(sub.info.duration_minutes)));
+        detailMeta.appendChild(metaRow(I18n.t("taskdetail.characters"), sub.info.reference_ids.map(characterName).join("、")));
+        detailMeta.appendChild(metaRow(I18n.t("taskdetail.createTime"), new Date(data.create_time).toLocaleString()));
+
+        detailTheme.textContent = "";
+        const themeLabel = document.createElement("div");
+        themeLabel.className = "detail-theme-label";
+        themeLabel.textContent = I18n.t("taskdetail.theme");
+        const themeText = document.createElement("div");
+        themeText.className = "detail-theme-text";
+        themeText.textContent = sub.info.theme;
+        detailTheme.appendChild(themeLabel);
+        detailTheme.appendChild(themeText);
+
+        renderSubtasks(data.subtasks);
+        detailPanel.hidden = false;
+      } catch (e) {
+        showMessage("taskdetail.loadFailed", true, { msg: e.message });
+      }
+    }
+
+    async function loadCharacters() {
+      try {
+        const data = await App.api("/api/audio/characters?page=1&page_size=50");
+        charactersMap = new Map(data.items.map((item) => [item.reference_id, item.title]));
+      } catch (e) {
+        charactersMap = null;
+      }
+    }
+
+    backBtn.addEventListener("click", () => {
+      window.location.href = "/index.html";
+    });
+    detailRefresh.addEventListener("click", loadTask);
+
+    window.addEventListener("aiaudio:langchange", () => {
+      App.renderUserArea();
+      loadTask();
+    });
+
+    async function initPage() {
+      I18n.init();
+      I18n.buildSwitcher(document.getElementById("langSwitcher"));
+      const ok = await App.init();
+      if (!ok) {
+        return;
+      }
+      await loadCharacters();
+      await loadTask();
+    }
+
+    window.addEventListener("load", initPage);
+  </script>
+</body>
+</html>
