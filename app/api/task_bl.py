@@ -88,6 +88,38 @@ def release_task(mongo, user_id: int, subtask_id: str) -> ReleaseTaskResponse | 
     return ReleaseTaskResponse(subtask_id=subtask_id, status=TaskStatus.PENDING)
 
 
+def refresh_task(mongo, user_id: int, subtask_id: str) -> ReleaseTaskResponse | None:
+    query = {"subtask_id": subtask_id, "user_id": user_id, "is_deleted": False}
+    doc = mongo.find_one(AUDIO_TASKS_COLLECTION, query, fields=("status", "type", "task_id"))
+    if doc is None:
+        return None
+    status = TaskStatus(doc["status"])
+    if status not in (TaskStatus.SUCCESS, TaskStatus.FAILED):
+        raise ValueError(f"子任务状态不支持刷新：{status.value}")
+
+    if TaskType(doc["type"]) == TaskType.ASMR_TEXT:
+        generated = mongo.find_one(
+            AUDIO_TASKS_COLLECTION,
+            {
+                "task_id": doc["task_id"],
+                "type": TaskType.ASMR_TEXT_GENERATE.value,
+                "is_deleted": False,
+            },
+            fields=("subtask_id",),
+        )
+        if generated is not None:
+            raise ValueError("生成子任务已下发，不能刷新对白任务")
+
+    modified = mongo.update_document(
+        AUDIO_TASKS_COLLECTION,
+        query,
+        {"$set": {"status": TaskStatus.PENDING.value, "update_time": datetime.utcnow()}},
+    )
+    if modified != 1:
+        raise RuntimeError("刷新子任务时更新数量异常")
+    return ReleaseTaskResponse(subtask_id=subtask_id, status=TaskStatus.PENDING)
+
+
 def delete_task(mongo, user_id: int, task_id: str) -> bool:
     return mongo.update_documents(
         AUDIO_TASKS_COLLECTION,

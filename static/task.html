@@ -169,6 +169,15 @@
       ASMR_TEXT: renderAsmrTextResult,
     };
 
+    function appendRefreshButton(head, sub) {
+      const refresh = App.refreshButton(sub, loadTask, (e) => {
+        showMessage("taskdetail.refreshFailed", true, { msg: e.message });
+      });
+      if (refresh) {
+        head.appendChild(refresh);
+      }
+    }
+
     function subtaskHead(sub, label) {
       const head = document.createElement("p");
       head.className = "subtask-head";
@@ -180,6 +189,7 @@
       if (release) {
         head.appendChild(release);
       }
+      appendRefreshButton(head, sub);
       return head;
     }
 
@@ -248,6 +258,7 @@
       head.className = "subtask-head";
       head.appendChild(document.createTextNode(sub.type + " · "));
       head.appendChild(App.statusTag(sub.status));
+      appendRefreshButton(head, sub);
       card.appendChild(head);
       const hint = document.createElement("p");
       hint.className = "hint";

@@ -675,6 +675,9 @@ a { color: var(--accent); }
 .subtask-release { margin-left: 10px; padding: 4px 10px; border: 1px solid var(--accent); border-radius: 7px; background: var(--accent); color: #ffffff; font-size: 12px; cursor: pointer; }
 .subtask-release:hover { opacity: 0.88; }
 .subtask-release:disabled { opacity: 0.55; cursor: default; }
+.subtask-refresh { margin-left: 10px; padding: 6px 14px; border: 1px solid var(--accent); border-radius: 7px; background: var(--surface); color: var(--accent); font-size: 12px; cursor: pointer; }
+.subtask-refresh:hover { background: var(--accent-soft); }
+.subtask-refresh:disabled { opacity: 0.55; cursor: default; }
 
 .subtask-download { display: inline-block; margin-top: 12px; padding: 6px 14px; border: 1px solid var(--accent); border-radius: 7px; color: var(--accent); font-size: 12px; text-decoration: none; }
 .subtask-download:hover { background: var(--accent); color: #ffffff; }
