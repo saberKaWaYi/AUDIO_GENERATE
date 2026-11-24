@@ -74,12 +74,18 @@ def run_text(subtask: dict) -> TextOutcome:
         if segment["reference_id"] not in valid_reference_ids:
             raise ValueError(f"片段引用了不存在的角色 ID：{segment['reference_id']}")
 
-    ordered = sorted(segments, key=lambda segment: segment["start_time"])
-    for previous, current in zip(ordered, ordered[1:]):
-        if current["start_time"] <= previous["start_time"]:
-            raise ValueError(
-                f"片段开始时间未严格递增：{previous['start_time']} -> {current['start_time']}"
-            )
+    vocal_by_reference: dict[str, list[dict]] = {}
+    for segment in segments:
+        vocal_by_reference.setdefault(segment["reference_id"], []).append(segment)
+    for reference_id, group in vocal_by_reference.items():
+        ordered = sorted(group, key=lambda segment: segment["start_time"])
+        for previous, current in zip(ordered, ordered[1:]):
+            if current["start_time"] < previous["end_time"]:
+                raise ValueError(
+                    f"角色 {reference_id} 的人声片段时间重叠："
+                    f"{previous['start_time']}-{previous['end_time']} 与 "
+                    f"{current['start_time']}-{current['end_time']}"
+                )
 
     total_seconds = subtask["info"]["duration_minutes"] * 60
     max_end_time = max(segment["end_time"] for segment in segments)
