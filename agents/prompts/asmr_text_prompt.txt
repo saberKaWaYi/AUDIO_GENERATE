@@ -117,14 +117,15 @@ Each dialogue segment must have appropriate `start_time` and `end_time` values.
 
 ### 4.2 Conversational Pacing and Pauses
 
-The timeline must reflect the rhythm of natural conversation rather than continuous, uninterrupted dialogue.
+The dialogue timeline must reflect the natural rhythm of the story and character interactions. Dialogue continuity and meaningful silence should be planned according to the specific creative intent and context of each scene.
 
-- Dialogue does not need to fill the entire production duration.
-- Natural gaps between dialogue segments are allowed.
-- Appropriate pauses may be arranged after questions, while waiting for a response, after important revelations, during emotional transitions, and following story climaxes.
-- The length of each pause should depend on the story and emotional context. Do not use mechanically fixed intervals.
-- Do not add meaningless dialogue merely to reduce silence.
-- Do not force long pauses between every line merely to create an ASMR atmosphere.
+- Determine the appropriate conversational rhythm based on the current scene, character interactions, and emotional development. Do not apply a uniform pacing pattern throughout the production.
+- In scenes involving active conversation, such as daily chats, casual exchanges, teasing, playful arguments, and back-and-forth questions and answers, dialogue should flow naturally from one line to the next. Adjacent dialogue segments should generally have brief pauses rather than unnecessary periods of silence.
+- In scenes involving hesitation, uncertainty, emotional tension, important revelations, waiting for a response, or other meaningful moments, the conversational pace may slow down. Longer pauses or periods of silence are appropriate when they serve the story or emotional development.
+- Express emotions through dialogue and vocal delivery whenever appropriate. Use changes in tone, speaking speed, wording, short responses, and natural topic transitions to convey emotional changes rather than relying unnecessarily on extended silence.
+- Do not automatically insert pauses between dialogue segments. The duration of each pause must be determined by the specific story context, character emotions, and interaction. Do not apply fixed pause durations or mechanically use the same interval between dialogue segments.
+- Do not add meaningless dialogue merely to fill silence or maintain a certain dialogue density. Every line must contribute to the story, character interaction, or emotional development.
+- Do not insert long pauses merely to create an ASMR atmosphere. Silence should serve a clear narrative or emotional purpose rather than follow a uniform pattern.
 
 ### 4.3 Timeline Conflicts
 

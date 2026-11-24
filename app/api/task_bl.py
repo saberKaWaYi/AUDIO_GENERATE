@@ -100,17 +100,20 @@ def refresh_task(mongo, user_id: int, subtask_id: str) -> ReleaseTaskResponse | 
         raise ValueError(f"子任务状态不支持刷新：{status.value}")
 
     if TaskType(doc["type"]) == TaskType.ASMR_TEXT:
-        generated = mongo.find_one(
+        generated_query = {
+            "task_id": doc["task_id"],
+            "type": TaskType.ASMR_TEXT_GENERATE.value,
+            "is_deleted": False,
+        }
+        generated = mongo.find_documents(
             AUDIO_TASKS_COLLECTION,
-            {
-                "task_id": doc["task_id"],
-                "type": TaskType.ASMR_TEXT_GENERATE.value,
-                "is_deleted": False,
-            },
-            fields=("subtask_id",),
+            generated_query,
+            fields=("status",),
         )
-        if generated is not None:
-            raise ValueError("生成子任务已下发，不能刷新对白任务")
+        if any(TaskStatus(item["status"]) == TaskStatus.SUCCESS for item in generated):
+            raise ValueError("已有生成子任务成功，不能刷新对白任务")
+        if generated:
+            mongo.delete_documents(AUDIO_TASKS_COLLECTION, generated_query)
 
     modified = mongo.update_document(
         AUDIO_TASKS_COLLECTION,

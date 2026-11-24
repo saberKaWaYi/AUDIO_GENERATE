@@ -118,6 +118,11 @@ class MongoService:
         logger.info("Updated %d document(s) in %s.%s", result.modified_count, self.database, collection)
         return result.modified_count
 
+    def delete_documents(self, collection: str, query: dict) -> int:
+        result = self._collection(collection).delete_many(query)
+        logger.info("Deleted %d document(s) from %s.%s", result.deleted_count, self.database, collection)
+        return result.deleted_count
+
     def _db(self):
         if self._client is None:
             raise RuntimeError("MongoDB 未就绪")
