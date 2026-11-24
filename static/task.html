@@ -182,57 +182,107 @@
       ASMR_TEXT: renderAsmrTextResult,
     };
 
+    function subtaskHead(sub, label) {
+      const head = document.createElement("p");
+      head.className = "subtask-head";
+      head.appendChild(document.createTextNode(label + " · "));
+      head.appendChild(App.statusTag(sub.status));
+      const release = App.releaseButton(sub, loadTask, (e) => {
+        showMessage("taskdetail.releaseFailed", true, { msg: e.message });
+      });
+      if (release) {
+        head.appendChild(release);
+      }
+      return head;
+    }
+
+    function renderTextCard(sub) {
+      const card = document.createElement("div");
+      card.className = "subtask-card";
+      card.appendChild(subtaskHead(sub, sub.type));
+      const renderer = RESULT_RENDERERS[sub.type];
+      if (renderer) {
+        renderer(card, sub);
+      }
+      const tokens = document.createElement("p");
+      tokens.className = "hint";
+      tokens.textContent = I18n.t("subtask.tokens", {
+        p: sub.result.prompt_tokens,
+        c: sub.result.completion_tokens,
+      });
+      card.appendChild(tokens);
+      return card;
+    }
+
+    function renderGenerateCard(sub) {
+      const card = document.createElement("div");
+      card.className = "subtask-card";
+      card.appendChild(subtaskHead(sub, sub.type));
+
+      const info = sub.info;
+      const row = document.createElement("div");
+      row.className = "detail-segment";
+      const time = document.createElement("span");
+      time.className = "detail-segment-time";
+      time.textContent = formatTime(info.start_time) + " - " + formatTime(info.end_time);
+      const name = document.createElement("span");
+      name.className = "detail-segment-name";
+      name.textContent = characterName(info.reference_id);
+      const text = document.createElement("div");
+      text.className = "detail-segment-text";
+      text.textContent = info.text;
+      row.appendChild(time);
+      row.appendChild(name);
+      row.appendChild(text);
+      card.appendChild(row);
+
+      if (sub.status === "success" && sub.result.result_text) {
+        const workId = sub.result.result_text.split("/").pop().replace(/\.mp3$/, "");
+        card.appendChild(App.downloadButton(workId));
+      } else if (sub.status === "failed" && sub.result.result_text) {
+        const error = document.createElement("pre");
+        error.className = "subtask-text";
+        error.textContent = sub.result.result_text;
+        card.appendChild(error);
+      }
+      return card;
+    }
+
+    function renderNonVerbalCard(sub) {
+      const card = document.createElement("div");
+      card.className = "subtask-card";
+      const head = document.createElement("p");
+      head.className = "subtask-head";
+      head.appendChild(document.createTextNode(sub.type + " · "));
+      head.appendChild(App.statusTag(sub.status));
+      card.appendChild(head);
+      const hint = document.createElement("p");
+      hint.className = "hint";
+      hint.textContent = I18n.t("taskdetail.nonVerbalHint");
+      card.appendChild(hint);
+      return card;
+    }
+
     function renderSubtasks(subtasks) {
       detailSubtasks.textContent = "";
-      for (const sub of subtasks) {
-        const card = document.createElement("div");
-        card.className = "subtask-card";
+      const textSubs = subtasks.filter((sub) => sub.type === "ASMR_TEXT");
+      const generateSubs = subtasks.filter((sub) => sub.type === "ASMR_TEXT_GENERATE");
+      const nonVerbalSubs = subtasks.filter((sub) => sub.type === "ASMR_NON_VERBAL");
 
-        const head = document.createElement("p");
-        head.className = "subtask-head";
-        const status = document.createElement("span");
-        status.className = "status-tag status-" + sub.status;
-        status.textContent = sub.status;
-        head.appendChild(document.createTextNode(sub.type + " · "));
-        head.appendChild(status);
-        if (sub.status === "debug") {
-          const release = document.createElement("button");
-          release.type = "button";
-          release.className = "subtask-release";
-          release.textContent = I18n.t("taskdetail.release");
-          release.addEventListener("click", async () => {
-            release.disabled = true;
-            try {
-              await App.api("/api/audio/tasks/" + encodeURIComponent(sub.subtask_id) + "/release", { method: "POST" });
-              await loadTask();
-              showMessage("taskdetail.releaseOk", false);
-            } catch (e) {
-              showMessage("taskdetail.releaseFailed", true, { msg: e.message });
-              release.disabled = false;
-            }
-          });
-          head.appendChild(release);
+      for (const sub of textSubs) {
+        detailSubtasks.appendChild(renderTextCard(sub));
+      }
+
+      if (generateSubs.length > 0) {
+        const group = App.collapsible(I18n.t("taskdetail.generateGroup"), generateSubs.length);
+        for (const sub of generateSubs) {
+          group.body.appendChild(renderGenerateCard(sub));
         }
-        card.appendChild(head);
+        detailSubtasks.appendChild(group.root);
+      }
 
-        const renderer = RESULT_RENDERERS[sub.type];
-        if (renderer) {
-          renderer(card, sub);
-        } else {
-          const pre = document.createElement("pre");
-          pre.className = "subtask-text";
-          pre.textContent = sub.result.result_text;
-          card.appendChild(pre);
-        }
-
-        const tokens = document.createElement("p");
-        tokens.className = "hint";
-        tokens.textContent = I18n.t("subtask.tokens", {
-          p: sub.result.prompt_tokens,
-          c: sub.result.completion_tokens,
-        });
-        card.appendChild(tokens);
-        detailSubtasks.appendChild(card);
+      for (const sub of nonVerbalSubs) {
+        detailSubtasks.appendChild(renderNonVerbalCard(sub));
       }
     }
 
@@ -243,7 +293,10 @@
       }
       try {
         const data = await App.api("/api/audio/tasks/" + encodeURIComponent(taskId));
-        const sub = data.subtasks[0];
+        const sub = data.subtasks.find((item) => item.type === "ASMR_TEXT");
+        if (!sub) {
+          throw new Error("ASMR_TEXT subtask not found");
+        }
         detailTitle.textContent = sub.info.title;
         detailStatus.textContent = data.status;
         detailStatus.className = "status-tag status-" + data.status;

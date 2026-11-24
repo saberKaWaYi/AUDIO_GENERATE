@@ -22,6 +22,84 @@ const App = {
     return thumb;
   },
 
+  statusTag(status) {
+    const tag = document.createElement("span");
+    tag.className = "status-tag status-" + status;
+    tag.textContent = status;
+    return tag;
+  },
+
+  infoRow(label, value) {
+    const row = document.createElement("div");
+    row.className = "detail-meta-row";
+    const key = document.createElement("span");
+    key.className = "detail-meta-key";
+    key.textContent = label;
+    const val = document.createElement("span");
+    val.className = "detail-meta-value";
+    val.textContent = value;
+    row.appendChild(key);
+    row.appendChild(val);
+    return row;
+  },
+
+  collapsible(label, count) {
+    const wrap = document.createElement("div");
+    wrap.className = "subtask-group";
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "subtask-group-toggle";
+    toggle.setAttribute("aria-expanded", "false");
+    const caret = document.createElement("span");
+    caret.className = "subtask-group-caret";
+    caret.textContent = "+";
+    const text = document.createElement("span");
+    text.textContent = label + "（" + count + "）";
+    toggle.appendChild(caret);
+    toggle.appendChild(text);
+    const body = document.createElement("div");
+    body.className = "subtask-group-body";
+    body.hidden = true;
+    toggle.addEventListener("click", () => {
+      const expanded = toggle.getAttribute("aria-expanded") === "true";
+      toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+      body.hidden = expanded;
+      caret.textContent = expanded ? "+" : "−";
+    });
+    wrap.appendChild(toggle);
+    wrap.appendChild(body);
+    return { root: wrap, body: body };
+  },
+
+  releaseButton(subtask, onChanged, onError) {
+    if (subtask.status !== "debug") {
+      return null;
+    }
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "subtask-release";
+    button.textContent = I18n.t("taskdetail.release");
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      try {
+        await this.api("/api/audio/tasks/" + encodeURIComponent(subtask.subtask_id) + "/release", { method: "POST" });
+        await onChanged();
+      } catch (e) {
+        button.disabled = false;
+        onError(e);
+      }
+    });
+    return button;
+  },
+
+  downloadButton(workId) {
+    const link = document.createElement("a");
+    link.className = "subtask-download";
+    link.href = "/api/audio/works/" + encodeURIComponent(workId) + "/audio";
+    link.textContent = I18n.t("taskdetail.download");
+    return link;
+  },
+
   async api(path, options = {}) {
     const res = await fetch(path, {
       credentials: "same-origin",

@@ -676,6 +676,16 @@ a { color: var(--accent); }
 .subtask-release:hover { opacity: 0.88; }
 .subtask-release:disabled { opacity: 0.55; cursor: default; }
 
+.subtask-download { display: inline-block; margin-top: 12px; padding: 6px 14px; border: 1px solid var(--accent); border-radius: 7px; color: var(--accent); font-size: 12px; text-decoration: none; }
+.subtask-download:hover { background: var(--accent); color: #ffffff; }
+
+.subtask-group { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+.subtask-group-toggle { display: flex; align-items: center; gap: 8px; width: 100%; padding: 14px 16px; border: 0; background: #f3f5fb; color: var(--ink); font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; }
+.subtask-group-toggle:hover { background: #eaedf7; }
+.subtask-group-caret { display: inline-block; width: 16px; font-size: 16px; line-height: 1; color: var(--accent); }
+.subtask-group-body { padding: 12px; background: #fafbfe; }
+.subtask-group-body .subtask-card:last-child { margin-bottom: 0; }
+
 .subtask-text {
   margin: 0;
   font-size: 13px;
