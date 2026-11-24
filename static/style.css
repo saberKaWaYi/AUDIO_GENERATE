@@ -678,6 +678,11 @@ a { color: var(--accent); }
 
 .subtask-download { display: inline-block; margin-top: 12px; padding: 6px 14px; border: 1px solid var(--accent); border-radius: 7px; color: var(--accent); font-size: 12px; text-decoration: none; }
 .subtask-download:hover { background: var(--accent); color: #ffffff; }
+.generate-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 12px; }
+.generate-actions .subtask-download { margin-top: 0; }
+.subtask-play { padding: 6px 14px; border: 1px solid var(--accent); border-radius: 7px; background: var(--accent); color: #ffffff; font-size: 12px; cursor: pointer; }
+.subtask-play:hover { opacity: 0.88; }
+.generate-player { flex-basis: 100%; width: 100%; margin-top: 4px; }
 .subtask-cover { width: 1.35em; height: 1.35em; border-radius: 50%; object-fit: cover; }
 
 .subtask-group { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 12px; overflow: hidden; }

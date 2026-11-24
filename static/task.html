@@ -231,7 +231,7 @@
       card.appendChild(row);
 
       if (sub.status === "success" && sub.result.result_text) {
-        card.appendChild(App.generateDownloadButton(sub.subtask_id));
+        card.appendChild(App.generateAudioActions(sub.subtask_id));
       } else if (sub.status === "failed" && sub.result.result_text) {
         const error = document.createElement("pre");
         error.className = "subtask-text";
