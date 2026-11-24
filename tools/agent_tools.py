@@ -14,6 +14,17 @@ def _get_mongo() -> MongoService:
     return mongo_service
 
 
+def _load_character(user_id: int, reference_id: str) -> dict:
+    doc = _get_mongo().find_one(
+        AUDIO_CHARACTERS_COLLECTION,
+        {"user_id": user_id, "reference_id": reference_id, "is_deleted": False},
+        fields=("title", "cover_image"),
+    )
+    if doc is None:
+        raise ValueError(f"音色不存在或已删除：{reference_id}")
+    return doc
+
+
 def _load_characters(subtask: dict) -> list[dict]:
     reference_ids = subtask["info"]["reference_ids"]
     docs = _get_mongo().find_documents(
@@ -23,6 +34,7 @@ def _load_characters(subtask: dict) -> list[dict]:
             "reference_id": {"$in": reference_ids},
             "is_deleted": False,
         },
+        fields=CHARACTER_FIELDS,
     )
     if len(docs) != len(reference_ids):
         raise ValueError(
