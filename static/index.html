@@ -147,7 +147,6 @@
         </div>
 
         <div class="form-foot">
-          <span class="type-badge" data-i18n="form.typeBadge">任务类型：ASMR_TEXT</span>
           <button id="submitBtn" class="primary-btn" type="submit" data-i18n="form.submit">下发任务</button>
         </div>
       </form>
@@ -156,7 +155,6 @@
 
       <section id="resultPanel" class="result-panel" hidden>
         <h3 data-i18n="result.created">任务已创建</h3>
-        <p class="result-line"><span data-i18n="result.taskId">任务 ID：</span><code id="resultTaskId"></code></p>
         <p class="result-line"><span data-i18n="result.status">当前状态：</span><span id="resultStatus" class="status-tag"></span></p>
         <button id="queryBtn" class="secondary-btn" type="button" data-i18n="result.queryBtn">查询任务状态</button>
         <div id="queryResult" class="query-result"></div>
@@ -184,7 +182,6 @@
     const submitBtn = document.getElementById("submitBtn");
     const formMsg = document.getElementById("formMsg");
     const resultPanel = document.getElementById("resultPanel");
-    const resultTaskId = document.getElementById("resultTaskId");
     const resultStatus = document.getElementById("resultStatus");
     const queryBtn = document.getElementById("queryBtn");
     const queryResult = document.getElementById("queryResult");
@@ -328,7 +325,6 @@
           }),
         });
         createdTaskId = result.task_id;
-        resultTaskId.textContent = result.task_id;
         resultStatus.textContent = result.status;
         resultStatus.className = "status-tag status-" + result.status;
         queryResult.textContent = "";
@@ -428,6 +424,25 @@
 
         const actions = document.createElement("div");
         actions.className = "task-list-actions";
+
+        if (item.status === "debug") {
+          const release = document.createElement("button");
+          release.type = "button";
+          release.className = "task-list-release";
+          release.textContent = I18n.t("tasklist.release");
+          release.addEventListener("click", async () => {
+            release.disabled = true;
+            try {
+              await App.api("/api/audio/tasks/" + encodeURIComponent(item.task_id) + "/release", { method: "POST" });
+              await loadTasks();
+              showMessageKey("tasklist.releaseOk", null, false);
+            } catch (e) {
+              showMessageKey("tasklist.releaseFailed", null, true, e.message);
+              release.disabled = false;
+            }
+          });
+          actions.appendChild(release);
+        }
 
         const toggle = document.createElement("button");
         toggle.type = "button";
