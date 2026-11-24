@@ -56,7 +56,7 @@ const App = {
     caret.className = "subtask-group-caret";
     caret.textContent = "+";
     const text = document.createElement("span");
-    text.textContent = label + "（" + count + "）";
+    text.textContent = count == null ? label : label + "（" + count + "）";
     toggle.appendChild(caret);
     toggle.appendChild(text);
     const body = document.createElement("div");

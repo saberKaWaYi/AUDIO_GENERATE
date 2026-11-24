@@ -83,7 +83,6 @@
       <section id="detailPanel" class="detail-panel" hidden>
         <div class="detail-head">
           <h2 id="detailTitle" class="detail-title"></h2>
-          <span id="detailStatus" class="status-tag"></span>
         </div>
         <div id="detailMeta" class="detail-meta"></div>
         <div id="detailTheme" class="detail-theme"></div>
@@ -103,7 +102,6 @@
     const detailMsg = document.getElementById("detailMsg");
     const detailPanel = document.getElementById("detailPanel");
     const detailTitle = document.getElementById("detailTitle");
-    const detailStatus = document.getElementById("detailStatus");
     const detailMeta = document.getElementById("detailMeta");
     const detailTheme = document.getElementById("detailTheme");
     const detailRefresh = document.getElementById("detailRefresh");
@@ -282,8 +280,6 @@
         throw new Error("ASMR_TEXT subtask not found");
       }
       detailTitle.textContent = sub.info.title;
-      detailStatus.textContent = data.status;
-      detailStatus.className = "status-tag status-" + data.status;
 
       detailMeta.textContent = "";
       detailMeta.appendChild(App.infoRow(I18n.t("taskdetail.language"), I18n.t("form.lang." + sub.info.language)));
@@ -343,7 +339,9 @@
       }
 
       for (const sub of textSubs) {
-        detailSubtasks.appendChild(renderTextCard(sub));
+        const group = App.collapsible(sub.type, null);
+        group.body.appendChild(renderTextCard(sub));
+        detailSubtasks.appendChild(group.root);
       }
 
       if (generateSubs.length > 0) {
