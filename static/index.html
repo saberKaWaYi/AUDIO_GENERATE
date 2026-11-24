@@ -412,37 +412,10 @@
         const title = document.createElement("div");
         title.className = "task-list-title";
         title.textContent = item.title;
-        const meta = document.createElement("div");
-        meta.className = "task-list-meta";
-        meta.textContent = item.type + " · ";
-        const status = document.createElement("span");
-        status.className = "status-tag status-" + item.status;
-        status.textContent = item.status;
-        meta.appendChild(status);
         info.appendChild(title);
-        info.appendChild(meta);
 
         const actions = document.createElement("div");
         actions.className = "task-list-actions";
-
-        if (item.status === "debug") {
-          const release = document.createElement("button");
-          release.type = "button";
-          release.className = "task-list-release";
-          release.textContent = I18n.t("tasklist.release");
-          release.addEventListener("click", async () => {
-            release.disabled = true;
-            try {
-              await App.api("/api/audio/tasks/" + encodeURIComponent(item.task_id) + "/release", { method: "POST" });
-              await loadTasks();
-              showMessageKey("tasklist.releaseOk", null, false);
-            } catch (e) {
-              showMessageKey("tasklist.releaseFailed", null, true, e.message);
-              release.disabled = false;
-            }
-          });
-          actions.appendChild(release);
-        }
 
         const toggle = document.createElement("button");
         toggle.type = "button";

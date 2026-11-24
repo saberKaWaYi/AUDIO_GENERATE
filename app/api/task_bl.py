@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from app.api.task_req import CreateTaskRequest
-from app.api.task_res import CreateTaskResponse, ReleaseTaskResponse, TaskQueryResponse, TaskSubtaskResponse
+from app.api.task_res import CreateTaskResponse, TaskQueryResponse, TaskSubtaskResponse
 from models.schemas_task import (
     ASMRTextInfo,
     ASMRTextResult,
@@ -53,7 +53,7 @@ def _new_task(
 def list_tasks(mongo, user_id: int) -> list[dict]:
     return mongo.find_documents(
         AUDIO_TASKS_COLLECTION,
-        {"user_id": user_id, "is_deleted": False},
+        {"user_id": user_id, "type": TaskType.ASMR_TEXT.value, "is_deleted": False},
         sort=[("create_time", -1)],
     )
 
@@ -64,25 +64,6 @@ def set_task_public(mongo, user_id: int, task_id: str, is_public: bool) -> bool:
         {"task_id": task_id, "user_id": user_id, "is_deleted": False},
         {"$set": {"is_public": is_public, "update_time": datetime.utcnow()}},
     ) > 0
-
-
-def release_task(mongo, user_id: int, task_id: str) -> ReleaseTaskResponse | None:
-    query = {"task_id": task_id, "user_id": user_id, "is_deleted": False}
-    docs = mongo.find_documents(AUDIO_TASKS_COLLECTION, query)
-    if not docs:
-        return None
-    for doc in docs:
-        if TaskStatus(doc["status"]) != TaskStatus.DEBUG:
-            raise ValueError(f"存在非 debug 状态的子任务，无法放行：{doc['status']}")
-
-    modified = mongo.update_documents(
-        AUDIO_TASKS_COLLECTION,
-        query,
-        {"$set": {"status": TaskStatus.PENDING.value, "update_time": datetime.utcnow()}},
-    )
-    if modified != len(docs):
-        raise RuntimeError("放行任务时更新数量异常")
-    return ReleaseTaskResponse(task_id=task_id, status=TaskStatus.PENDING)
 
 
 def delete_task(mongo, user_id: int, task_id: str) -> bool:

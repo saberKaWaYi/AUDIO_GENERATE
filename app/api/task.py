@@ -4,11 +4,10 @@ from app.api.task_bl import create_task as create_task_bl
 from app.api.task_bl import delete_task as delete_task_bl
 from app.api.task_bl import list_tasks as list_tasks_bl
 from app.api.task_bl import query_task as query_task_bl
-from app.api.task_bl import release_task as release_task_bl
 from app.api.task_bl import set_task_public as set_task_public_bl
 from app.auth.deps import get_current_user
 from app.api.task_req import CreateTaskRequest
-from app.api.task_res import CreateTaskResponse, ReleaseTaskResponse, TaskListResponse, TaskListItem, TaskQueryResponse
+from app.api.task_res import CreateTaskResponse, TaskListResponse, TaskListItem, TaskQueryResponse
 
 import logging
 
@@ -78,30 +77,6 @@ async def query_task(
     except Exception as e:
         logger.error("query audio task failed: %s", e)
         raise HTTPException(status_code=500, detail="任务查询失败")
-    if task is None:
-        raise HTTPException(status_code=404, detail=f"任务不存在：{task_id}")
-    return task
-
-
-@router.post(
-    "/audio/tasks/{task_id}/release",
-    response_model=ReleaseTaskResponse,
-    summary="Release a debug task to pending",
-)
-async def release_task_route(
-    task_id: str,
-    request: Request,
-    user=Depends(get_current_user),
-):
-    try:
-        task = release_task_bl(request.app.state.mongo, user.user_id, task_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except RuntimeError:
-        raise HTTPException(status_code=503, detail="数据库未就绪")
-    except Exception as e:
-        logger.error("release audio task failed: %s", e)
-        raise HTTPException(status_code=500, detail="任务放行失败")
     if task is None:
         raise HTTPException(status_code=404, detail=f"任务不存在：{task_id}")
     return task
