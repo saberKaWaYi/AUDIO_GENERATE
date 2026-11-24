@@ -195,6 +195,24 @@
         status.textContent = sub.status;
         head.appendChild(document.createTextNode(sub.type + " · "));
         head.appendChild(status);
+        if (sub.status === "debug") {
+          const release = document.createElement("button");
+          release.type = "button";
+          release.className = "subtask-release";
+          release.textContent = I18n.t("taskdetail.release");
+          release.addEventListener("click", async () => {
+            release.disabled = true;
+            try {
+              await App.api("/api/audio/tasks/" + encodeURIComponent(sub.subtask_id) + "/release", { method: "POST" });
+              await loadTask();
+              showMessage("taskdetail.releaseOk", false);
+            } catch (e) {
+              showMessage("taskdetail.releaseFailed", true, { msg: e.message });
+              release.disabled = false;
+            }
+          });
+          head.appendChild(release);
+        }
         card.appendChild(head);
 
         const renderer = RESULT_RENDERERS[sub.type];
