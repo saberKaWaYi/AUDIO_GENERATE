@@ -86,7 +86,6 @@
         </div>
         <div id="detailMeta" class="detail-meta"></div>
         <div id="detailTheme" class="detail-theme"></div>
-        <div id="detailMerged" class="detail-merged"></div>
 
         <div class="page-head detail-sub-head">
           <h3 data-i18n="taskdetail.subtasks">子任务结果</h3>
@@ -105,7 +104,6 @@
     const detailTitle = document.getElementById("detailTitle");
     const detailMeta = document.getElementById("detailMeta");
     const detailTheme = document.getElementById("detailTheme");
-    const detailMerged = document.getElementById("detailMerged");
     const detailRefresh = document.getElementById("detailRefresh");
     const detailSubtasks = document.getElementById("detailSubtasks");
 
@@ -299,22 +297,6 @@
       detailTheme.appendChild(themeLabel);
       detailTheme.appendChild(themeText);
 
-      detailMerged.textContent = "";
-      const hasGenerated = data.subtasks.some(
-        (item) => item.type === "ASMR_TEXT_GENERATE" && item.status === "success"
-      );
-      if (hasGenerated) {
-        const mergedLabel = document.createElement("div");
-        mergedLabel.className = "detail-theme-label";
-        mergedLabel.textContent = I18n.t("taskdetail.mergedAudio");
-        detailMerged.appendChild(mergedLabel);
-        detailMerged.appendChild(
-          App.mergedAudioActions(taskId, (e) => {
-            showMessage("taskdetail.mergedFailed", true, { msg: e.message });
-          })
-        );
-      }
-
       renderSubtasks(data.subtasks);
       detailPanel.hidden = false;
     }
@@ -363,8 +345,22 @@
       }
 
       if (generateSubs.length > 0) {
-        const action = generateSubs.some((sub) => sub.status === "debug") ? batchReleaseButton() : null;
-        const group = App.collapsible(I18n.t("taskdetail.generateGroup"), generateSubs.length, action);
+        const group = App.collapsible(I18n.t("taskdetail.generateGroup"), generateSubs.length, null);
+        const actions = document.createElement("div");
+        actions.className = "subtask-group-actions";
+        if (generateSubs.some((sub) => sub.status === "success")) {
+          actions.appendChild(
+            App.mergedAudioActions(taskId, (e) => {
+              showMessage("taskdetail.mergedFailed", true, { msg: e.message });
+            }, group.root)
+          );
+        }
+        if (generateSubs.some((sub) => sub.status === "debug")) {
+          actions.appendChild(batchReleaseButton());
+        }
+        if (actions.childElementCount > 0) {
+          group.head.appendChild(actions);
+        }
         for (const sub of generateSubs) {
           group.body.appendChild(renderGenerateCard(sub));
         }

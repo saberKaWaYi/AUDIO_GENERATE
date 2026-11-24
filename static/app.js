@@ -74,7 +74,7 @@ const App = {
     }
     wrap.appendChild(head);
     wrap.appendChild(body);
-    return { root: wrap, body: body };
+    return { root: wrap, head: head, body: body };
   },
 
   releaseButton(subtask, onChanged, onError) {
@@ -218,9 +218,10 @@ const App = {
     return wrap;
   },
 
-  mergedAudioActions(taskId, onError) {
+  mergedAudioActions(taskId, onError, playerHost) {
     const wrap = document.createElement("div");
     wrap.className = "generate-actions merged-actions";
+    wrap.title = I18n.t("taskdetail.mergedAudio");
     const audioUrl = "/api/audio/tasks/" + encodeURIComponent(taskId) + "/merged-audio";
     const play = document.createElement("button");
     play.type = "button";
@@ -245,7 +246,7 @@ const App = {
         player.addEventListener("ended", () => {
           play.textContent = I18n.t("taskdetail.play");
         });
-        wrap.appendChild(player);
+        playerHost.appendChild(player);
       }
       play.textContent = I18n.t("taskdetail.pause");
       try {
