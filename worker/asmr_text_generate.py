@@ -1,13 +1,11 @@
-from datetime import datetime
 from pathlib import Path
-from uuid import uuid4
 
-from models.schemas_work import AUDIO_WORKS_COLLECTION, WORK_TYPE_TTS, AudioWork
 from services.fish_audio_service import FishAudioNotFoundError
 from settings.worker import worker_settings
-from tools.agent_tools import _get_mongo, _load_character
+from tools.agent_tools import _load_character
 
 WORK_SUBDIR = "works"
+ASMR_SUBDIR = "ASMR"
 
 
 class GenerateOutcome:
@@ -23,31 +21,11 @@ def _get_fish():
     return fish_service
 
 
-def _store_work(mongo, user_id: int, reference_id: str, character: dict, text: str, audio: bytes) -> AudioWork:
-    now = datetime.utcnow()
-    work_id = uuid4().hex
-    file_path = Path(worker_settings.audio_data_dir) / WORK_SUBDIR / str(user_id) / f"{work_id}.mp3"
+def _store_audio(user_id: int, task_id: str, subtask_id: str, audio: bytes) -> str:
+    file_path = Path(worker_settings.audio_data_dir) / WORK_SUBDIR / str(user_id) / ASMR_SUBDIR / task_id / f"{subtask_id}.mp3"
     file_path.parent.mkdir(parents=True, exist_ok=True)
     file_path.write_bytes(audio)
-    work = AudioWork(
-        work_id=work_id,
-        user_id=user_id,
-        work_type=WORK_TYPE_TTS,
-        title=character["title"],
-        reference_id=reference_id,
-        cover_image=character["cover_image"],
-        text=text,
-        file_name=file_path.name,
-        relative_path=str(Path(WORK_SUBDIR) / str(user_id) / file_path.name),
-        file_size=len(audio),
-        content_type="audio/mpeg",
-        is_public=False,
-        create_time=now,
-        update_time=now,
-        is_deleted=False,
-    )
-    mongo.insert_document(AUDIO_WORKS_COLLECTION, work.model_dump(mode="json"))
-    return work
+    return str(Path(WORK_SUBDIR) / str(user_id) / ASMR_SUBDIR / task_id / file_path.name)
 
 
 def run_generate(subtask: dict) -> GenerateOutcome:
@@ -59,11 +37,10 @@ def run_generate(subtask: dict) -> GenerateOutcome:
     if not text:
         raise ValueError("片段文本不能为空")
 
-    mongo = _get_mongo()
-    character = _load_character(subtask["user_id"], reference_id)
+    _load_character(subtask["user_id"], reference_id)
     try:
         audio = _get_fish().synthesize(text, reference_id)
     except FishAudioNotFoundError as exc:
         raise ValueError(f"音色不可用：{reference_id}") from exc
-    work = _store_work(mongo, subtask["user_id"], reference_id, character, text, audio)
-    return GenerateOutcome(result_text=work.relative_path)
+    relative_path = _store_audio(subtask["user_id"], subtask["task_id"], subtask["subtask_id"], audio)
+    return GenerateOutcome(result_text=relative_path)

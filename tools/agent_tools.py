@@ -18,7 +18,7 @@ def _load_character(user_id: int, reference_id: str) -> dict:
     doc = _get_mongo().find_one(
         AUDIO_CHARACTERS_COLLECTION,
         {"user_id": user_id, "reference_id": reference_id, "is_deleted": False},
-        fields=("title", "cover_image"),
+        fields=("reference_id",),
     )
     if doc is None:
         raise ValueError(f"音色不存在或已删除：{reference_id}")
