@@ -117,6 +117,7 @@
     function showMessage(key, isError, vars) {
       detailMsg.textContent = vars ? I18n.t(key, vars) : I18n.t(key);
       detailMsg.classList.toggle("error", Boolean(isError));
+      detailMsg.scrollIntoView({ block: "nearest" });
     }
 
     function formatTime(totalSeconds) {
