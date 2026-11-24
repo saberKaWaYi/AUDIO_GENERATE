@@ -678,6 +678,7 @@ a { color: var(--accent); }
 
 .subtask-download { display: inline-block; margin-top: 12px; padding: 6px 14px; border: 1px solid var(--accent); border-radius: 7px; color: var(--accent); font-size: 12px; text-decoration: none; }
 .subtask-download:hover { background: var(--accent); color: #ffffff; }
+.subtask-cover { display: block; width: 72px; height: 72px; border-radius: 8px; object-fit: cover; margin-bottom: 10px; }
 
 .subtask-group { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
 .subtask-group-toggle { display: flex; align-items: center; gap: 8px; width: 100%; padding: 14px 16px; border: 0; background: #f3f5fb; color: var(--ink); font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; }
@@ -1094,6 +1095,7 @@ a { color: var(--accent); }
 .markdown-body table { margin: 10px 0; border-collapse: collapse; }
 .markdown-body th, .markdown-body td { padding: 6px 10px; border: 1px solid var(--line); }
 .detail-sub-head { margin-top: 28px; }
+.detail-sub-actions { display: flex; gap: 10px; margin-top: 10px; }
 .detail-subtasks { display: flex; flex-direction: column; gap: 14px; }
 .detail-segment { display: grid; grid-template-columns: 90px 1fr; gap: 2px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .detail-segment:last-child { border-bottom: none; }

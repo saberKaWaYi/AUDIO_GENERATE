@@ -11,3 +11,9 @@ class CreateTaskRequest(BaseModel):
     theme: str = Field(..., min_length=1, description="详细创作主题")
     duration_minutes: int = Field(..., ge=1, le=60, description="目标时长（分钟），最长 60")
     language: TaskLanguage = Field(..., description="语言：zh / ja / en / ko")
+
+
+class BatchReleaseRequest(BaseModel):
+
+    task_id: str = Field(..., min_length=1, description="任务标识")
+    type: TaskType = Field(..., description="要放行的子任务类型")

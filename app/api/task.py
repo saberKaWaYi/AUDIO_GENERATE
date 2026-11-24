@@ -1,14 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
 from app.api.task_bl import create_task as create_task_bl
 from app.api.task_bl import delete_task as delete_task_bl
+from app.api.task_bl import get_task_audio as get_task_audio_bl
 from app.api.task_bl import list_tasks as list_tasks_bl
 from app.api.task_bl import query_task as query_task_bl
 from app.api.task_bl import release_task as release_task_bl
+from app.api.task_bl import release_tasks_batch as release_tasks_batch_bl
 from app.api.task_bl import set_task_public as set_task_public_bl
 from app.auth.deps import get_current_user
-from app.api.task_req import CreateTaskRequest
-from app.api.task_res import CreateTaskResponse, ReleaseTaskResponse, TaskListResponse, TaskListItem, TaskQueryResponse
+from app.api.task_req import BatchReleaseRequest, CreateTaskRequest
+from app.api.task_res import BatchReleaseResponse, CreateTaskResponse, ReleaseTaskResponse, TaskListResponse, TaskListItem, TaskQueryResponse
 
 import logging
 
@@ -83,6 +85,35 @@ async def query_task(
     return task
 
 
+@router.get(
+    "/audio/tasks/{subtask_id}/audio",
+    summary="Download a generated ASMR subtask audio",
+)
+async def download_subtask_audio(
+    subtask_id: str,
+    request: Request,
+    user=Depends(get_current_user),
+):
+    try:
+        result = get_task_audio_bl(request.app.state.mongo, user.user_id, subtask_id)
+    except RuntimeError:
+        raise HTTPException(status_code=503, detail="数据库未就绪")
+    except Exception as e:
+        logger.error("download subtask audio failed: %s", e)
+        raise HTTPException(status_code=500, detail="音频读取失败")
+    if result is None:
+        raise HTTPException(status_code=404, detail="子任务音频不存在")
+    file_name, audio = result
+    return Response(
+        content=audio,
+        media_type="audio/mpeg",
+        headers={
+            "Content-Disposition": f'attachment; filename="{file_name}"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
 @router.post(
     "/audio/tasks/{subtask_id}/release",
     response_model=ReleaseTaskResponse,
@@ -105,6 +136,28 @@ async def release_task_route(
     if task is None:
         raise HTTPException(status_code=404, detail=f"子任务不存在：{subtask_id}")
     return task
+
+
+@router.post(
+    "/audio/tasks/batch-release",
+    response_model=BatchReleaseResponse,
+    summary="Release debug subtasks of a given type in batch",
+)
+async def batch_release_tasks_route(
+    payload: BatchReleaseRequest,
+    request: Request,
+    user=Depends(get_current_user),
+):
+    try:
+        released = release_tasks_batch_bl(
+            request.app.state.mongo, user.user_id, payload.task_id, payload.type
+        )
+    except RuntimeError:
+        raise HTTPException(status_code=503, detail="数据库未就绪")
+    except Exception as e:
+        logger.error("batch release audio tasks failed: %s", e)
+        raise HTTPException(status_code=500, detail="批量放行失败")
+    return BatchReleaseResponse(task_id=payload.task_id, type=payload.type, released=released)
 
 
 @router.patch(

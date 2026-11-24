@@ -90,7 +90,10 @@
 
         <div class="page-head detail-sub-head">
           <h3 data-i18n="taskdetail.subtasks">子任务结果</h3>
-          <button id="detailRefresh" class="secondary-btn" type="button" data-i18n="taskdetail.refresh">刷新</button>
+          <div class="detail-sub-actions">
+            <button id="detailBatchRelease" class="secondary-btn" type="button" data-i18n="taskdetail.batchRelease">批量放行</button>
+            <button id="detailRefresh" class="secondary-btn" type="button" data-i18n="taskdetail.refresh">刷新</button>
+          </div>
         </div>
         <div id="detailSubtasks" class="detail-subtasks"></div>
       </section>
@@ -107,6 +110,7 @@
     const detailMeta = document.getElementById("detailMeta");
     const detailTheme = document.getElementById("detailTheme");
     const detailRefresh = document.getElementById("detailRefresh");
+    const detailBatchRelease = document.getElementById("detailBatchRelease");
     const detailSubtasks = document.getElementById("detailSubtasks");
 
     const taskId = new URLSearchParams(window.location.search).get("task_id");
@@ -206,6 +210,14 @@
       card.className = "subtask-card";
       card.appendChild(subtaskHead(sub, sub.type));
 
+      if (sub.cover_image) {
+        const cover = document.createElement("img");
+        cover.className = "subtask-cover";
+        cover.src = App.coverImageUrl(sub.cover_image);
+        cover.alt = "";
+        card.appendChild(cover);
+      }
+
       const info = sub.info;
       const row = document.createElement("div");
       row.className = "detail-segment";
@@ -224,8 +236,7 @@
       card.appendChild(row);
 
       if (sub.status === "success" && sub.result.result_text) {
-        const workId = sub.result.result_text.split("/").pop().replace(/\.mp3$/, "");
-        card.appendChild(App.downloadButton(workId));
+        card.appendChild(App.generateDownloadButton(sub.subtask_id));
       } else if (sub.status === "failed" && sub.result.result_text) {
         const error = document.createElement("pre");
         error.className = "subtask-text";
@@ -307,6 +318,8 @@
         detailSubtasks.appendChild(group.root);
       }
 
+      detailBatchRelease.hidden = !generateSubs.some((sub) => sub.status === "debug");
+
       for (const sub of nonVerbalSubs) {
         detailSubtasks.appendChild(renderNonVerbalCard(sub));
       }
@@ -337,6 +350,21 @@
       window.location.href = "/index.html";
     });
     detailRefresh.addEventListener("click", loadTask);
+    detailBatchRelease.addEventListener("click", async () => {
+      detailBatchRelease.disabled = true;
+      try {
+        await App.api("/api/audio/tasks/batch-release", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ task_id: taskId, type: "ASMR_TEXT_GENERATE" }),
+        });
+        await loadTask();
+      } catch (e) {
+        showMessage("taskdetail.batchReleaseFailed", true, { msg: e.message });
+      } finally {
+        detailBatchRelease.disabled = false;
+      }
+    });
 
     window.addEventListener("aiaudio:langchange", () => {
       App.renderUserArea();

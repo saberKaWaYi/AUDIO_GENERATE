@@ -100,6 +100,14 @@ const App = {
     return link;
   },
 
+  generateDownloadButton(subtaskId) {
+    const link = document.createElement("a");
+    link.className = "subtask-download";
+    link.href = "/api/audio/tasks/" + encodeURIComponent(subtaskId) + "/audio";
+    link.textContent = I18n.t("taskdetail.download");
+    return link;
+  },
+
   async api(path, options = {}) {
     const res = await fetch(path, {
       credentials: "same-origin",

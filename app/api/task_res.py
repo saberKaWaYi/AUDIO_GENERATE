@@ -17,6 +17,13 @@ class ReleaseTaskResponse(BaseModel):
     status: TaskStatus = Field(..., description="放行后的状态")
 
 
+class BatchReleaseResponse(BaseModel):
+
+    task_id: str = Field(..., description="任务标识")
+    type: TaskType = Field(..., description="放行的子任务类型")
+    released: int = Field(..., description="本次放行的子任务数量")
+
+
 class TaskListItem(BaseModel):
 
     task_id: str = Field(..., description="任务标识")
@@ -39,6 +46,7 @@ class TaskSubtaskResponse(BaseModel):
     info: TaskInfo = Field(..., description="业务参数")
     status: TaskStatus = Field(..., description="子任务状态")
     result: TaskResult = Field(..., description="处理结果；未处理为空")
+    cover_image: str | None = Field(..., description="参与角色封面")
     create_time: datetime = Field(..., description="创建时间")
     update_time: datetime = Field(..., description="更新时间")
     is_public: bool = Field(False, description="是否公开展示")

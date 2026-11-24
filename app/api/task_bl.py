@@ -1,8 +1,10 @@
 from datetime import datetime
+from pathlib import Path
 from uuid import uuid4
 
 from app.api.task_req import CreateTaskRequest
 from app.api.task_res import CreateTaskResponse, ReleaseTaskResponse, TaskQueryResponse, TaskSubtaskResponse
+from models.schemas_character import AUDIO_CHARACTERS_COLLECTION
 from models.schemas_task import (
     ASMRTextInfo,
     ASMRTextResult,
@@ -13,6 +15,7 @@ from models.schemas_task import (
     TaskStatus,
     TaskType,
 )
+from settings.worker import worker_settings
 
 
 def _new_info(request: CreateTaskRequest, task_type: TaskType) -> TaskInfo:
@@ -107,12 +110,41 @@ def create_task(mongo, user_id: int, request: CreateTaskRequest) -> CreateTaskRe
     return CreateTaskResponse(task_id=task_id, status=task.status)
 
 
+def _load_cover_images(mongo, user_id: int, docs: list[dict]) -> dict[str, str | None]:
+    covers: dict[str, str | None] = {doc["subtask_id"]: None for doc in docs}
+    reference_ids = [
+        doc["info"]["reference_id"]
+        for doc in docs
+        if doc["type"] == TaskType.ASMR_TEXT_GENERATE.value
+    ]
+    if not reference_ids:
+        return covers
+    characters = mongo.find_documents(
+        AUDIO_CHARACTERS_COLLECTION,
+        {
+            "user_id": user_id,
+            "reference_id": {"$in": reference_ids},
+            "is_deleted": False,
+        },
+        fields=("reference_id", "cover_image"),
+    )
+    cover_by_reference = {char["reference_id"]: char["cover_image"] for char in characters}
+    for doc in docs:
+        if doc["type"] != TaskType.ASMR_TEXT_GENERATE.value:
+            continue
+        reference_id = doc["info"]["reference_id"]
+        if reference_id in cover_by_reference:
+            covers[doc["subtask_id"]] = cover_by_reference[reference_id]
+    return covers
+
+
 def query_task(mongo, task_id: str, user_id: int) -> TaskQueryResponse | None:
     query = {"task_id": task_id, "user_id": user_id, "is_deleted": False}
     docs = mongo.find_documents(AUDIO_TASKS_COLLECTION, query, sort=[("create_time", 1)])
     if not docs:
         return None
 
+    covers = _load_cover_images(mongo, user_id, docs)
     subtasks = [
         TaskSubtaskResponse(
             subtask_id=doc["subtask_id"],
@@ -120,6 +152,7 @@ def query_task(mongo, task_id: str, user_id: int) -> TaskQueryResponse | None:
             info=doc["info"],
             status=doc["status"],
             result=doc["result"],
+            cover_image=covers[doc["subtask_id"]],
             create_time=doc["create_time"],
             update_time=doc["update_time"],
             is_public=doc["is_public"],
@@ -135,3 +168,35 @@ def query_task(mongo, task_id: str, user_id: int) -> TaskQueryResponse | None:
         update_time=docs[0]["update_time"],
         is_public=docs[0]["is_public"],
     )
+
+
+def release_tasks_batch(mongo, user_id: int, task_id: str, task_type: TaskType) -> int:
+    return mongo.update_documents(
+        AUDIO_TASKS_COLLECTION,
+        {
+            "task_id": task_id,
+            "user_id": user_id,
+            "type": task_type.value,
+            "status": TaskStatus.DEBUG.value,
+            "is_deleted": False,
+        },
+        {"$set": {"status": TaskStatus.PENDING.value, "update_time": datetime.utcnow()}},
+    )
+
+
+def get_task_audio(mongo, user_id: int, subtask_id: str) -> tuple[str, bytes] | None:
+    doc = mongo.find_one(
+        AUDIO_TASKS_COLLECTION,
+        {
+            "subtask_id": subtask_id,
+            "user_id": user_id,
+            "status": TaskStatus.SUCCESS.value,
+            "is_deleted": False,
+        },
+        fields=("result.result_text",),
+    )
+    if doc is None:
+        return None
+    relative_path = doc["result"]["result_text"]
+    file_path = Path(worker_settings.audio_data_dir) / relative_path
+    return file_path.name, file_path.read_bytes()
