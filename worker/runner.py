@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 from typing import Optional
 
-from agents.text import TextOutcome
+from agents.asmr_text import TextOutcome
 from models.schemas_task import AUDIO_TASKS_COLLECTION, TaskStatus, TaskType
 from services.mongo_service import MongoService
 from settings.mongo import mongo_settings

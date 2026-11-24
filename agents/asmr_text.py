@@ -1,6 +1,6 @@
 import json
 
-from agents.prompts.text_prompt import get_text_system_prompt
+from agents.prompts.asmr_text_prompt import get_text_system_prompt
 from services.llm_service import chat, parse_json
 from settings_config import settings
 from tools.agent_tools import _load_characters, build_user_content
@@ -48,7 +48,7 @@ def run_text(subtask: dict) -> TextOutcome:
         raise ValueError("DEEPSEEK_API_KEY 未配置")
     system_prompt = get_text_system_prompt()
     if not system_prompt.strip():
-        raise ValueError("text_prompt.txt 提示词未填写")
+        raise ValueError("asmr_text_prompt.txt 提示词未填写")
 
     characters = _load_characters(subtask)
     result = chat(
