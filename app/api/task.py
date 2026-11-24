@@ -9,9 +9,10 @@ from app.api.task_bl import refresh_task as refresh_task_bl
 from app.api.task_bl import release_task as release_task_bl
 from app.api.task_bl import release_tasks_batch as release_tasks_batch_bl
 from app.api.task_bl import set_task_public as set_task_public_bl
+from app.api.task_bl import update_subtask_text as update_subtask_text_bl
 from app.auth.deps import get_current_user
-from app.api.task_req import BatchReleaseRequest, CreateTaskRequest
-from app.api.task_res import BatchReleaseResponse, CreateTaskResponse, ReleaseTaskResponse, TaskListResponse, TaskListItem, TaskQueryResponse
+from app.api.task_req import BatchReleaseRequest, CreateTaskRequest, UpdateTextRequest
+from app.api.task_res import BatchReleaseResponse, CreateTaskResponse, ReleaseTaskResponse, TaskListResponse, TaskListItem, TaskQueryResponse, UpdateTextResponse
 
 import logging
 
@@ -158,6 +159,31 @@ async def refresh_task_route(
     except Exception as e:
         logger.error("refresh audio task failed: %s", e)
         raise HTTPException(status_code=500, detail="任务刷新失败")
+    if task is None:
+        raise HTTPException(status_code=404, detail=f"子任务不存在：{subtask_id}")
+    return task
+
+
+@router.post(
+    "/audio/tasks/{subtask_id}/text",
+    response_model=UpdateTextResponse,
+    summary="Update the text of a failed GENERATE subtask",
+)
+async def update_subtask_text_route(
+    subtask_id: str,
+    payload: UpdateTextRequest,
+    request: Request,
+    user=Depends(get_current_user),
+):
+    try:
+        task = update_subtask_text_bl(request.app.state.mongo, user.user_id, subtask_id, payload.text)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError:
+        raise HTTPException(status_code=503, detail="数据库未就绪")
+    except Exception as e:
+        logger.error("update subtask text failed: %s", e)
+        raise HTTPException(status_code=500, detail="修改文本失败")
     if task is None:
         raise HTTPException(status_code=404, detail=f"子任务不存在：{subtask_id}")
     return task

@@ -215,7 +215,14 @@
     function renderGenerateCard(sub) {
       const card = document.createElement("div");
       card.className = "subtask-card";
-      card.appendChild(subtaskHead(sub, sub.type));
+      const head = subtaskHead(sub, sub.type);
+      const edit = App.editTextButton(sub, card, loadTask, (e) => {
+        showMessage("taskdetail.editTextFailed", true, { msg: e.message });
+      });
+      if (edit) {
+        head.appendChild(edit);
+      }
+      card.appendChild(head);
 
       const info = sub.info;
       const row = document.createElement("div");

@@ -24,6 +24,12 @@ class BatchReleaseResponse(BaseModel):
     released: int = Field(..., description="本次放行的子任务数量")
 
 
+class UpdateTextResponse(BaseModel):
+
+    subtask_id: str = Field(..., description="子任务标识")
+    status: TaskStatus = Field(..., description="修改后的状态")
+
+
 class TaskListItem(BaseModel):
 
     task_id: str = Field(..., description="任务标识")
