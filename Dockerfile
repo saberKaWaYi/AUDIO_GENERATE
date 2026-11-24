@@ -11,4 +11,7 @@ FROM base AS web
 CMD ["python", "main.py", "web", "--host", "0.0.0.0", "--port", "8002", "--no-reload"]
 
 FROM base AS worker
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 CMD ["python", "main.py", "worker"]
