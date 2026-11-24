@@ -59,7 +59,7 @@ def list_tasks(mongo, user_id: int) -> list[dict]:
 
 
 def set_task_public(mongo, user_id: int, task_id: str, is_public: bool) -> bool:
-    return mongo.update_document(
+    return mongo.update_documents(
         AUDIO_TASKS_COLLECTION,
         {"task_id": task_id, "user_id": user_id, "is_deleted": False},
         {"$set": {"is_public": is_public, "update_time": datetime.utcnow()}},
@@ -68,24 +68,25 @@ def set_task_public(mongo, user_id: int, task_id: str, is_public: bool) -> bool:
 
 def release_task(mongo, user_id: int, task_id: str) -> ReleaseTaskResponse | None:
     query = {"task_id": task_id, "user_id": user_id, "is_deleted": False}
-    doc = mongo.find_one(AUDIO_TASKS_COLLECTION, query)
-    if doc is None:
+    docs = mongo.find_documents(AUDIO_TASKS_COLLECTION, query)
+    if not docs:
         return None
-    if TaskStatus(doc["status"]) != TaskStatus.DEBUG:
-        raise ValueError(f"任务不处于 debug 状态，无法放行：{doc['status']}")
+    for doc in docs:
+        if TaskStatus(doc["status"]) != TaskStatus.DEBUG:
+            raise ValueError(f"存在非 debug 状态的子任务，无法放行：{doc['status']}")
 
-    modified = mongo.update_document(
+    modified = mongo.update_documents(
         AUDIO_TASKS_COLLECTION,
         query,
         {"$set": {"status": TaskStatus.PENDING.value, "update_time": datetime.utcnow()}},
     )
-    if modified != 1:
+    if modified != len(docs):
         raise RuntimeError("放行任务时更新数量异常")
     return ReleaseTaskResponse(task_id=task_id, status=TaskStatus.PENDING)
 
 
 def delete_task(mongo, user_id: int, task_id: str) -> bool:
-    return mongo.update_document(
+    return mongo.update_documents(
         AUDIO_TASKS_COLLECTION,
         {"task_id": task_id, "user_id": user_id, "is_deleted": False},
         {"$set": {"is_deleted": True, "update_time": datetime.utcnow()}},
