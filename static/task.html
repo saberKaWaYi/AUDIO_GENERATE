@@ -112,24 +112,11 @@
     const taskId = new URLSearchParams(window.location.search).get("task_id");
 
     let charactersMap = null;
+    let taskData = null;
 
     function showMessage(key, isError, vars) {
       detailMsg.textContent = vars ? I18n.t(key, vars) : I18n.t(key);
       detailMsg.classList.toggle("error", Boolean(isError));
-    }
-
-    function metaRow(label, value) {
-      const row = document.createElement("div");
-      row.className = "detail-meta-row";
-      const key = document.createElement("span");
-      key.className = "detail-meta-key";
-      key.textContent = label;
-      const val = document.createElement("span");
-      val.className = "detail-meta-value";
-      val.textContent = value;
-      row.appendChild(key);
-      row.appendChild(val);
-      return row;
     }
 
     function formatTime(totalSeconds) {
@@ -263,11 +250,50 @@
       return card;
     }
 
+    function renderDetail(data) {
+      taskData = data;
+      const sub = data.subtasks.find((item) => item.type === "ASMR_TEXT");
+      if (!sub) {
+        throw new Error("ASMR_TEXT subtask not found");
+      }
+      detailTitle.textContent = sub.info.title;
+      detailStatus.textContent = data.status;
+      detailStatus.className = "status-tag status-" + data.status;
+
+      detailMeta.textContent = "";
+      detailMeta.appendChild(App.infoRow(I18n.t("taskdetail.language"), I18n.t("form.lang." + sub.info.language)));
+      detailMeta.appendChild(App.infoRow(I18n.t("taskdetail.duration"), String(sub.info.duration_minutes)));
+      detailMeta.appendChild(App.infoRow(I18n.t("taskdetail.characters"), sub.info.reference_ids.map(characterName).join("、")));
+      detailMeta.appendChild(App.infoRow(I18n.t("taskdetail.createTime"), new Date(data.create_time).toLocaleString()));
+
+      detailTheme.textContent = "";
+      const themeLabel = document.createElement("div");
+      themeLabel.className = "detail-theme-label";
+      themeLabel.textContent = I18n.t("taskdetail.theme");
+      const themeText = document.createElement("div");
+      themeText.className = "detail-theme-text markdown-body";
+      themeText.innerHTML = marked.parse(sub.info.theme);
+      detailTheme.appendChild(themeLabel);
+      detailTheme.appendChild(themeText);
+
+      renderSubtasks(data.subtasks);
+      detailPanel.hidden = false;
+    }
+
     function renderSubtasks(subtasks) {
       detailSubtasks.textContent = "";
-      const textSubs = subtasks.filter((sub) => sub.type === "ASMR_TEXT");
-      const generateSubs = subtasks.filter((sub) => sub.type === "ASMR_TEXT_GENERATE");
-      const nonVerbalSubs = subtasks.filter((sub) => sub.type === "ASMR_NON_VERBAL");
+      const textSubs = [];
+      const generateSubs = [];
+      const nonVerbalSubs = [];
+      for (const sub of subtasks) {
+        if (sub.type === "ASMR_TEXT") {
+          textSubs.push(sub);
+        } else if (sub.type === "ASMR_TEXT_GENERATE") {
+          generateSubs.push(sub);
+        } else if (sub.type === "ASMR_NON_VERBAL") {
+          nonVerbalSubs.push(sub);
+        }
+      }
 
       for (const sub of textSubs) {
         detailSubtasks.appendChild(renderTextCard(sub));
@@ -292,33 +318,7 @@
         return;
       }
       try {
-        const data = await App.api("/api/audio/tasks/" + encodeURIComponent(taskId));
-        const sub = data.subtasks.find((item) => item.type === "ASMR_TEXT");
-        if (!sub) {
-          throw new Error("ASMR_TEXT subtask not found");
-        }
-        detailTitle.textContent = sub.info.title;
-        detailStatus.textContent = data.status;
-        detailStatus.className = "status-tag status-" + data.status;
-
-        detailMeta.textContent = "";
-        detailMeta.appendChild(metaRow(I18n.t("taskdetail.language"), sub.info.language));
-        detailMeta.appendChild(metaRow(I18n.t("taskdetail.duration"), String(sub.info.duration_minutes)));
-        detailMeta.appendChild(metaRow(I18n.t("taskdetail.characters"), sub.info.reference_ids.map(characterName).join("、")));
-        detailMeta.appendChild(metaRow(I18n.t("taskdetail.createTime"), new Date(data.create_time).toLocaleString()));
-
-        detailTheme.textContent = "";
-        const themeLabel = document.createElement("div");
-        themeLabel.className = "detail-theme-label";
-        themeLabel.textContent = I18n.t("taskdetail.theme");
-        const themeText = document.createElement("div");
-        themeText.className = "detail-theme-text markdown-body";
-        themeText.innerHTML = marked.parse(sub.info.theme);
-        detailTheme.appendChild(themeLabel);
-        detailTheme.appendChild(themeText);
-
-        renderSubtasks(data.subtasks);
-        detailPanel.hidden = false;
+        renderDetail(await App.api("/api/audio/tasks/" + encodeURIComponent(taskId)));
       } catch (e) {
         showMessage("taskdetail.loadFailed", true, { msg: e.message });
       }
@@ -340,7 +340,9 @@
 
     window.addEventListener("aiaudio:langchange", () => {
       App.renderUserArea();
-      loadTask();
+      if (taskData) {
+        renderDetail(taskData);
+      }
     });
 
     async function initPage() {

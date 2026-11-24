@@ -96,6 +96,7 @@
     const galleryList = document.getElementById("galleryList");
     const galleryEmpty = document.getElementById("galleryEmpty");
     const galleryMsg = document.getElementById("galleryMsg");
+    let works = [];
     let messageRenderer = null;
 
     function renderMessage() {
@@ -154,8 +155,8 @@
 
     async function loadWorks() {
       try {
-        const data = await App.api("/api/audio/works/public");
-        renderWorks(data.items);
+        works = (await App.api("/api/audio/works/public")).items;
+        renderWorks(works);
       } catch (error) {
         galleryList.textContent = "";
         galleryEmpty.textContent = I18n.t("gallery.loadFailed", { msg: error.message });
@@ -166,7 +167,7 @@
     window.addEventListener("aiaudio:langchange", () => {
       renderMessage();
       App.renderUserArea();
-      loadWorks();
+      renderWorks(works);
     });
 
     async function initPage() {

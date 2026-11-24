@@ -286,10 +286,11 @@
         durationEntries.push({ name: file.name, seconds: null, file: file });
       }
       renderAnswer();
-      for (let i = 0; i < accepted.length; i += 1) {
-        durationEntries[startIndex + i].seconds = await readAudioDuration(accepted[i]);
-        renderAnswer();
+      const durations = await Promise.all(accepted.map((file) => readAudioDuration(file)));
+      for (let i = 0; i < durations.length; i += 1) {
+        durationEntries[startIndex + i].seconds = durations[i];
       }
+      renderAnswer();
     }
 
     function clearCover() {
@@ -324,15 +325,6 @@
 
     function onCoverChanged(event) {
       setCover(event.target.files[0]);
-    }
-
-    const FISH_COVER_BASE = "https://public-platform.r2.fish.audio/";
-
-    function coverImageUrl(value) {
-      if (/^https?:\/\//i.test(value)) {
-        return value;
-      }
-      return FISH_COVER_BASE + value.replace(/^\/+/, "");
     }
 
     function renderLibrary() {
@@ -371,7 +363,7 @@
             cover.className = "voice-item-cover";
             if (item.cover_image) {
               const img = document.createElement("img");
-              img.src = coverImageUrl(item.cover_image);
+              img.src = App.coverImageUrl(item.cover_image);
               img.alt = "";
               cover.appendChild(img);
             } else {

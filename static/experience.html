@@ -141,6 +141,7 @@
     const downloadLink = document.getElementById("downloadLink");
 
     let voices = [];
+    let works = [];
     let selectedReferenceId = "";
     let objectUrl = null;
     let messageRenderer = null;
@@ -250,8 +251,8 @@
 
     async function loadWorks() {
       try {
-        const data = await App.api("/api/audio/works/mine");
-        renderWorks(data.items);
+        works = (await App.api("/api/audio/works/mine")).items;
+        renderWorks(works);
       } catch (error) {
         worksList.textContent = "";
         worksEmpty.textContent = I18n.t("experience.worksLoadFailed", { msg: error.message });
@@ -387,7 +388,7 @@
       if (!generating) {
         generateBtn.textContent = I18n.t("experience.generateBtn");
       }
-      loadWorks();
+      renderWorks(works);
     });
 
     audioPlayer.addEventListener("error", () => {

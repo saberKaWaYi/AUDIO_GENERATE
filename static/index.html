@@ -190,6 +190,8 @@
     const taskListRefresh = document.getElementById("taskListRefresh");
 
     let createdTaskId = null;
+    let tasks = [];
+    let createdTask = null;
 
     let messageRenderer = null;
 
@@ -330,12 +332,12 @@
         queryResult.textContent = "";
         resultPanel.hidden = false;
         showMessageKey("form.submitSuccess", null, false);
-        await loadTasks();
       } catch (e) {
         showMessageKey("form.submitFailed", null, true, e.message);
       } finally {
         submitBtn.disabled = false;
       }
+      await loadTasks();
     }
 
     function renderSubtasks(subtasks) {
@@ -369,16 +371,20 @@
       }
     }
 
+    function renderQueryResult(data) {
+      createdTask = data;
+      resultStatus.textContent = data.status;
+      resultStatus.className = "status-tag status-" + data.status;
+      renderSubtasks(data.subtasks);
+    }
+
     async function queryTask() {
       if (!createdTaskId) {
         return;
       }
       queryBtn.disabled = true;
       try {
-        const data = await App.api("/api/audio/tasks/" + encodeURIComponent(createdTaskId));
-        resultStatus.textContent = data.status;
-        resultStatus.className = "status-tag status-" + data.status;
-        renderSubtasks(data.subtasks);
+        renderQueryResult(await App.api("/api/audio/tasks/" + encodeURIComponent(createdTaskId)));
       } catch (e) {
         showMessageKey("result.queryFailed", null, true, e.message);
       } finally {
@@ -388,8 +394,8 @@
 
     async function loadTasks() {
       try {
-        const data = await App.api("/api/audio/tasks");
-        renderTasks(data.items);
+        tasks = (await App.api("/api/audio/tasks")).items;
+        renderTasks(tasks);
       } catch (e) {
         taskList.textContent = "";
         taskListEmpty.hidden = false;
@@ -476,11 +482,9 @@
       renderMessage();
       renderCharacterList();
       App.renderUserArea();
-      loadTasks();
-      if (createdTaskId) {
-        App.api("/api/audio/tasks/" + encodeURIComponent(createdTaskId))
-          .then((data) => renderSubtasks(data.subtasks))
-          .catch(() => {});
+      renderTasks(tasks);
+      if (createdTask) {
+        renderQueryResult(createdTask);
       }
     });
 
