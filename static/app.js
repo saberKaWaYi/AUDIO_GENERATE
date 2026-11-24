@@ -43,9 +43,11 @@ const App = {
     return row;
   },
 
-  collapsible(label, count) {
+  collapsible(label, count, action) {
     const wrap = document.createElement("div");
     wrap.className = "subtask-group";
+    const head = document.createElement("div");
+    head.className = "subtask-group-head";
     const toggle = document.createElement("button");
     toggle.type = "button";
     toggle.className = "subtask-group-toggle";
@@ -66,7 +68,11 @@ const App = {
       body.hidden = expanded;
       caret.textContent = expanded ? "+" : "−";
     });
-    wrap.appendChild(toggle);
+    head.appendChild(toggle);
+    if (action) {
+      head.appendChild(action);
+    }
+    wrap.appendChild(head);
     wrap.appendChild(body);
     return { root: wrap, body: body };
   },
