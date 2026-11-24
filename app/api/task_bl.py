@@ -55,6 +55,7 @@ def list_tasks(mongo, user_id: int) -> list[dict]:
         AUDIO_TASKS_COLLECTION,
         {"user_id": user_id, "type": TaskType.ASMR_TEXT.value, "is_deleted": False},
         sort=[("create_time", -1)],
+        fields=("task_id", "info.title", "type", "status", "is_public", "create_time"),
     )
 
 
@@ -68,7 +69,7 @@ def set_task_public(mongo, user_id: int, task_id: str, is_public: bool) -> bool:
 
 def release_task(mongo, user_id: int, subtask_id: str) -> ReleaseTaskResponse | None:
     query = {"subtask_id": subtask_id, "user_id": user_id, "is_deleted": False}
-    doc = mongo.find_one(AUDIO_TASKS_COLLECTION, query)
+    doc = mongo.find_one(AUDIO_TASKS_COLLECTION, query, fields=("status",))
     if doc is None:
         return None
     if TaskStatus(doc["status"]) != TaskStatus.DEBUG:

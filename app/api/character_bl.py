@@ -73,7 +73,7 @@ def _upsert_character(mongo, user_id: int, entity: FishModelEntity) -> tuple[boo
     document = character.model_dump(mode="json")
     query = {"user_id": user_id, "reference_id": entity.reference_id, "is_deleted": False}
 
-    created = mongo.find_one(AUDIO_CHARACTERS_COLLECTION, query) is None
+    created = mongo.find_one(AUDIO_CHARACTERS_COLLECTION, query, fields=("reference_id",)) is None
     if created:
         mongo.insert_document(AUDIO_CHARACTERS_COLLECTION, document)
     else:
@@ -241,6 +241,7 @@ def synthesize_tts(mongo, fish, user_id: int, reference_id: str, text: str, is_p
     character = mongo.find_one(
         AUDIO_CHARACTERS_COLLECTION,
         {"user_id": user_id, "reference_id": reference_id, "is_deleted": False},
+        fields=("cover_image", "title"),
     )
     if character is None:
         raise FishAudioNotFoundError("音色不存在或已删除")
@@ -259,6 +260,7 @@ def list_works(mongo, query: dict) -> list[dict]:
         AUDIO_WORKS_COLLECTION,
         query,
         sort=[("create_time", -1)],
+        fields=("work_id", "work_type", "title", "cover_image", "text", "file_size", "is_public", "create_time"),
     )
 
 
@@ -272,7 +274,7 @@ def set_work_public(mongo, user_id: int, work_id: str, is_public: bool) -> bool:
 
 def delete_work(mongo, user_id: int, work_id: str) -> bool:
     query = {"work_id": work_id, "user_id": user_id, "is_deleted": False}
-    doc = mongo.find_one(AUDIO_WORKS_COLLECTION, query)
+    doc = mongo.find_one(AUDIO_WORKS_COLLECTION, query, fields=("relative_path",))
     if doc is None:
         return False
     file_path = Path(worker_settings.audio_data_dir) / doc["relative_path"]
@@ -291,7 +293,7 @@ def get_work_audio(mongo, work_id: str, user_id: int, public_only: bool) -> tupl
         query["is_public"] = True
     else:
         query["user_id"] = user_id
-    doc = mongo.find_one(AUDIO_WORKS_COLLECTION, query)
+    doc = mongo.find_one(AUDIO_WORKS_COLLECTION, query, fields=("file_name", "relative_path"))
     if doc is None:
         return None
     file_path = Path(worker_settings.audio_data_dir) / doc["relative_path"]
