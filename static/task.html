@@ -6,6 +6,7 @@
   <title data-i18n="taskdetail.title">任务详情 - AI AUDIO</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="/style.css">
+  <script src="/marked.min.js"></script>
   <script src="/i18n.js"></script>
 </head>
 <body class="app-body">
@@ -197,8 +198,6 @@
       detailTitle.textContent = textSub ? textSub.info.title : data.task_id;
 
       detailMeta.textContent = "";
-      detailMeta.appendChild(App.infoRow(I18n.t("taskdetail.taskId"), data.task_id));
-      detailMeta.appendChild(App.infoRow(I18n.t("taskdetail.status"), data.status));
       detailMeta.appendChild(App.infoRow(I18n.t("taskdetail.createTime"), new Date(data.create_time).toLocaleString()));
       detailMeta.appendChild(App.infoRow(I18n.t("taskdetail.updateTime"), new Date(data.update_time).toLocaleString()));
       if (textSub) {
@@ -214,8 +213,8 @@
         themeLabel.className = "detail-theme-label";
         themeLabel.textContent = I18n.t("taskdetail.theme");
         const themeText = document.createElement("div");
-        themeText.className = "detail-theme-text";
-        themeText.textContent = textSub.info.theme;
+        themeText.className = "detail-theme-text markdown-body";
+        themeText.innerHTML = marked.parse(textSub.info.theme);
         detailTheme.appendChild(themeLabel);
         detailTheme.appendChild(themeText);
       }
