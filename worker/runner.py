@@ -10,6 +10,7 @@ from models.schemas_task import AUDIO_TASKS_COLLECTION, TaskStatus, TaskType
 from services.mongo_service import MongoService
 from settings.mongo import mongo_settings
 from settings.worker import worker_settings
+from worker.dispatch import dispatch_generate_tasks
 from worker.executors import EXECUTORS
 from logging_config import setup_logging
 
@@ -124,6 +125,8 @@ def _run_once() -> bool:
                 raise ValueError(f"TEXT 执行器返回类型错误：{type(outcome).__name__}")
             _write_success(subtask, outcome)
             logger.info("TEXT 生成成功, subtask_id=%s", subtask["subtask_id"])
+            created = dispatch_generate_tasks(mongo_service, subtask, outcome.result_text)
+            logger.info("下发 GENERATE 子任务 %d 条, task_id=%s", created, subtask["task_id"])
         else:
             raise ValueError(f"任务类型 {task_type.value!r} 没有闭合结果处理")
     except Exception as exc:

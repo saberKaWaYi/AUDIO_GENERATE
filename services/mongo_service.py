@@ -64,6 +64,11 @@ class MongoService:
         logger.info("Inserted one document into %s.%s", self.database, collection)
         return str(result.inserted_id)
 
+    def insert_documents(self, collection: str, documents: list[dict]) -> int:
+        result = self._collection(collection).insert_many(documents)
+        logger.info("Inserted %d documents into %s.%s", len(result.inserted_ids), self.database, collection)
+        return len(result.inserted_ids)
+
     def find_one(
         self, collection: str, query: dict, fields: tuple[str, ...] | None = None
     ) -> Optional[dict]:
