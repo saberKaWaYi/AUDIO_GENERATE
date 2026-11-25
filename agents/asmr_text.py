@@ -5,7 +5,7 @@ from services.llm_service import chat
 from settings_config import settings
 from tools.agent_tools import _load_characters, build_user_content
 
-REQUIRED_FIELDS = {"index", "text"}
+REQUIRED_FIELDS = {"index", "reference_id", "text"}
 
 
 class TextOutcome:
@@ -31,6 +31,8 @@ def _validate_dialogue(data: list) -> None:
             raise ValueError(f"第 {position} 条对白多余字段：{sorted(extra)}")
         if type(item["index"]) is not int or item["index"] < 1:
             raise ValueError(f"第 {position} 条对白 index 必须是正整数")
+        if not isinstance(item["reference_id"], str) or not item["reference_id"]:
+            raise ValueError(f"第 {position} 条对白 reference_id 必须是非空字符串")
         if not isinstance(item["text"], str) or not item["text"]:
             raise ValueError(f"第 {position} 条对白 text 必须是非空字符串")
 
@@ -58,6 +60,11 @@ def run_text(subtask: dict) -> TextOutcome:
 
     dialogue = json.loads(result.raw_text)
     _validate_dialogue(dialogue)
+
+    valid_reference_ids = {character["reference_id"] for character in characters}
+    for item in dialogue:
+        if item["reference_id"] not in valid_reference_ids:
+            raise ValueError(f"对白引用了不存在的角色 ID：{item['reference_id']}")
 
     return TextOutcome(
         result_text=result.raw_text,
