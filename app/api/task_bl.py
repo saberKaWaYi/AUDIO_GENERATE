@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from app.api.task_req import CreateTaskRequest
-from app.api.task_res import CreateTaskResponse, TaskQueryResponse, TaskSubtaskResponse
+from app.api.task_res import CreateTaskResponse, ReleaseTaskResponse, TaskQueryResponse, TaskSubtaskResponse
 from models.schemas_task import (
     ASMRTextInfo,
     ASMRTextResult,
@@ -106,3 +106,46 @@ def query_task(mongo, task_id: str, user_id: int) -> TaskQueryResponse | None:
         update_time=docs[0]["update_time"],
         is_public=docs[0]["is_public"],
     )
+
+
+def list_tasks(mongo, user_id: int) -> list[dict]:
+    return mongo.find_documents(
+        AUDIO_TASKS_COLLECTION,
+        {"user_id": user_id, "type": TaskType.ASMR_TEXT.value, "is_deleted": False},
+        sort=[("create_time", -1)],
+        fields=("task_id", "info.title", "status", "is_public", "create_time"),
+    )
+
+
+def release_task(mongo, user_id: int, subtask_id: str) -> ReleaseTaskResponse | None:
+    query = {"subtask_id": subtask_id, "user_id": user_id, "is_deleted": False}
+    doc = mongo.find_one(AUDIO_TASKS_COLLECTION, query, fields=("status",))
+    if doc is None:
+        return None
+    if TaskStatus(doc["status"]) != TaskStatus.DEBUG:
+        raise ValueError(f"子任务不处于 debug 状态，无法放行：{doc['status']}")
+
+    modified = mongo.update_document(
+        AUDIO_TASKS_COLLECTION,
+        query,
+        {"$set": {"status": TaskStatus.PENDING.value, "update_time": datetime.utcnow()}},
+    )
+    if modified != 1:
+        raise RuntimeError("放行子任务时更新数量异常")
+    return ReleaseTaskResponse(subtask_id=subtask_id, status=TaskStatus.PENDING)
+
+
+def set_task_public(mongo, user_id: int, task_id: str, is_public: bool) -> bool:
+    return mongo.update_documents(
+        AUDIO_TASKS_COLLECTION,
+        {"task_id": task_id, "user_id": user_id, "is_deleted": False},
+        {"$set": {"is_public": is_public, "update_time": datetime.utcnow()}},
+    ) > 0
+
+
+def delete_task(mongo, user_id: int, task_id: str) -> bool:
+    return mongo.update_documents(
+        AUDIO_TASKS_COLLECTION,
+        {"task_id": task_id, "user_id": user_id, "is_deleted": False},
+        {"$set": {"is_deleted": True, "update_time": datetime.utcnow()}},
+    ) > 0

@@ -161,6 +161,15 @@
         <button id="queryBtn" class="secondary-btn" type="button" data-i18n="result.queryBtn">查询任务状态</button>
         <div id="queryResult" class="query-result"></div>
       </section>
+
+      <section class="task-list-panel">
+        <div class="task-list-head">
+          <h3 data-i18n="tasklist.title">我的任务</h3>
+          <button id="taskListRefresh" class="secondary-btn" type="button" data-i18n="tasklist.refresh">刷新</button>
+        </div>
+        <p id="taskListEmpty" class="hint" hidden></p>
+        <div id="taskList" class="task-list"></div>
+      </section>
     </main>
   </div>
 
@@ -179,8 +188,12 @@
     const resultStatus = document.getElementById("resultStatus");
     const queryBtn = document.getElementById("queryBtn");
     const queryResult = document.getElementById("queryResult");
+    const taskList = document.getElementById("taskList");
+    const taskListEmpty = document.getElementById("taskListEmpty");
+    const taskListRefresh = document.getElementById("taskListRefresh");
 
     let createdTaskId = null;
+    let tasks = [];
 
     let messageRenderer = null;
 
@@ -322,6 +335,7 @@
         queryResult.textContent = "";
         resultPanel.hidden = false;
         showMessageKey("form.submitSuccess", null, false);
+        await loadTasks();
       } catch (e) {
         showMessageKey("form.submitFailed", null, true, e.message);
       } finally {
@@ -349,13 +363,24 @@
         text.textContent = sub.result.result_text;
         card.appendChild(text);
 
-        const tokens = document.createElement("p");
-        tokens.className = "hint";
-        tokens.textContent = I18n.t("subtask.tokens", {
-          p: sub.result.prompt_tokens,
-          c: sub.result.completion_tokens,
-        });
-        card.appendChild(tokens);
+        if (sub.result.prompt_tokens !== undefined) {
+          const tokens = document.createElement("p");
+          tokens.className = "hint";
+          tokens.textContent = I18n.t("subtask.tokens", {
+            p: sub.result.prompt_tokens,
+            c: sub.result.completion_tokens,
+          });
+          card.appendChild(tokens);
+        }
+
+        const release = App.releaseButton(
+          sub,
+          () => queryTask(),
+          (e) => showMessageKey("taskdetail.releaseFailed", { msg: e.message }, true)
+        );
+        if (release) {
+          card.appendChild(release);
+        }
         queryResult.appendChild(card);
       }
     }
@@ -377,10 +402,92 @@
       }
     }
 
+    async function loadTasks() {
+      try {
+        tasks = (await App.api("/api/audio/tasks")).items;
+        renderTasks();
+      } catch (e) {
+        tasks = [];
+        renderTasks();
+        showMessageKey("tasklist.loadFailed", null, true, e.message);
+      }
+    }
+
+    function renderTasks() {
+      taskList.textContent = "";
+      taskListEmpty.hidden = tasks.length > 0;
+      if (tasks.length === 0) {
+        taskListEmpty.textContent = I18n.t("tasklist.empty");
+      }
+      for (const item of tasks) {
+        const row = document.createElement("div");
+        row.className = "task-list-item";
+
+        const info = document.createElement("div");
+        info.className = "task-list-info";
+        const title = document.createElement("div");
+        title.className = "task-list-title";
+        title.textContent = item.title;
+        const meta = document.createElement("div");
+        meta.className = "task-list-meta";
+        meta.textContent = item.status;
+        info.appendChild(title);
+        info.appendChild(meta);
+
+        const actions = document.createElement("div");
+        actions.className = "task-list-actions";
+
+        const toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "exp-work-public";
+        let isPublic = item.is_public;
+        const renderPublic = () => {
+          toggle.textContent = isPublic ? I18n.t("tasklist.publicOn") : I18n.t("tasklist.publicOff");
+          toggle.classList.toggle("on", isPublic);
+        };
+        renderPublic();
+        toggle.addEventListener("click", async () => {
+          const next = !isPublic;
+          try {
+            await App.api("/api/audio/tasks/" + encodeURIComponent(item.task_id) + "/public?is_public=" + (next ? "true" : "false"), { method: "PATCH" });
+            isPublic = next;
+            renderPublic();
+            showMessageKey(next ? "tasklist.setPublicOk" : "tasklist.setPrivateOk", null, false);
+          } catch (e) {
+            showMessageKey("tasklist.setPublicFailed", null, true, e.message);
+          }
+        });
+
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "exp-work-delete";
+        del.textContent = I18n.t("tasklist.delete");
+        del.addEventListener("click", async () => {
+          if (!window.confirm(I18n.t("tasklist.deleteConfirm", { name: item.title }))) {
+            return;
+          }
+          try {
+            await App.api("/api/audio/tasks/" + encodeURIComponent(item.task_id), { method: "DELETE" });
+            await loadTasks();
+            showMessageKey("tasklist.deleteOk", null, false);
+          } catch (e) {
+            showMessageKey("tasklist.deleteFailed", null, true, e.message);
+          }
+        });
+
+        actions.appendChild(toggle);
+        actions.appendChild(del);
+        row.appendChild(info);
+        row.appendChild(actions);
+        taskList.appendChild(row);
+      }
+    }
+
     window.addEventListener("aiaudio:langchange", () => {
       renderMessage();
       renderCharacterList();
       App.renderUserArea();
+      renderTasks();
       if (createdTaskId) {
         App.api("/api/audio/tasks/" + encodeURIComponent(createdTaskId))
           .then((data) => renderSubtasks(data.subtasks))
@@ -397,7 +504,9 @@
       }
       form.addEventListener("submit", submitTask);
       queryBtn.addEventListener("click", queryTask);
+      taskListRefresh.addEventListener("click", loadTasks);
       loadCharacters();
+      loadTasks();
     }
 
     window.addEventListener("load", initPage);

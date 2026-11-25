@@ -67,6 +67,27 @@ const App = {
     }
   },
 
+  releaseButton(subtask, onChanged, onError) {
+    if (subtask.status !== "debug") {
+      return null;
+    }
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "subtask-release";
+    button.textContent = I18n.t("taskdetail.release");
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      try {
+        await this.api("/api/audio/tasks/" + encodeURIComponent(subtask.subtask_id) + "/release", { method: "POST" });
+        await onChanged();
+      } catch (e) {
+        button.disabled = false;
+        onError(e);
+      }
+    });
+    return button;
+  },
+
   bindLogout() {
     const btn = document.getElementById("logoutBtn");
     if (btn) {
