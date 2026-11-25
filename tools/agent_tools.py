@@ -23,6 +23,7 @@ def _load_characters(subtask: dict) -> list[dict]:
             "reference_id": {"$in": reference_ids},
             "is_deleted": False,
         },
+        fields=CHARACTER_FIELDS,
     )
     if len(docs) != len(reference_ids):
         raise ValueError(

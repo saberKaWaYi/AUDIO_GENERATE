@@ -67,7 +67,9 @@ async def lifespan(app: FastAPI):
         mongo.create_index(AUDIO_USER_IDENTITIES_COLLECTION, index["field"], index["unique"])
 
     mongo.create_collection(AUDIO_COUNTERS_COLLECTION)
-    if mongo.find_one(AUDIO_COUNTERS_COLLECTION, {"key": USER_ID_COUNTER_KEY}) is None:
+    if mongo.find_one(
+        AUDIO_COUNTERS_COLLECTION, {"key": USER_ID_COUNTER_KEY}, fields=("key",)
+    ) is None:
         counter = AudioCounter(key=USER_ID_COUNTER_KEY, value=0)
         mongo.insert_document(AUDIO_COUNTERS_COLLECTION, counter.model_dump(mode="json"))
 

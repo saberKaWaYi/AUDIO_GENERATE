@@ -87,6 +87,7 @@ def verify_email_code(mongo, email: str, code: str) -> None:
     doc = mongo.find_one(
         AUDIO_EMAIL_CODES_COLLECTION,
         {"email": email, "code": code, "used": False},
+        fields=("email", "code", "expire_time", "used", "create_time"),
     )
     if doc is None:
         raise ValueError("验证码错误或已失效")
@@ -112,7 +113,11 @@ def next_user_id(mongo) -> int:
 
 
 def get_user(mongo, user_id: int) -> AudioUser | None:
-    doc = mongo.find_one(AUDIO_USERS_COLLECTION, {"user_id": user_id})
+    doc = mongo.find_one(
+        AUDIO_USERS_COLLECTION,
+        {"user_id": user_id},
+        fields=("user_id", "email", "name", "picture", "create_time", "update_time"),
+    )
     if doc is None:
         return None
     return AudioUser.model_validate(doc)
@@ -129,6 +134,7 @@ def find_or_create_user(
     identity = mongo.find_one(
         AUDIO_USER_IDENTITIES_COLLECTION,
         {"provider": provider, "provider_user_id": provider_user_id},
+        fields=("user_id",),
     )
     if identity is not None:
         user = get_user(mongo, identity["user_id"])

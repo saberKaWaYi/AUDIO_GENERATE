@@ -66,7 +66,21 @@ def create_task(mongo, user_id: int, request: CreateTaskRequest) -> CreateTaskRe
 
 def query_task(mongo, task_id: str, user_id: int) -> TaskQueryResponse | None:
     query = {"task_id": task_id, "user_id": user_id, "is_deleted": False}
-    docs = mongo.find_documents(AUDIO_TASKS_COLLECTION, query, sort=[("create_time", 1)])
+    docs = mongo.find_documents(
+        AUDIO_TASKS_COLLECTION,
+        query,
+        sort=[("create_time", 1)],
+        fields=(
+            "subtask_id",
+            "type",
+            "info",
+            "status",
+            "result",
+            "create_time",
+            "update_time",
+            "is_public",
+        ),
+    )
     if not docs:
         return None
 

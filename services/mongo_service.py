@@ -8,6 +8,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _projection(fields: tuple[str, ...] | None) -> dict:
+    if fields is None:
+        return {"_id": 0}
+    return {"_id": 0, **{field: 1 for field in fields}}
+
+
 class MongoService:
 
     def __init__(
@@ -58,8 +64,10 @@ class MongoService:
         logger.info("Inserted one document into %s.%s", self.database, collection)
         return str(result.inserted_id)
 
-    def find_one(self, collection: str, query: dict) -> Optional[dict]:
-        return self._collection(collection).find_one(query, {"_id": 0})
+    def find_one(
+        self, collection: str, query: dict, fields: tuple[str, ...] | None = None
+    ) -> Optional[dict]:
+        return self._collection(collection).find_one(query, _projection(fields))
 
     def find_documents(
         self,
@@ -68,8 +76,9 @@ class MongoService:
         sort: Optional[list] = None,
         skip: int = 0,
         limit: int = 0,
+        fields: tuple[str, ...] | None = None,
     ) -> list[dict]:
-        cursor = self._collection(collection).find(query, {"_id": 0})
+        cursor = self._collection(collection).find(query, _projection(fields))
         if sort:
             cursor = cursor.sort(sort)
         if skip:
