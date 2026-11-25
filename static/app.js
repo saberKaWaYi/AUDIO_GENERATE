@@ -67,6 +67,61 @@ const App = {
     }
   },
 
+  statusTag(status) {
+    const tag = document.createElement("span");
+    tag.className = "status-tag status-" + status;
+    tag.textContent = status;
+    return tag;
+  },
+
+  infoRow(label, value) {
+    const row = document.createElement("div");
+    row.className = "detail-meta-row";
+    const key = document.createElement("span");
+    key.className = "detail-meta-key";
+    key.textContent = label;
+    const val = document.createElement("span");
+    val.className = "detail-meta-value";
+    val.textContent = value;
+    row.appendChild(key);
+    row.appendChild(val);
+    return row;
+  },
+
+  collapsible(label, count, action) {
+    const wrap = document.createElement("div");
+    wrap.className = "subtask-group";
+    const head = document.createElement("div");
+    head.className = "subtask-group-head";
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "subtask-group-toggle";
+    toggle.setAttribute("aria-expanded", "false");
+    const caret = document.createElement("span");
+    caret.className = "subtask-group-caret";
+    caret.textContent = "+";
+    const text = document.createElement("span");
+    text.textContent = count == null ? label : label + "（" + count + "）";
+    toggle.appendChild(caret);
+    toggle.appendChild(text);
+    const body = document.createElement("div");
+    body.className = "subtask-group-body";
+    body.hidden = true;
+    toggle.addEventListener("click", () => {
+      const expanded = toggle.getAttribute("aria-expanded") === "true";
+      toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+      body.hidden = expanded;
+      caret.textContent = expanded ? "+" : "−";
+    });
+    head.appendChild(toggle);
+    if (action) {
+      head.appendChild(action);
+    }
+    wrap.appendChild(head);
+    wrap.appendChild(body);
+    return { root: wrap, head: head, body: body };
+  },
+
   releaseButton(subtask, onChanged, onError) {
     if (subtask.status !== "debug") {
       return null;

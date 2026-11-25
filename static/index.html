@@ -428,14 +428,18 @@
         const title = document.createElement("div");
         title.className = "task-list-title";
         title.textContent = item.title;
-        const meta = document.createElement("div");
-        meta.className = "task-list-meta";
-        meta.textContent = item.status;
         info.appendChild(title);
-        info.appendChild(meta);
 
         const actions = document.createElement("div");
         actions.className = "task-list-actions";
+
+        const detail = document.createElement("button");
+        detail.type = "button";
+        detail.className = "task-list-detail";
+        detail.textContent = I18n.t("tasklist.detail");
+        detail.addEventListener("click", () => {
+          window.location.href = "/task.html?task_id=" + encodeURIComponent(item.task_id);
+        });
 
         const toggle = document.createElement("button");
         toggle.type = "button";
@@ -475,6 +479,7 @@
           }
         });
 
+        actions.appendChild(detail);
         actions.appendChild(toggle);
         actions.appendChild(del);
         row.appendChild(info);
