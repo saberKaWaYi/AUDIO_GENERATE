@@ -157,6 +157,12 @@
       if (release) {
         head.appendChild(release);
       }
+      const refresh = App.refreshButton(sub, loadTask, (e) => {
+        showMessage("taskdetail.refreshFailed", true, { msg: e.message });
+      });
+      if (refresh) {
+        head.appendChild(refresh);
+      }
       return head;
     }
 

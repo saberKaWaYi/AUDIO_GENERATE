@@ -4,6 +4,7 @@ from app.api.task_bl import create_task as create_task_bl
 from app.api.task_bl import delete_task as delete_task_bl
 from app.api.task_bl import list_tasks as list_tasks_bl
 from app.api.task_bl import query_task as query_task_bl
+from app.api.task_bl import refresh_task as refresh_task_bl
 from app.api.task_bl import release_task as release_task_bl
 from app.api.task_bl import set_task_public as set_task_public_bl
 from app.auth.deps import get_current_user
@@ -101,6 +102,30 @@ async def release_task_route(
     except Exception as e:
         logger.error("release audio task failed: %s", e)
         raise HTTPException(status_code=500, detail="任务放行失败")
+    if task is None:
+        raise HTTPException(status_code=404, detail=f"子任务不存在：{subtask_id}")
+    return task
+
+
+@router.post(
+    "/audio/tasks/{subtask_id}/refresh",
+    response_model=ReleaseTaskResponse,
+    summary="Refresh a finished subtask to pending",
+)
+async def refresh_task_route(
+    subtask_id: str,
+    request: Request,
+    user=Depends(get_current_user),
+):
+    try:
+        task = refresh_task_bl(request.app.state.mongo, user.user_id, subtask_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError:
+        raise HTTPException(status_code=503, detail="数据库未就绪")
+    except Exception as e:
+        logger.error("refresh audio task failed: %s", e)
+        raise HTTPException(status_code=500, detail="任务刷新失败")
     if task is None:
         raise HTTPException(status_code=404, detail=f"子任务不存在：{subtask_id}")
     return task

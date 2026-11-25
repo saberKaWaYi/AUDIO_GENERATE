@@ -143,6 +143,27 @@ const App = {
     return button;
   },
 
+  refreshButton(subtask, onChanged, onError) {
+    if (subtask.status !== "success" && subtask.status !== "failed") {
+      return null;
+    }
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "subtask-refresh";
+    button.textContent = I18n.t("taskdetail.refreshSubtask");
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      try {
+        await this.api("/api/audio/tasks/" + encodeURIComponent(subtask.subtask_id) + "/refresh", { method: "POST" });
+        await onChanged();
+      } catch (e) {
+        button.disabled = false;
+        onError(e);
+      }
+    });
+    return button;
+  },
+
   bindLogout() {
     const btn = document.getElementById("logoutBtn");
     if (btn) {
