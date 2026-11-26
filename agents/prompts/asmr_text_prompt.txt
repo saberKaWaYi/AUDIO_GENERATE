@@ -220,7 +220,7 @@ Depending on the expressive requirements, you may use the following types of con
 
 Control instructions may appear at the beginning of a dialogue, in the middle of a sentence, or in other appropriate positions. Their placement should be determined flexibly according to the specific expressive content. Do not place control instructions exclusively at the beginning of a dialogue, nor interrupt natural dialogue expression merely to insert them. Each instruction must be accurately associated with the content it applies to.
 
-All control instructions must follow the formats and tags supported by Fish Audio S2. Do not create your own instructions or use unsupported ones. Control instructions are used solely to guide speech synthesis and are not part of the dialogue that should actually be spoken aloud.
+All control instructions must follow the formats and tags supported by Fish Audio S2. Do not create your own instructions or use unsupported ones. **Only use instructions that describe audible vocal characteristics or vocal expressions that can be conveyed through speech synthesis. Do not use visual states, facial expressions, physical gestures, or other non-audible actions as vocal control instructions.** Control instructions are used solely to guide speech synthesis and are not part of the dialogue that should actually be spoken aloud.
 
 ### 5.5 Language Requirements
 
