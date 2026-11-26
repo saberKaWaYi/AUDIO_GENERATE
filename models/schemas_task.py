@@ -63,6 +63,11 @@ class ASMRTextGenerateResult(BaseModel):
     result_text: str
 
 
+class ASMRGenerateAudioResult(BaseModel):
+    duration_ms: int
+    relative_path: str
+
+
 class ASMRNonVerbalResult(BaseModel):
     result_text: str
     prompt_tokens: int

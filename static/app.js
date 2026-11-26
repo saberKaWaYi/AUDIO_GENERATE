@@ -215,6 +215,46 @@ const App = {
     return button;
   },
 
+  generateAudioActions(subtaskId) {
+    const wrap = document.createElement("div");
+    wrap.className = "generate-actions";
+    const play = document.createElement("button");
+    play.type = "button";
+    play.className = "subtask-play";
+    play.textContent = I18n.t("taskdetail.play");
+    const download = document.createElement("a");
+    download.className = "subtask-download";
+    download.href = "/api/audio/tasks/" + encodeURIComponent(subtaskId) + "/audio";
+    download.textContent = I18n.t("taskdetail.download");
+    let player = null;
+    play.addEventListener("click", async () => {
+      if (player && !player.paused) {
+        player.pause();
+        play.textContent = I18n.t("taskdetail.play");
+        return;
+      }
+      if (!player) {
+        player = document.createElement("audio");
+        player.className = "generate-player";
+        player.controls = true;
+        player.src = "/api/audio/tasks/" + encodeURIComponent(subtaskId) + "/audio";
+        player.addEventListener("ended", () => {
+          play.textContent = I18n.t("taskdetail.play");
+        });
+        wrap.appendChild(player);
+      }
+      play.textContent = I18n.t("taskdetail.pause");
+      try {
+        await player.play();
+      } catch (e) {
+        play.textContent = I18n.t("taskdetail.play");
+      }
+    });
+    wrap.appendChild(play);
+    wrap.appendChild(download);
+    return wrap;
+  },
+
   bindLogout() {
     const btn = document.getElementById("logoutBtn");
     if (btn) {

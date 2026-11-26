@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import Response
 
 from app.api.task_bl import release_tasks_batch as release_tasks_batch_bl
 from app.api.task_bl import create_task as create_task_bl
 from app.api.task_bl import delete_task as delete_task_bl
+from app.api.task_bl import get_task_audio as get_task_audio_bl
 from app.api.task_bl import list_tasks as list_tasks_bl
 from app.api.task_bl import query_task as query_task_bl
 from app.api.task_bl import refresh_task as refresh_task_bl
@@ -91,6 +93,35 @@ async def query_task(
     if task is None:
         raise HTTPException(status_code=404, detail=f"任务不存在：{task_id}")
     return task
+
+
+@router.get(
+    "/audio/tasks/{subtask_id}/audio",
+    summary="Download a generated GENERATE subtask audio",
+)
+async def download_subtask_audio(
+    subtask_id: str,
+    request: Request,
+    user=Depends(get_current_user),
+):
+    try:
+        result = get_task_audio_bl(request.app.state.mongo, user.user_id, subtask_id)
+    except RuntimeError:
+        raise HTTPException(status_code=503, detail="数据库未就绪")
+    except Exception as e:
+        logger.error("download subtask audio failed: %s", e)
+        raise HTTPException(status_code=500, detail="音频读取失败")
+    if result is None:
+        raise HTTPException(status_code=404, detail="子任务音频不存在")
+    file_name, audio = result
+    return Response(
+        content=audio,
+        media_type="audio/mpeg",
+        headers={
+            "Content-Disposition": f'attachment; filename="{file_name}"',
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @router.post(

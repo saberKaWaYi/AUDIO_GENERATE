@@ -1,6 +1,7 @@
 import subprocess
 from pathlib import Path
 
+from models.schemas_task import ASMRGenerateAudioResult
 from services.fish_audio_service import FishAudioNotFoundError
 from settings.worker import worker_settings
 
@@ -21,8 +22,12 @@ def _get_fish():
     return fish_service
 
 
+def _relative_audio_path(user_id: int, subtask_id: str) -> str:
+    return str(Path(ASMR_SUBDIR) / str(user_id) / f"{subtask_id}.mp3")
+
+
 def _audio_path(user_id: int, subtask_id: str) -> Path:
-    return Path(worker_settings.audio_data_dir) / ASMR_SUBDIR / str(user_id) / f"{subtask_id}.mp3"
+    return Path(worker_settings.audio_data_dir) / _relative_audio_path(user_id, subtask_id)
 
 
 def _probe_duration_ms(file_path: Path) -> int:
@@ -54,4 +59,8 @@ def run_generate(subtask: dict) -> GenerateOutcome:
     file_path.parent.mkdir(parents=True, exist_ok=True)
     file_path.write_bytes(audio)
     duration_ms = _probe_duration_ms(file_path)
-    return GenerateOutcome(result_text=str(duration_ms))
+    payload = ASMRGenerateAudioResult(
+        duration_ms=duration_ms,
+        relative_path=_relative_audio_path(subtask["user_id"], subtask["subtask_id"]),
+    )
+    return GenerateOutcome(result_text=payload.model_dump_json())

@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from pathlib import Path
 from uuid import uuid4
 
 from app.api.task_req import CreateTaskRequest
@@ -11,6 +12,7 @@ from app.api.task_res import (
     UpdateTextResponse,
 )
 from models.schemas_task import (
+    ASMRGenerateAudioResult,
     ASMRTextInfo,
     ASMRTextResult,
     AUDIO_TASKS_COLLECTION,
@@ -20,6 +22,7 @@ from models.schemas_task import (
     TaskStatus,
     TaskType,
 )
+from settings.worker import worker_settings
 
 
 def _new_info(request: CreateTaskRequest, task_type: TaskType) -> TaskInfo:
@@ -113,6 +116,25 @@ def query_task(mongo, task_id: str, user_id: int) -> TaskQueryResponse | None:
         update_time=docs[0]["update_time"],
         is_public=docs[0]["is_public"],
     )
+
+
+def get_task_audio(mongo, user_id: int, subtask_id: str) -> tuple[str, bytes] | None:
+    doc = mongo.find_one(
+        AUDIO_TASKS_COLLECTION,
+        {
+            "subtask_id": subtask_id,
+            "user_id": user_id,
+            "type": TaskType.ASMR_TEXT_GENERATE.value,
+            "status": TaskStatus.SUCCESS.value,
+            "is_deleted": False,
+        },
+        fields=("result.result_text",),
+    )
+    if doc is None:
+        return None
+    payload = ASMRGenerateAudioResult.model_validate_json(doc["result"]["result_text"])
+    file_path = Path(worker_settings.audio_data_dir) / payload.relative_path
+    return file_path.name, file_path.read_bytes()
 
 
 def list_tasks(mongo, user_id: int) -> list[dict]:

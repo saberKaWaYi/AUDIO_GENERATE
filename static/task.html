@@ -202,6 +202,9 @@
       row.appendChild(text);
       card.appendChild(row);
       card.appendChild(resultBlock(sub));
+      if (sub.status === "success" && sub.result.result_text) {
+        card.appendChild(App.generateAudioActions(sub.subtask_id));
+      }
       return card;
     }
 
