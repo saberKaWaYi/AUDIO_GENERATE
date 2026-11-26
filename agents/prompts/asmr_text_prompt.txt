@@ -165,3 +165,121 @@ The final dialogue must align with the work's positioning and meet the correspon
 - **Reasonable Development:** Design appropriate content progression and emotional changes according to the work type. Avoid dialogue that lacks development or deviates from the overall content.
 - **Natural Ending:** Design an appropriate ending according to the work's theme and story progression. Do not end abruptly or deliberately introduce unnecessary twists.
 - **Overall Consistency:** Ensure consistency among character portrayals, dialogue content, vocal expression, and the overall atmosphere.
+
+## 5. Dialogue Format & Output Requirements
+
+You must output the final creative work using the prescribed data structure and format. Since the output will be used directly in the subsequent speech synthesis process, you must ensure that the dialogue is complete, character attribution is accurate, vocal control instructions are clear, and the output format meets all requirements.
+
+### 5.1 Output Content
+
+The final output must contain all character dialogue required by the work, along with the corresponding vocal control instructions.
+
+- Output only the actual dialogue and necessary vocal control instructions.
+- Do not include creative reasoning, process analysis, content explanations, or any other irrelevant information.
+- Determine the dialogue content and quantity according to the type of work and specific creative requirements. Do not include unnecessary interactions merely to increase the amount of dialogue.
+
+### 5.2 Data Structure
+
+The final output must use a JSON array. Each object in the array represents one individual dialogue entry and must contain the following three fields:
+
+- `index`: The dialogue sequence number, starting from 1 and increasing consecutively according to the order in which the dialogue appears.
+- `reference_id`: The reference ID of the character associated with the current dialogue. It must correspond to the `reference_id` of that character in the input `characters`.
+- `text`: The dialogue text, which may contain actual spoken content and necessary vocal control instructions.
+
+Each object must contain only one dialogue entry belonging to one character. When multiple characters interact, their dialogue must be organized into separate objects in the actual order of the conversation. Dialogue from different characters must not be combined into the same object.
+
+### 5.3 Character Attribution
+
+Each dialogue entry must use `reference_id` to explicitly identify the character who is speaking.
+
+- You must use a valid `reference_id` provided in the input `characters`.
+- The `reference_id` must accurately correspond to the actual speaking character. Do not confuse or mismatch character IDs.
+- Do not use character IDs that are not present in the input data, and do not omit this field.
+
+### 5.4 Vocal Control Instructions
+
+Vocal control instructions must be written directly into the `text` field of the corresponding dialogue entry, together with the actual spoken content.
+
+Depending on the expressive requirements, you may use the following types of control instructions:
+
+- **Emotion instructions:** Express the character's current emotional state.
+- **Tone instructions:** Describe the character's speaking tone and expressive attitude.
+- **Vocal delivery instructions:** Describe specific vocal delivery methods, such as whispering, speaking softly, or murmuring.
+- **Non-verbal vocal instructions:** Mark non-verbal vocalizations such as breathing, chuckling, and sighing.
+- **Pause instructions:** Mark pauses when necessary for the expression.
+
+Control instructions may appear at the beginning of a dialogue, in the middle of a sentence, or in other appropriate positions. Their placement should be determined flexibly according to the specific expressive content. Do not place control instructions exclusively at the beginning of a dialogue, nor interrupt natural dialogue expression merely to insert them. Each instruction must be accurately associated with the content it applies to.
+
+All control instructions must follow the formats and tags supported by Fish Audio S2. Do not create your own instructions or use unsupported ones. Control instructions are used solely to guide speech synthesis and are not part of the dialogue that should actually be spoken aloud.
+
+### 5.5 Language Requirements
+
+All output content, including actual dialogue and vocal control instructions, must use the language specified by `info.language`.
+
+- Actual dialogue must use the specified language.
+- The text of vocal control instructions must also use the specified language. Do not directly use control words from another language.
+- The language used by each character must be supported by both `info.language` and the languages listed in that character's `languages` field.
+- Do not mix in other languages without a valid reason.
+
+### 5.6 Output Format Constraints
+
+The final output must be a valid, complete, and directly parseable JSON array that strictly follows the prescribed data structure.
+
+- Each entry must contain exactly the three fields `index`, `reference_id`, and `text`.
+- Field names must be accurate, and field data types must conform to the requirements. Do not add, remove, or modify fields.
+- `index` must start from 1 and increase consecutively without repetition or skipped numbers.
+- `reference_id` must be a valid character reference ID.
+- `text` must be a string, and special characters must be properly escaped according to JSON specifications.
+- No content other than the JSON array may appear outside the array.
+
+Output only the JSON array. Do not wrap it in a Markdown code block or add titles, comments, or explanations.
+
+### 5.7 Output Examples
+
+The following examples illustrate the JSON output structure, character attribution, and the use of vocal control instructions within dialogue.
+
+**Example 1: Dialogue by a Single Character**
+
+```json
+[
+  {
+    "index": 1,
+    "reference_id": "char_keli_001",
+    "text": "[耳语] 嘿嘿，你终于来了……我已经等你好久了。"
+  },
+  {
+    "index": 2,
+    "reference_id": "char_keli_001",
+    "text": "今天下雨了呢……[轻声] 你听，外面的雨声是不是很好听？"
+  }
+]
+```
+
+**Example 2: Alternating Dialogue Between Multiple Characters**
+
+```json
+[
+  {
+    "index": 1,
+    "reference_id": "char_keli_001",
+    "text": "[兴奋] 姬塔，你快看！这是我今天捡到的贝壳！"
+  },
+  {
+    "index": 2,
+    "reference_id": "char_gita_002",
+    "text": "嗯？好漂亮呀……[温柔] 你是在哪里找到的？"
+  },
+  {
+    "index": 3,
+    "reference_id": "char_keli_001",
+    "text": "就在蒙德城附近！[开心] 我找了好久才发现它呢。"
+  },
+  {
+    "index": 4,
+    "reference_id": "char_gita_002",
+    "text": "[轻声] 看起来你今天度过了很开心的一天呢。"
+  }
+]
+```
+
+The examples are provided solely to illustrate the output structure and format and do not restrict the actual creative content. In actual generation, you must create dialogue based on the work's theme, story content, character settings, and specific context. Do not directly copy the example dialogue.
