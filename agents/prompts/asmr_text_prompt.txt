@@ -216,7 +216,6 @@ Depending on the expressive requirements, you may use the following types of con
 - **Tone instructions:** Describe the character's speaking tone and expressive attitude.
 - **Vocal delivery instructions:** Describe specific vocal delivery methods, such as whispering, speaking softly, or murmuring.
 - **Non-verbal vocal instructions:** Mark non-verbal vocalizations such as breathing, chuckling, and sighing.
-- **Pause instructions:** Mark pauses when necessary for the expression.
 
 Control instructions may appear at the beginning of a dialogue, in the middle of a sentence, or in other appropriate positions. Their placement should be determined flexibly according to the specific expressive content. Do not place control instructions exclusively at the beginning of a dialogue, nor interrupt natural dialogue expression merely to insert them. Each instruction must be accurately associated with the content it applies to.
 
