@@ -23,6 +23,7 @@ from models.schemas_task import (
     TaskType,
 )
 from settings.worker import worker_settings
+from tools.ffmpeg_tool import merge_segments
 
 
 def _new_info(request: CreateTaskRequest, task_type: TaskType) -> TaskInfo:
@@ -137,6 +138,28 @@ def get_task_audio(mongo, user_id: int, subtask_id: str) -> tuple[str, bytes] | 
     return file_path.name, file_path.read_bytes()
 
 
+def build_merged_audio(mongo, user_id: int, task_id: str) -> tuple[str, bytes]:
+    docs = mongo.find_documents(
+        AUDIO_TASKS_COLLECTION,
+        {
+            "task_id": task_id,
+            "user_id": user_id,
+            "type": TaskType.ASMR_TEXT_GENERATE.value,
+            "status": TaskStatus.SUCCESS.value,
+            "is_deleted": False,
+        },
+        sort=[("info.index", 1)],
+        fields=("result.result_text",),
+    )
+    if not docs:
+        raise ValueError("没有可拼接的音频片段")
+    file_paths = []
+    for doc in docs:
+        payload = ASMRGenerateAudioResult.model_validate_json(doc["result"]["result_text"])
+        file_paths.append(str(Path(worker_settings.audio_data_dir) / payload.relative_path))
+    return f"{task_id}.mp3", merge_segments(file_paths)
+
+
 def list_tasks(mongo, user_id: int) -> list[dict]:
     return mongo.find_documents(
         AUDIO_TASKS_COLLECTION,
@@ -166,7 +189,7 @@ def release_task(mongo, user_id: int, subtask_id: str) -> ReleaseTaskResponse | 
 
 def refresh_task(mongo, user_id: int, subtask_id: str) -> ReleaseTaskResponse | None:
     query = {"subtask_id": subtask_id, "user_id": user_id, "is_deleted": False}
-    doc = mongo.find_one(AUDIO_TASKS_COLLECTION, query, fields=("status", "type", "task_id"))
+    doc = mongo.find_one(AUDIO_TASKS_COLLECTION, query, fields=("status", "type", "task_id", "user_id"))
     if doc is None:
         return None
     status = TaskStatus(doc["status"])
@@ -176,6 +199,7 @@ def refresh_task(mongo, user_id: int, subtask_id: str) -> ReleaseTaskResponse | 
     if TaskType(doc["type"]) == TaskType.ASMR_TEXT:
         generated_query = {
             "task_id": doc["task_id"],
+            "user_id": doc["user_id"],
             "type": TaskType.ASMR_TEXT_GENERATE.value,
             "is_deleted": False,
         }

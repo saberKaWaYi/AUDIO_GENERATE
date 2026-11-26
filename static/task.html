@@ -86,6 +86,7 @@
         </div>
         <div id="detailMeta" class="detail-meta"></div>
         <div id="detailTheme" class="detail-theme"></div>
+        <div id="detailWaveform" class="detail-waveform"></div>
 
         <div class="page-head detail-sub-head">
           <h3 data-i18n="taskdetail.subtasks">子任务结果</h3>
@@ -104,6 +105,7 @@
     const detailTitle = document.getElementById("detailTitle");
     const detailMeta = document.getElementById("detailMeta");
     const detailTheme = document.getElementById("detailTheme");
+    const detailWaveform = document.getElementById("detailWaveform");
     const detailRefresh = document.getElementById("detailRefresh");
     const detailSubtasks = document.getElementById("detailSubtasks");
 
@@ -208,6 +210,33 @@
       return card;
     }
 
+    function renderWaveform(data) {
+      detailWaveform.textContent = "";
+      const ready = data.subtasks.filter(
+        (item) => item.type === "ASMR_TEXT_GENERATE" && item.status === "success"
+      );
+      if (ready.length === 0) {
+        return;
+      }
+      const options = [
+        {
+          label: I18n.t("taskdetail.mergedAudio"),
+          url: "/api/audio/tasks/" + encodeURIComponent(data.task_id) + "/merged-audio",
+        },
+      ];
+      for (const sub of ready) {
+        options.push({
+          label: I18n.t("taskdetail.segmentIndex", { n: sub.info.index }) + " · " + characterName(sub.info.reference_id),
+          url: "/api/audio/tasks/" + encodeURIComponent(sub.subtask_id) + "/audio",
+        });
+      }
+      detailWaveform.appendChild(
+        App.audioWaveformPanel(options, (e) => {
+          showMessage("taskdetail.waveformFailed", true, { msg: e.message });
+        })
+      );
+    }
+
     function renderDetail(data) {
       taskData = data;
       const textSub = data.subtasks.find((item) => item.type === "ASMR_TEXT");
@@ -235,6 +264,7 @@
         detailTheme.appendChild(themeText);
       }
 
+      renderWaveform(data);
       renderSubtasks(data.subtasks);
       detailPanel.hidden = false;
     }

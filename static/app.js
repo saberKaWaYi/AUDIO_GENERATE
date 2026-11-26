@@ -255,6 +255,124 @@ const App = {
     return wrap;
   },
 
+  audioWaveformPanel(options, onError) {
+    const wrap = document.createElement("div");
+    wrap.className = "waveform-panel";
+
+    const head = document.createElement("div");
+    head.className = "waveform-head";
+    const label = document.createElement("span");
+    label.textContent = I18n.t("taskdetail.waveformTitle");
+    const select = document.createElement("select");
+    select.className = "waveform-select";
+    for (const option of options) {
+      const item = document.createElement("option");
+      item.value = option.url;
+      item.textContent = option.label;
+      select.appendChild(item);
+    }
+    head.appendChild(label);
+    head.appendChild(select);
+    wrap.appendChild(head);
+
+    const canvas = document.createElement("canvas");
+    canvas.className = "waveform-canvas";
+    wrap.appendChild(canvas);
+
+    const status = document.createElement("p");
+    status.className = "hint waveform-status";
+    status.textContent = I18n.t("taskdetail.waveformPlaceholder");
+    wrap.appendChild(status);
+
+    const audio = document.createElement("audio");
+    audio.className = "waveform-player";
+    audio.controls = true;
+    audio.preload = "none";
+    audio.src = options[0].url;
+    wrap.appendChild(audio);
+
+    const download = document.createElement("a");
+    download.className = "subtask-download waveform-download";
+    download.href = options[0].url;
+    download.textContent = I18n.t("taskdetail.download");
+    wrap.appendChild(download);
+
+    const paint = (decoded) => {
+      const data = decoded.getChannelData(0);
+      const cssWidth = canvas.clientWidth || 600;
+      const cssHeight = 96;
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = cssWidth * ratio;
+      canvas.height = cssHeight * ratio;
+      canvas.style.height = cssHeight + "px";
+      const context = canvas.getContext("2d");
+      context.scale(ratio, ratio);
+      context.clearRect(0, 0, cssWidth, cssHeight);
+      const middle = cssHeight / 2;
+      const bars = 120;
+      const step = Math.max(1, Math.floor(data.length / bars));
+      const barWidth = cssWidth / bars;
+      const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
+      context.fillStyle = accent;
+      for (let index = 0; index < bars; index += 1) {
+        let peak = 0;
+        const start = index * step;
+        const end = Math.min(start + step, data.length);
+        for (let cursor = start; cursor < end; cursor += 1) {
+          const value = Math.abs(data[cursor]);
+          if (value > peak) {
+            peak = value;
+          }
+        }
+        const barHeight = Math.max(2, peak * cssHeight * 0.9);
+        context.fillRect(index * barWidth + 0.5, middle - barHeight / 2, Math.max(1, barWidth - 1), barHeight);
+      }
+    };
+
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    let drawToken = 0;
+    const draw = async () => {
+      const token = ++drawToken;
+      const context2d = canvas.getContext("2d");
+      context2d.clearRect(0, 0, canvas.width, canvas.height);
+      status.textContent = I18n.t("taskdetail.waveformPlaceholder");
+      try {
+        const response = await fetch(select.value, { credentials: "same-origin" });
+        if (!response.ok) {
+          throw new Error(String(response.status));
+        }
+        const buffer = await response.arrayBuffer();
+        const audioContext = new AudioContextClass();
+        try {
+          const decoded = await audioContext.decodeAudioData(buffer);
+          if (token !== drawToken) {
+            return;
+          }
+          paint(decoded);
+          status.textContent = "";
+        } finally {
+          await audioContext.close();
+        }
+      } catch (e) {
+        if (token !== drawToken) {
+          return;
+        }
+        status.textContent = I18n.t("taskdetail.waveformFailed", { msg: e.message });
+        if (onError) {
+          onError(e);
+        }
+      }
+    };
+
+    select.addEventListener("change", () => {
+      audio.src = select.value;
+      download.href = select.value;
+      draw();
+    });
+    requestAnimationFrame(() => draw());
+    return wrap;
+  },
+
   bindLogout() {
     const btn = document.getElementById("logoutBtn");
     if (btn) {

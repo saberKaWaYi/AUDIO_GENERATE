@@ -1,6 +1,11 @@
+import asyncio
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import Response
 
+from tools.ffmpeg_tool import AudioMergeError
+
+from app.api.task_bl import build_merged_audio as build_merged_audio_bl
 from app.api.task_bl import release_tasks_batch as release_tasks_batch_bl
 from app.api.task_bl import create_task as create_task_bl
 from app.api.task_bl import delete_task as delete_task_bl
@@ -93,6 +98,39 @@ async def query_task(
     if task is None:
         raise HTTPException(status_code=404, detail=f"任务不存在：{task_id}")
     return task
+
+
+@router.get(
+    "/audio/tasks/{task_id}/merged-audio",
+    summary="Merge successful GENERATE audios of a task in index order",
+)
+async def download_merged_audio(
+    task_id: str,
+    request: Request,
+    user=Depends(get_current_user),
+):
+    try:
+        result = await asyncio.to_thread(
+            build_merged_audio_bl, request.app.state.mongo, user.user_id, task_id
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except AudioMergeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except RuntimeError:
+        raise HTTPException(status_code=503, detail="数据库未就绪")
+    except Exception as e:
+        logger.error("build merged audio failed: %s", e)
+        raise HTTPException(status_code=500, detail="音频拼接失败")
+    file_name, audio = result
+    return Response(
+        content=audio,
+        media_type="audio/mpeg",
+        headers={
+            "Content-Disposition": f'attachment; filename="{file_name}"',
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @router.get(

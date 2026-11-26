@@ -1,12 +1,11 @@
-import subprocess
 from pathlib import Path
 
 from models.schemas_task import ASMRGenerateAudioResult
 from services.fish_audio_service import FishAudioNotFoundError
 from settings.worker import worker_settings
+from tools.ffmpeg_tool import probe_duration_ms
 
 ASMR_SUBDIR = "ASMR"
-FFPROBE_BIN = "ffprobe"
 
 
 class GenerateOutcome:
@@ -30,17 +29,6 @@ def _audio_path(user_id: int, subtask_id: str) -> Path:
     return Path(worker_settings.audio_data_dir) / _relative_audio_path(user_id, subtask_id)
 
 
-def _probe_duration_ms(file_path: Path) -> int:
-    result = subprocess.run(
-        [FFPROBE_BIN, "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", str(file_path)],
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"ffprobe 读取音频时长失败：{result.stderr.strip()}")
-    return round(float(result.stdout.strip()) * 1000)
-
-
 def run_generate(subtask: dict) -> GenerateOutcome:
     info = subtask["info"]
     reference_id = info["reference_id"]
@@ -58,7 +46,7 @@ def run_generate(subtask: dict) -> GenerateOutcome:
     file_path = _audio_path(subtask["user_id"], subtask["subtask_id"])
     file_path.parent.mkdir(parents=True, exist_ok=True)
     file_path.write_bytes(audio)
-    duration_ms = _probe_duration_ms(file_path)
+    duration_ms = probe_duration_ms(file_path)
     payload = ASMRGenerateAudioResult(
         duration_ms=duration_ms,
         relative_path=_relative_audio_path(subtask["user_id"], subtask["subtask_id"]),
