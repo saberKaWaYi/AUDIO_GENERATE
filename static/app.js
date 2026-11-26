@@ -366,9 +366,9 @@ const App = {
     return wrap;
   },
 
-  mergedAudioActions(audioUrl, onError) {
+  mergedAudioActions(audioUrl, playerHost, onError) {
     const wrap = document.createElement("div");
-    wrap.className = "generate-actions merged-actions";
+    wrap.className = "merged-actions";
     const play = document.createElement("button");
     play.type = "button";
     play.className = "subtask-play";
@@ -392,7 +392,7 @@ const App = {
         player.addEventListener("ended", () => {
           play.textContent = I18n.t("taskdetail.play");
         });
-        wrap.appendChild(player);
+        playerHost.appendChild(player);
       }
       play.textContent = I18n.t("taskdetail.pause");
       try {

@@ -280,6 +280,14 @@
         const group = App.collapsible(I18n.t("taskdetail.generateGroup"), generateSubs.length, null);
         const actions = document.createElement("div");
         actions.className = "subtask-group-actions";
+        if (generateSubs.some((sub) => sub.status === "success")) {
+          const mergedUrl = "/api/audio/tasks/" + encodeURIComponent(currentTaskId) + "/merged-audio";
+          actions.appendChild(
+            App.mergedAudioActions(mergedUrl, group.body, (e) => {
+              showMessage("taskdetail.mergedFailed", true, { msg: e.message });
+            })
+          );
+        }
         if (generateSubs.some((sub) => sub.status === "debug")) {
           actions.appendChild(batchReleaseButton());
         }
@@ -290,17 +298,6 @@
           group.body.appendChild(renderGenerateCard(sub));
         }
         detailSubtasks.appendChild(group.root);
-
-        if (generateSubs.some((sub) => sub.status === "success")) {
-          const merged = App.collapsible(I18n.t("taskdetail.mergedAudio"), null);
-          const mergedUrl = "/api/audio/tasks/" + encodeURIComponent(currentTaskId) + "/merged-audio";
-          merged.body.appendChild(
-            App.mergedAudioActions(mergedUrl, (e) => {
-              showMessage("taskdetail.mergedFailed", true, { msg: e.message });
-            })
-          );
-          detailSubtasks.appendChild(merged.root);
-        }
       }
       const nonVerbalSubs = subtasks.filter((item) => item.type === "ASMR_NON_VERBAL");
       if (nonVerbalSubs.length > 0) {
