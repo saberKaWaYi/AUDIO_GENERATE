@@ -230,6 +230,20 @@ def update_subtask_text(mongo, user_id: int, subtask_id: str, text: str) -> Upda
     return UpdateTextResponse(subtask_id=subtask_id, status=TaskStatus.DEBUG)
 
 
+def release_tasks_batch(mongo, user_id: int, task_id: str, task_type: TaskType) -> int:
+    return mongo.update_documents(
+        AUDIO_TASKS_COLLECTION,
+        {
+            "task_id": task_id,
+            "user_id": user_id,
+            "type": task_type.value,
+            "status": TaskStatus.DEBUG.value,
+            "is_deleted": False,
+        },
+        {"$set": {"status": TaskStatus.PENDING.value, "update_time": datetime.utcnow()}},
+    )
+
+
 def set_task_public(mongo, user_id: int, task_id: str, is_public: bool) -> bool:
     return mongo.update_documents(
         AUDIO_TASKS_COLLECTION,

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
+from app.api.task_bl import release_tasks_batch as release_tasks_batch_bl
 from app.api.task_bl import create_task as create_task_bl
 from app.api.task_bl import delete_task as delete_task_bl
 from app.api.task_bl import list_tasks as list_tasks_bl
@@ -9,8 +10,9 @@ from app.api.task_bl import release_task as release_task_bl
 from app.api.task_bl import set_task_public as set_task_public_bl
 from app.api.task_bl import update_subtask_text as update_subtask_text_bl
 from app.auth.deps import get_current_user
-from app.api.task_req import CreateTaskRequest, UpdateTextRequest
+from app.api.task_req import BatchReleaseRequest, CreateTaskRequest, UpdateTextRequest
 from app.api.task_res import (
+    BatchReleaseResponse,
     CreateTaskResponse,
     ReleaseTaskResponse,
     TaskListItem,
@@ -162,6 +164,28 @@ async def update_subtask_text_route(
     if task is None:
         raise HTTPException(status_code=404, detail=f"子任务不存在：{subtask_id}")
     return task
+
+
+@router.post(
+    "/audio/tasks/batch-release",
+    response_model=BatchReleaseResponse,
+    summary="Release debug subtasks of a given type in batch",
+)
+async def batch_release_tasks_route(
+    payload: BatchReleaseRequest,
+    request: Request,
+    user=Depends(get_current_user),
+):
+    try:
+        released = release_tasks_batch_bl(
+            request.app.state.mongo, user.user_id, payload.task_id, payload.type
+        )
+    except RuntimeError:
+        raise HTTPException(status_code=503, detail="数据库未就绪")
+    except Exception as e:
+        logger.error("batch release audio tasks failed: %s", e)
+        raise HTTPException(status_code=500, detail="批量放行失败")
+    return BatchReleaseResponse(task_id=payload.task_id, type=payload.type, released=released)
 
 
 @router.patch(

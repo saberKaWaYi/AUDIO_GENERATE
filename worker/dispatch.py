@@ -3,6 +3,8 @@ from datetime import datetime
 from uuid import NAMESPACE_URL, uuid5
 
 from models.schemas_task import (
+    ASMRNonVerbalInfo,
+    ASMRNonVerbalResult,
     ASMRTextGenerateInfo,
     ASMRTextGenerateResult,
     AUDIO_TASKS_COLLECTION,
@@ -20,6 +22,10 @@ def _now() -> datetime:
 
 def _generate_subtask_id(task_id: str, parent_subtask_id: str, index: int) -> str:
     return uuid5(_NAMESPACE, f"{task_id}:{parent_subtask_id}:generate:{index}").hex
+
+
+def _non_verbal_subtask_id(task_id: str) -> str:
+    return uuid5(_NAMESPACE, f"{task_id}:non_verbal").hex
 
 
 def dispatch_generate_tasks(mongo, parent: dict, result_text: str) -> int:
@@ -59,3 +65,62 @@ def dispatch_generate_tasks(mongo, parent: dict, result_text: str) -> int:
     if created:
         mongo.insert_documents(AUDIO_TASKS_COLLECTION, documents)
     return created
+
+
+def dispatch_non_verbal_if_done(mongo, task_id: str) -> bool:
+    docs = mongo.find_documents(
+        AUDIO_TASKS_COLLECTION,
+        {
+            "task_id": task_id,
+            "type": TaskType.ASMR_TEXT_GENERATE.value,
+            "is_deleted": False,
+        },
+        fields=("status",),
+    )
+    if not docs:
+        raise ValueError("找不到 ASMR_TEXT_GENERATE 子任务")
+    if any(TaskStatus(item["status"]) != TaskStatus.SUCCESS for item in docs):
+        return False
+
+    subtask_id = _non_verbal_subtask_id(task_id)
+    if mongo.find_one(AUDIO_TASKS_COLLECTION, {"subtask_id": subtask_id}, fields=("subtask_id",)) is not None:
+        return False
+
+    parent = mongo.find_one(
+        AUDIO_TASKS_COLLECTION,
+        {
+            "task_id": task_id,
+            "type": TaskType.ASMR_TEXT.value,
+            "is_deleted": False,
+        },
+        fields=("info", "result.result_text", "user_id"),
+    )
+    if parent is None:
+        raise ValueError("找不到 ASMR_TEXT 主任务")
+    parent_info = parent["info"]
+    source_result_text = parent["result"]["result_text"]
+    if not source_result_text:
+        raise ValueError("ASMR_TEXT 主任务没有可用的结果文本")
+    now = _now()
+    info = ASMRNonVerbalInfo(
+        title=parent_info["title"],
+        reference_ids=parent_info["reference_ids"],
+        theme=parent_info["theme"],
+        duration_minutes=parent_info["duration_minutes"],
+        language=parent_info["language"],
+        source_result_text=source_result_text,
+    )
+    task = AudioTask(
+        task_id=task_id,
+        subtask_id=subtask_id,
+        user_id=parent["user_id"],
+        type=TaskType.ASMR_NON_VERBAL,
+        info=info,
+        status=TaskStatus.DEBUG,
+        result=ASMRNonVerbalResult(result_text="", prompt_tokens=0, completion_tokens=0),
+        create_time=now,
+        update_time=now,
+        is_deleted=False,
+    )
+    mongo.insert_document(AUDIO_TASKS_COLLECTION, task.model_dump(mode="json"))
+    return True

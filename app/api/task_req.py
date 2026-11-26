@@ -3,6 +3,12 @@ from pydantic import BaseModel, Field
 from models.schemas_task import TaskLanguage, TaskType
 
 
+class BatchReleaseRequest(BaseModel):
+
+    task_id: str = Field(..., min_length=1, description="任务标识")
+    type: TaskType = Field(..., description="要放行的子任务类型")
+
+
 class UpdateTextRequest(BaseModel):
 
     text: str = Field(..., min_length=1, description="修改后的片段文本")

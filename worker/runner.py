@@ -6,11 +6,13 @@ from typing import Optional
 import logging
 
 from agents.asmr_text import TextOutcome
+from worker.asmr_text_generate import GenerateOutcome
 from models.schemas_task import AUDIO_TASKS_COLLECTION, TaskStatus, TaskType
+from services.fish_audio_service import FishAudioService
 from services.mongo_service import MongoService
 from settings.mongo import mongo_settings
 from settings.worker import worker_settings
-from worker.dispatch import dispatch_generate_tasks
+from worker.dispatch import dispatch_generate_tasks, dispatch_non_verbal_if_done
 from worker.executors import EXECUTORS
 from logging_config import setup_logging
 
@@ -18,12 +20,13 @@ setup_logging("worker")
 logger = logging.getLogger(__name__)
 
 mongo_service: MongoService = None
+fish_service: FishAudioService = None
 
 _stopping = False
 
 
 def _connect() -> None:
-    global mongo_service
+    global mongo_service, fish_service
 
     mongo_service = MongoService(
         host=mongo_settings.mongodb_host,
@@ -33,6 +36,7 @@ def _connect() -> None:
         database=mongo_settings.mongodb_database,
     )
     mongo_service.connect()
+    fish_service = FishAudioService()
 
 
 def _handle_stop(signum, frame) -> None:
@@ -87,6 +91,20 @@ def _write_success(subtask: dict, outcome: TextOutcome) -> None:
     )
 
 
+def _write_generate_success(subtask: dict, outcome: GenerateOutcome) -> None:
+    mongo_service.update_document(
+        AUDIO_TASKS_COLLECTION,
+        {"subtask_id": subtask["subtask_id"], "is_deleted": False},
+        {
+            "$set": {
+                "status": TaskStatus.SUCCESS.value,
+                "result.result_text": outcome.result_text,
+                "update_time": _now(),
+            }
+        },
+    )
+
+
 def _write_failed(subtask: dict, reason: str) -> None:
     mongo_service.update_document(
         AUDIO_TASKS_COLLECTION,
@@ -127,6 +145,14 @@ def _run_once() -> bool:
             logger.info("TEXT 生成成功, subtask_id=%s", subtask["subtask_id"])
             created = dispatch_generate_tasks(mongo_service, subtask, outcome.result_text)
             logger.info("下发 GENERATE 子任务 %d 条, task_id=%s", created, subtask["task_id"])
+        elif task_type == TaskType.ASMR_TEXT_GENERATE:
+            if not isinstance(outcome, GenerateOutcome):
+                raise ValueError(f"GENERATE 执行器返回类型错误：{type(outcome).__name__}")
+            _write_generate_success(subtask, outcome)
+            logger.info("GENERATE 生成成功, subtask_id=%s", subtask["subtask_id"])
+            inserted = dispatch_non_verbal_if_done(mongo_service, subtask["task_id"])
+            if inserted:
+                logger.info("下发 ASMR_NON_VERBAL 任务, task_id=%s", subtask["task_id"])
         else:
             raise ValueError(f"任务类型 {task_type.value!r} 没有闭合结果处理")
     except Exception as exc:

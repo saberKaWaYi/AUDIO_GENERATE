@@ -236,6 +236,28 @@
       detailPanel.hidden = false;
     }
 
+    function batchReleaseButton() {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "subtask-release";
+      button.textContent = I18n.t("taskdetail.batchRelease");
+      button.addEventListener("click", async () => {
+        button.disabled = true;
+        try {
+          await App.api("/api/audio/tasks/batch-release", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ task_id: taskId, type: "ASMR_TEXT_GENERATE" }),
+          });
+          await loadTask();
+        } catch (e) {
+          button.disabled = false;
+          showMessage("taskdetail.batchReleaseFailed", true, { msg: e.message });
+        }
+      });
+      return button;
+    }
+
     function renderSubtasks(subtasks) {
       detailSubtasks.textContent = "";
       for (const sub of subtasks) {
@@ -248,8 +270,35 @@
       const generateSubs = subtasks.filter((item) => item.type === "ASMR_TEXT_GENERATE");
       if (generateSubs.length > 0) {
         const group = App.collapsible(I18n.t("taskdetail.generateGroup"), generateSubs.length, null);
+        const actions = document.createElement("div");
+        actions.className = "subtask-group-actions";
+        if (generateSubs.some((sub) => sub.status === "debug")) {
+          actions.appendChild(batchReleaseButton());
+        }
+        if (actions.childElementCount > 0) {
+          group.head.appendChild(actions);
+        }
         for (const sub of generateSubs) {
           group.body.appendChild(renderGenerateCard(sub));
+        }
+        detailSubtasks.appendChild(group.root);
+      }
+      const nonVerbalSubs = subtasks.filter((item) => item.type === "ASMR_NON_VERBAL");
+      if (nonVerbalSubs.length > 0) {
+        const group = App.collapsible(I18n.t("taskdetail.nonVerbalGroup"), nonVerbalSubs.length, null);
+        for (const sub of nonVerbalSubs) {
+          const card = document.createElement("div");
+          card.className = "subtask-card";
+          const head = document.createElement("p");
+          head.className = "subtask-head";
+          head.appendChild(document.createTextNode(sub.type + " · "));
+          head.appendChild(App.statusTag(sub.status));
+          card.appendChild(head);
+          const hint = document.createElement("p");
+          hint.className = "hint";
+          hint.textContent = I18n.t("taskdetail.nonVerbalHint");
+          card.appendChild(hint);
+          group.body.appendChild(card);
         }
         detailSubtasks.appendChild(group.root);
       }

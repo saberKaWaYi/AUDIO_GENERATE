@@ -17,6 +17,13 @@ class ReleaseTaskResponse(BaseModel):
     status: TaskStatus = Field(..., description="放行后的状态")
 
 
+class BatchReleaseResponse(BaseModel):
+
+    task_id: str = Field(..., description="任务标识")
+    type: TaskType = Field(..., description="放行的子任务类型")
+    released: int = Field(..., description="本次放行的子任务数量")
+
+
 class UpdateTextResponse(BaseModel):
 
     subtask_id: str = Field(..., description="子任务标识")

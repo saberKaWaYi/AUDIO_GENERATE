@@ -759,6 +759,8 @@ a { color: var(--accent); }
 .subtask-group-caret { display: inline-block; width: 16px; font-size: 16px; line-height: 1; color: var(--accent); }
 .subtask-group-body { padding: 12px; background: #fafbfe; }
 .subtask-group-body .subtask-card:last-child { margin-bottom: 0; }
+.subtask-group-actions { display: flex; align-items: center; gap: 8px; margin-right: 16px; }
+.subtask-group-actions .subtask-release { margin-left: 0; }
 
 .detail-segment { display: grid; grid-template-columns: 90px 1fr; gap: 2px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .detail-segment:last-child { border-bottom: none; }
