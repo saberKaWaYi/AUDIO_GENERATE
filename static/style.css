@@ -690,6 +690,12 @@ a { color: var(--accent); }
 .subtask-refresh:hover { background: var(--accent-soft); }
 .subtask-refresh:disabled { opacity: 0.55; cursor: default; }
 
+.text-editor { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; margin-top: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.text-editor-input { flex: 1 1 260px; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); font-size: 13px; line-height: 1.6; resize: vertical; }
+.text-editor-save { padding: 8px 16px; border: 1px solid var(--accent); border-radius: 7px; background: var(--accent); color: #ffffff; font-size: 12px; cursor: pointer; }
+.text-editor-save:hover { opacity: 0.88; }
+.text-editor-save:disabled { opacity: 0.55; cursor: default; }
+
 .task-list-panel { margin-top: 24px; }
 .task-list-head { display: flex; align-items: center; justify-content: space-between; }
 .task-list-head h3 { margin: 0; font-size: 17px; font-weight: 700; }

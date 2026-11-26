@@ -3,6 +3,11 @@ from pydantic import BaseModel, Field
 from models.schemas_task import TaskLanguage, TaskType
 
 
+class UpdateTextRequest(BaseModel):
+
+    text: str = Field(..., min_length=1, description="修改后的片段文本")
+
+
 class CreateTaskRequest(BaseModel):
 
     type: TaskType = Field(..., description="任务类型：ASMR_TEXT")

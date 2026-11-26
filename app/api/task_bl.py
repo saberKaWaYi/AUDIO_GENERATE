@@ -1,8 +1,15 @@
+import json
 from datetime import datetime
 from uuid import uuid4
 
 from app.api.task_req import CreateTaskRequest
-from app.api.task_res import CreateTaskResponse, ReleaseTaskResponse, TaskQueryResponse, TaskSubtaskResponse
+from app.api.task_res import (
+    CreateTaskResponse,
+    ReleaseTaskResponse,
+    TaskQueryResponse,
+    TaskSubtaskResponse,
+    UpdateTextResponse,
+)
 from models.schemas_task import (
     ASMRTextInfo,
     ASMRTextResult,
@@ -168,6 +175,59 @@ def refresh_task(mongo, user_id: int, subtask_id: str) -> ReleaseTaskResponse | 
     if modified != 1:
         raise RuntimeError("刷新子任务时更新数量异常")
     return ReleaseTaskResponse(subtask_id=subtask_id, status=TaskStatus.PENDING)
+
+
+def update_subtask_text(mongo, user_id: int, subtask_id: str, text: str) -> UpdateTextResponse | None:
+    if not text.strip():
+        raise ValueError("修改文本不能为空")
+
+    query = {
+        "subtask_id": subtask_id,
+        "user_id": user_id,
+        "type": TaskType.ASMR_TEXT_GENERATE.value,
+        "is_deleted": False,
+    }
+    doc = mongo.find_one(AUDIO_TASKS_COLLECTION, query, fields=("status", "task_id", "info"))
+    if doc is None:
+        return None
+    if TaskStatus(doc["status"]) != TaskStatus.DEBUG:
+        raise ValueError(f"只有 debug 状态的生成子任务能修改文本：{doc['status']}")
+
+    info = doc["info"]
+    parent_query = {
+        "task_id": doc["task_id"],
+        "user_id": user_id,
+        "type": TaskType.ASMR_TEXT.value,
+        "is_deleted": False,
+    }
+    parent = mongo.find_one(AUDIO_TASKS_COLLECTION, parent_query, fields=("result.result_text",))
+    if parent is None:
+        raise ValueError("找不到 ASMR_TEXT 主任务")
+    segments = json.loads(parent["result"]["result_text"])
+    target = None
+    for segment in segments:
+        if (
+            segment["index"] == info["index"]
+            and segment["reference_id"] == info["reference_id"]
+        ):
+            target = segment
+            break
+    if target is None:
+        raise ValueError("主任务中找不到对应的片段")
+    target["text"] = text
+    updated_result_text = json.dumps(segments, ensure_ascii=False)
+
+    mongo.update_document(
+        AUDIO_TASKS_COLLECTION,
+        parent_query,
+        {"$set": {"result.result_text": updated_result_text, "update_time": datetime.utcnow()}},
+    )
+    mongo.update_document(
+        AUDIO_TASKS_COLLECTION,
+        query,
+        {"$set": {"info.text": text, "status": TaskStatus.DEBUG.value, "update_time": datetime.utcnow()}},
+    )
+    return UpdateTextResponse(subtask_id=subtask_id, status=TaskStatus.DEBUG)
 
 
 def set_task_public(mongo, user_id: int, task_id: str, is_public: bool) -> bool:

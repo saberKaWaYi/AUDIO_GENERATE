@@ -164,6 +164,57 @@ const App = {
     return button;
   },
 
+  editTextButton(subtask, editorHost, onChanged, onError) {
+    if (subtask.status !== "debug") {
+      return null;
+    }
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "subtask-refresh";
+    button.textContent = I18n.t("taskdetail.editText");
+    let editor = null;
+    button.addEventListener("click", () => {
+      if (editor) {
+        editor.hidden = !editor.hidden;
+        return;
+      }
+      editor = document.createElement("div");
+      editor.className = "text-editor";
+      const input = document.createElement("textarea");
+      input.className = "text-editor-input";
+      input.value = subtask.info.text;
+      input.rows = 3;
+      const save = document.createElement("button");
+      save.type = "button";
+      save.className = "text-editor-save";
+      save.textContent = I18n.t("taskdetail.editTextSave");
+      save.addEventListener("click", async () => {
+        const text = input.value;
+        if (!text.trim()) {
+          onError(new Error(I18n.t("taskdetail.editTextEmpty")));
+          return;
+        }
+        save.disabled = true;
+        try {
+          await this.api("/api/audio/tasks/" + encodeURIComponent(subtask.subtask_id) + "/text", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text }),
+          });
+          await onChanged();
+        } catch (e) {
+          save.disabled = false;
+          onError(e);
+        }
+      });
+      editor.appendChild(input);
+      editor.appendChild(save);
+      editorHost.appendChild(editor);
+      input.focus();
+    });
+    return button;
+  },
+
   bindLogout() {
     const btn = document.getElementById("logoutBtn");
     if (btn) {
