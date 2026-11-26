@@ -200,6 +200,8 @@ Each dialogue entry must use `reference_id` to explicitly identify the character
 
 Vocal control instructions must be written directly into the `text` field of the corresponding dialogue entry, together with the actual spoken content.
 
+**All vocal control instructions must be enclosed in square brackets `[]` to distinguish them from the actual spoken dialogue.**
+
 Depending on the expressive requirements, you may use the following types of control instructions:
 
 - **Emotion instructions:** Express the character's current emotional state.
