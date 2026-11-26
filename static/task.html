@@ -86,7 +86,6 @@
         </div>
         <div id="detailMeta" class="detail-meta"></div>
         <div id="detailTheme" class="detail-theme"></div>
-        <div id="detailWaveform" class="detail-waveform"></div>
 
         <div class="page-head detail-sub-head">
           <h3 data-i18n="taskdetail.subtasks">子任务结果</h3>
@@ -105,7 +104,6 @@
     const detailTitle = document.getElementById("detailTitle");
     const detailMeta = document.getElementById("detailMeta");
     const detailTheme = document.getElementById("detailTheme");
-    const detailWaveform = document.getElementById("detailWaveform");
     const detailRefresh = document.getElementById("detailRefresh");
     const detailSubtasks = document.getElementById("detailSubtasks");
 
@@ -206,35 +204,13 @@
       card.appendChild(resultBlock(sub));
       if (sub.status === "success" && sub.result.result_text) {
         card.appendChild(App.generateAudioActions(sub.subtask_id));
+        card.appendChild(
+          App.waveformFold("/api/audio/tasks/" + encodeURIComponent(sub.subtask_id) + "/audio", (e) => {
+            showMessage("taskdetail.waveformFailed", true, { msg: e.message });
+          })
+        );
       }
       return card;
-    }
-
-    function renderWaveform(data) {
-      detailWaveform.textContent = "";
-      const ready = data.subtasks.filter(
-        (item) => item.type === "ASMR_TEXT_GENERATE" && item.status === "success"
-      );
-      if (ready.length === 0) {
-        return;
-      }
-      const options = [
-        {
-          label: I18n.t("taskdetail.mergedAudio"),
-          url: "/api/audio/tasks/" + encodeURIComponent(data.task_id) + "/merged-audio",
-        },
-      ];
-      for (const sub of ready) {
-        options.push({
-          label: I18n.t("taskdetail.segmentIndex", { n: sub.info.index }) + " · " + characterName(sub.info.reference_id),
-          url: "/api/audio/tasks/" + encodeURIComponent(sub.subtask_id) + "/audio",
-        });
-      }
-      detailWaveform.appendChild(
-        App.audioWaveformPanel(options, (e) => {
-          showMessage("taskdetail.waveformFailed", true, { msg: e.message });
-        })
-      );
     }
 
     function renderDetail(data) {
@@ -264,8 +240,7 @@
         detailTheme.appendChild(themeText);
       }
 
-      renderWaveform(data);
-      renderSubtasks(data.subtasks);
+      renderSubtasks(data.subtasks, data.task_id);
       detailPanel.hidden = false;
     }
 
@@ -291,7 +266,7 @@
       return button;
     }
 
-    function renderSubtasks(subtasks) {
+    function renderSubtasks(subtasks, currentTaskId) {
       detailSubtasks.textContent = "";
       for (const sub of subtasks) {
         if (sub.type === "ASMR_TEXT") {
@@ -315,6 +290,17 @@
           group.body.appendChild(renderGenerateCard(sub));
         }
         detailSubtasks.appendChild(group.root);
+
+        if (generateSubs.some((sub) => sub.status === "success")) {
+          const merged = App.collapsible(I18n.t("taskdetail.mergedAudio"), null);
+          const mergedUrl = "/api/audio/tasks/" + encodeURIComponent(currentTaskId) + "/merged-audio";
+          merged.body.appendChild(
+            App.mergedAudioActions(mergedUrl, (e) => {
+              showMessage("taskdetail.mergedFailed", true, { msg: e.message });
+            })
+          );
+          detailSubtasks.appendChild(merged.root);
+        }
       }
       const nonVerbalSubs = subtasks.filter((item) => item.type === "ASMR_NON_VERBAL");
       if (nonVerbalSubs.length > 0) {

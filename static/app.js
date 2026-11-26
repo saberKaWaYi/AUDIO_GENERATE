@@ -255,52 +255,36 @@ const App = {
     return wrap;
   },
 
-  audioWaveformPanel(options, onError) {
+  waveformFold(audioUrl, onError) {
     const wrap = document.createElement("div");
-    wrap.className = "waveform-panel";
+    wrap.className = "waveform-fold";
 
-    const head = document.createElement("div");
-    head.className = "waveform-head";
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "waveform-fold-toggle";
+    toggle.setAttribute("aria-expanded", "false");
+    const caret = document.createElement("span");
+    caret.className = "waveform-fold-caret";
+    caret.textContent = "▸";
     const label = document.createElement("span");
     label.textContent = I18n.t("taskdetail.waveformTitle");
-    const select = document.createElement("select");
-    select.className = "waveform-select";
-    for (const option of options) {
-      const item = document.createElement("option");
-      item.value = option.url;
-      item.textContent = option.label;
-      select.appendChild(item);
-    }
-    head.appendChild(label);
-    head.appendChild(select);
-    wrap.appendChild(head);
+    toggle.appendChild(caret);
+    toggle.appendChild(label);
 
+    const body = document.createElement("div");
+    body.className = "waveform-fold-body";
+    body.hidden = true;
     const canvas = document.createElement("canvas");
     canvas.className = "waveform-canvas";
-    wrap.appendChild(canvas);
-
     const status = document.createElement("p");
-    status.className = "hint waveform-status";
-    status.textContent = I18n.t("taskdetail.waveformPlaceholder");
-    wrap.appendChild(status);
-
-    const audio = document.createElement("audio");
-    audio.className = "waveform-player";
-    audio.controls = true;
-    audio.preload = "none";
-    audio.src = options[0].url;
-    wrap.appendChild(audio);
-
-    const download = document.createElement("a");
-    download.className = "subtask-download waveform-download";
-    download.href = options[0].url;
-    download.textContent = I18n.t("taskdetail.download");
-    wrap.appendChild(download);
+    status.className = "waveform-status";
+    body.appendChild(canvas);
+    body.appendChild(status);
 
     const paint = (decoded) => {
       const data = decoded.getChannelData(0);
-      const cssWidth = canvas.clientWidth || 600;
-      const cssHeight = 96;
+      const cssWidth = canvas.clientWidth;
+      const cssHeight = 84;
       const ratio = window.devicePixelRatio || 1;
       canvas.width = cssWidth * ratio;
       canvas.height = cssHeight * ratio;
@@ -309,10 +293,17 @@ const App = {
       context.scale(ratio, ratio);
       context.clearRect(0, 0, cssWidth, cssHeight);
       const middle = cssHeight / 2;
-      const bars = 120;
+      const bars = Math.max(40, Math.floor(cssWidth / 4));
       const step = Math.max(1, Math.floor(data.length / bars));
       const barWidth = cssWidth / bars;
       const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
+      context.strokeStyle = accent;
+      context.globalAlpha = 0.12;
+      context.beginPath();
+      context.moveTo(0, middle + 0.5);
+      context.lineTo(cssWidth, middle + 0.5);
+      context.stroke();
+      context.globalAlpha = 1;
       context.fillStyle = accent;
       for (let index = 0; index < bars; index += 1) {
         let peak = 0;
@@ -324,52 +315,97 @@ const App = {
             peak = value;
           }
         }
-        const barHeight = Math.max(2, peak * cssHeight * 0.9);
-        context.fillRect(index * barWidth + 0.5, middle - barHeight / 2, Math.max(1, barWidth - 1), barHeight);
+        const barHeight = Math.max(2, peak * cssHeight * 0.84);
+        context.fillRect(index * barWidth + 0.5, middle - barHeight / 2, Math.max(1, barWidth - 1.5), barHeight);
       }
     };
 
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    let drawToken = 0;
-    const draw = async () => {
-      const token = ++drawToken;
-      const context2d = canvas.getContext("2d");
-      context2d.clearRect(0, 0, canvas.width, canvas.height);
+    let rendered = false;
+    const render = async () => {
       status.textContent = I18n.t("taskdetail.waveformPlaceholder");
+      status.classList.remove("error");
       try {
-        const response = await fetch(select.value, { credentials: "same-origin" });
+        const response = await fetch(audioUrl, { credentials: "same-origin" });
         if (!response.ok) {
           throw new Error(String(response.status));
         }
         const buffer = await response.arrayBuffer();
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         const audioContext = new AudioContextClass();
+        let decoded;
         try {
-          const decoded = await audioContext.decodeAudioData(buffer);
-          if (token !== drawToken) {
-            return;
-          }
-          paint(decoded);
-          status.textContent = "";
+          decoded = await audioContext.decodeAudioData(buffer);
         } finally {
           await audioContext.close();
         }
+        paint(decoded);
+        status.textContent = "";
       } catch (e) {
-        if (token !== drawToken) {
-          return;
-        }
         status.textContent = I18n.t("taskdetail.waveformFailed", { msg: e.message });
+        status.classList.add("error");
         if (onError) {
           onError(e);
         }
       }
     };
 
-    select.addEventListener("change", () => {
-      audio.src = select.value;
-      download.href = select.value;
-      draw();
+    toggle.addEventListener("click", () => {
+      const expanded = toggle.getAttribute("aria-expanded") === "true";
+      toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+      body.hidden = expanded;
+      caret.textContent = expanded ? "▸" : "▾";
+      label.textContent = expanded ? I18n.t("taskdetail.waveformTitle") : I18n.t("taskdetail.waveformHide");
+      if (!expanded && !rendered) {
+        rendered = true;
+        requestAnimationFrame(() => render());
+      }
     });
-    requestAnimationFrame(() => draw());
+
+    wrap.appendChild(toggle);
+    wrap.appendChild(body);
+    return wrap;
+  },
+
+  mergedAudioActions(audioUrl, onError) {
+    const wrap = document.createElement("div");
+    wrap.className = "generate-actions merged-actions";
+    const play = document.createElement("button");
+    play.type = "button";
+    play.className = "subtask-play";
+    play.textContent = I18n.t("taskdetail.play");
+    const download = document.createElement("a");
+    download.className = "subtask-download";
+    download.href = audioUrl;
+    download.textContent = I18n.t("taskdetail.download");
+    let player = null;
+    play.addEventListener("click", async () => {
+      if (player && !player.paused) {
+        player.pause();
+        play.textContent = I18n.t("taskdetail.play");
+        return;
+      }
+      if (!player) {
+        player = document.createElement("audio");
+        player.className = "generate-player";
+        player.controls = true;
+        player.src = audioUrl;
+        player.addEventListener("ended", () => {
+          play.textContent = I18n.t("taskdetail.play");
+        });
+        wrap.appendChild(player);
+      }
+      play.textContent = I18n.t("taskdetail.pause");
+      try {
+        await player.play();
+      } catch (e) {
+        play.textContent = I18n.t("taskdetail.play");
+        if (onError) {
+          onError(e);
+        }
+      }
+    });
+    wrap.appendChild(play);
+    wrap.appendChild(download);
     return wrap;
   },
 
