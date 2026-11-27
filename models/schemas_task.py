@@ -16,7 +16,7 @@ class TaskLanguage(str, Enum):
 class TaskType(str, Enum):
     ASMR_TEXT = "ASMR_TEXT"
     ASMR_TEXT_GENERATE = "ASMR_TEXT_GENERATE"
-    ASMR_NON_VERBAL = "ASMR_NON_VERBAL"
+    ASMR_TIME_PLAN = "ASMR_TIME_PLAN"
 
 
 class TaskStatus(str, Enum):
@@ -41,7 +41,7 @@ class ASMRTextGenerateInfo(BaseModel):
     text: str
 
 
-class ASMRNonVerbalInfo(BaseModel):
+class ASMRTimePlanInfo(BaseModel):
     title: str
     reference_ids: list[str]
     theme: str
@@ -50,7 +50,7 @@ class ASMRNonVerbalInfo(BaseModel):
     source_result_text: str
 
 
-TaskInfo = ASMRTextInfo | ASMRTextGenerateInfo | ASMRNonVerbalInfo
+TaskInfo = ASMRTextInfo | ASMRTextGenerateInfo | ASMRTimePlanInfo
 
 
 class ASMRTextResult(BaseModel):
@@ -68,13 +68,13 @@ class ASMRGenerateAudioResult(BaseModel):
     relative_path: str
 
 
-class ASMRNonVerbalResult(BaseModel):
+class ASMRTimePlanResult(BaseModel):
     result_text: str
     prompt_tokens: int
     completion_tokens: int
 
 
-TaskResult = ASMRTextResult | ASMRTextGenerateResult | ASMRNonVerbalResult
+TaskResult = ASMRTextResult | ASMRTextGenerateResult | ASMRTimePlanResult
 
 
 class AudioTask(BaseModel):

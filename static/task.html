@@ -299,10 +299,10 @@
         }
         detailSubtasks.appendChild(group.root);
       }
-      const nonVerbalSubs = subtasks.filter((item) => item.type === "ASMR_NON_VERBAL");
-      if (nonVerbalSubs.length > 0) {
-        const group = App.collapsible(I18n.t("taskdetail.nonVerbalGroup"), nonVerbalSubs.length, null);
-        for (const sub of nonVerbalSubs) {
+      const timePlanSubs = subtasks.filter((item) => item.type === "ASMR_TIME_PLAN");
+      if (timePlanSubs.length > 0) {
+        const group = App.collapsible(I18n.t("taskdetail.timePlanGroup"), timePlanSubs.length, null);
+        for (const sub of timePlanSubs) {
           const card = document.createElement("div");
           card.className = "subtask-card";
           const head = document.createElement("p");
@@ -312,7 +312,7 @@
           card.appendChild(head);
           const hint = document.createElement("p");
           hint.className = "hint";
-          hint.textContent = I18n.t("taskdetail.nonVerbalHint");
+          hint.textContent = I18n.t("taskdetail.timePlanHint");
           card.appendChild(hint);
           group.body.appendChild(card);
         }

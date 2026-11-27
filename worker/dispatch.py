@@ -3,10 +3,10 @@ from datetime import datetime
 from uuid import NAMESPACE_URL, uuid5
 
 from models.schemas_task import (
-    ASMRNonVerbalInfo,
-    ASMRNonVerbalResult,
     ASMRTextGenerateInfo,
     ASMRTextGenerateResult,
+    ASMRTimePlanInfo,
+    ASMRTimePlanResult,
     AUDIO_TASKS_COLLECTION,
     AudioTask,
     TaskStatus,
@@ -24,8 +24,8 @@ def _generate_subtask_id(task_id: str, parent_subtask_id: str, index: int) -> st
     return uuid5(_NAMESPACE, f"{task_id}:{parent_subtask_id}:generate:{index}").hex
 
 
-def _non_verbal_subtask_id(task_id: str) -> str:
-    return uuid5(_NAMESPACE, f"{task_id}:non_verbal").hex
+def _time_plan_subtask_id(task_id: str) -> str:
+    return uuid5(_NAMESPACE, f"{task_id}:time_plan").hex
 
 
 def dispatch_generate_tasks(mongo, parent: dict, result_text: str) -> int:
@@ -67,7 +67,7 @@ def dispatch_generate_tasks(mongo, parent: dict, result_text: str) -> int:
     return created
 
 
-def dispatch_non_verbal_if_done(mongo, task_id: str) -> bool:
+def dispatch_time_plan_if_done(mongo, task_id: str) -> bool:
     docs = mongo.find_documents(
         AUDIO_TASKS_COLLECTION,
         {
@@ -82,7 +82,7 @@ def dispatch_non_verbal_if_done(mongo, task_id: str) -> bool:
     if any(TaskStatus(item["status"]) != TaskStatus.SUCCESS for item in docs):
         return False
 
-    subtask_id = _non_verbal_subtask_id(task_id)
+    subtask_id = _time_plan_subtask_id(task_id)
     if mongo.find_one(AUDIO_TASKS_COLLECTION, {"subtask_id": subtask_id}, fields=("subtask_id",)) is not None:
         return False
 
@@ -102,7 +102,7 @@ def dispatch_non_verbal_if_done(mongo, task_id: str) -> bool:
     if not source_result_text:
         raise ValueError("ASMR_TEXT 主任务没有可用的结果文本")
     now = _now()
-    info = ASMRNonVerbalInfo(
+    info = ASMRTimePlanInfo(
         title=parent_info["title"],
         reference_ids=parent_info["reference_ids"],
         theme=parent_info["theme"],
@@ -114,10 +114,10 @@ def dispatch_non_verbal_if_done(mongo, task_id: str) -> bool:
         task_id=task_id,
         subtask_id=subtask_id,
         user_id=parent["user_id"],
-        type=TaskType.ASMR_NON_VERBAL,
+        type=TaskType.ASMR_TIME_PLAN,
         info=info,
         status=TaskStatus.DEBUG,
-        result=ASMRNonVerbalResult(result_text="", prompt_tokens=0, completion_tokens=0),
+        result=ASMRTimePlanResult(result_text="", prompt_tokens=0, completion_tokens=0),
         create_time=now,
         update_time=now,
         is_deleted=False,

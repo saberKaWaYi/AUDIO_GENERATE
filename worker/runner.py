@@ -12,7 +12,7 @@ from services.fish_audio_service import FishAudioService
 from services.mongo_service import MongoService
 from settings.mongo import mongo_settings
 from settings.worker import worker_settings
-from worker.dispatch import dispatch_generate_tasks, dispatch_non_verbal_if_done
+from worker.dispatch import dispatch_generate_tasks, dispatch_time_plan_if_done
 from worker.executors import EXECUTORS
 from logging_config import setup_logging
 
@@ -150,9 +150,9 @@ def _run_once() -> bool:
                 raise ValueError(f"GENERATE 执行器返回类型错误：{type(outcome).__name__}")
             _write_generate_success(subtask, outcome)
             logger.info("GENERATE 生成成功, subtask_id=%s", subtask["subtask_id"])
-            inserted = dispatch_non_verbal_if_done(mongo_service, subtask["task_id"])
+            inserted = dispatch_time_plan_if_done(mongo_service, subtask["task_id"])
             if inserted:
-                logger.info("下发 ASMR_NON_VERBAL 任务, task_id=%s", subtask["task_id"])
+                logger.info("下发 ASMR_TIME_PLAN 任务, task_id=%s", subtask["task_id"])
         else:
             raise ValueError(f"任务类型 {task_type.value!r} 没有闭合结果处理")
     except Exception as exc:
