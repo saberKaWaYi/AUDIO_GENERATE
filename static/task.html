@@ -301,7 +301,7 @@
       }
       const timePlanSubs = subtasks.filter((item) => item.type === "ASMR_TIME_PLAN");
       if (timePlanSubs.length > 0) {
-        const group = App.collapsible(timePlanSubs[0].type, timePlanSubs.length, null);
+        const group = App.collapsible(timePlanSubs[0].type, null);
         for (const sub of timePlanSubs) {
           const card = document.createElement("div");
           card.className = "subtask-card";
